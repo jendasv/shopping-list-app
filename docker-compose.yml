@@ -30,10 +30,11 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: shopping
-    ports:
-      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    # more secure
+#    ports:
+#      - "3306:3306"
 
   adminer:
     image: adminer:latest
@@ -41,6 +42,8 @@ services:
     restart: always
     ports:
       - "8081:8080"
+    depends_on:
+      - mysql
 
   frontend:
     build:
