@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat&display=swap');
+
+body {
+  font-family: 'Caveat', cursive;
+  background-image: url('@/assets/shopping_mal.jpeg');
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+}
+
+.paper {
+  background-color: #fff9d6;
+  border-radius: 4px;
+
+  background-image:
+    radial-gradient(rgba(0,0,0,0.03) 1px, transparent 1px);
+
+  background-size: 4px 4px;
+
+  /* jemný stín */
+  box-shadow:
+    0 8px 20px rgba(0,0,0,0.15),
+    0 2px 4px rgba(0,0,0,0.08);
+}
+
+.arrow {
+  path {
+    transition: stroke 0.2s ease;
+  }
+
+  &:hover path {
+    stroke: #888888;
+  }
+}
+
+.arrow-back {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+}
+
+//Animation
+/* fade animation */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.fade-enter-to,
+.fade-leave-from {
+  opacity: 1;
+}
+
+/* unroll animation */
+.unroll-enter-active,
+.unroll-leave-active {
+  transition: all 0.2s ease-in-out;
+}
+
+.unroll-enter-from,
+.unroll-leave-to {
+  opacity: 0;
+  transform: translateY(-30px);
+}
+
+.unroll-enter-to,
+.unroll-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
