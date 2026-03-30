@@ -1,66 +1,19 @@
 <script setup lang="ts">
-import {RouterLink} from "vue-router";
-import {ref, onMounted} from "vue";
-import ArrowDown from "@/components/icons/ArrowDown.vue";
-import IconPlusCircle from "@/components/icons/IconPlusCircle.vue";
-import type {iShoppingList} from "@/types/index.ts"
-import HandDrawnDivider from "@/components/elements/HandDrawnDivider.vue";
-import Typewrite from "@/components/animations/Typewrite.vue";
-import {apiFetch} from "@/serivices/api.ts";
+import { ref } from 'vue'
+import { RouterLink } from 'vue-router'
+import ArrowDown from '@/components/icons/ArrowDown.vue'
+import IconPlusCircle from '@/components/icons/IconPlusCircle.vue'
+import HandDrawnDivider from '@/components/elements/HandDrawnDivider.vue'
+import Typewrite from '@/components/animations/Typewrite.vue'
+import HandDrawnPencil from '@/components/icons/HandDrawnPencil.vue'
+import { useShoppingLists } from '@/composables/useShoppingLists'
 
-const lists = ref<iShoppingList[]>([])
 const newListName = ref<string>('')
-const error = ref<string>('')
+const { lists, error, isLoading, editingListId, startEditList, saveListName, addList, removeList } = useShoppingLists()
 
-onMounted(async () => {
-  try {
-    const data = await apiFetch<iShoppingList[]>('/lists', {
-      method: 'GET',
-    })
-
-    lists.value = data
-  } catch (error) {
-    console.error('Error during list loading:', error)
-    lists.value = []
-  }
-})
-
-
-async function remove(id: number) {
-  await apiFetch<void>(`/lists/${id}`, {
-    method: 'DELETE',
-  })
-  lists.value = lists.value.filter((list: iShoppingList) => list.id !== id);
-}
-
-async function addList() {
-
-  const name = newListName.value.trim()  // odstraní bílé znaky na začátku/konci
-
-  if (!name || name.length < 3) {
-    error.value = 'Please enter a list name!'
-    return
-  }
-
-  try {
-    const data: iShoppingList = await apiFetch<iShoppingList>('/lists', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name })
-    })
-    lists.value.push({
-      id: data.id,
-      name: data.name,
-      isNew: true,
-      items: [],
-    })
-
-    newListName.value = ''
-  } catch (error: any) {
-    console.error('Failed to create list:', error)
-    error.value = 'Failed to create list. Try again.'
-  }
-
+async function submitAddList() {
+  await addList(newListName.value)
+  newListName.value = ''
 }
 </script>
 
@@ -81,7 +34,7 @@ async function addList() {
     Create your own shopping list and you will never forget anything again! Only if you forget to write it here.
   </p>
   <HandDrawnDivider variant="low-wave" customClass="hidden mb-6"/>
-  <form @submit.prevent="addList" class="hidden mb-8">
+  <form @submit.prevent="submitAddList" class="hidden mb-8">
     <div class="">
       <label for="newListName" class="flex items-center gap-4 ">
         <span class="flex-1">Fast list creating:</span>
@@ -109,14 +62,15 @@ async function addList() {
     </div>
   </form>
   <HandDrawnDivider/>
-  <ul class="space-y-4 text-2xl">
+  <p v-if="isLoading" class="text-center text-gray-400 text-2xl mt-6">Loading...</p>
+  <ul v-else class="space-y-4 text-2xl">
     <li
       v-for="list in lists"
       :key="list.id"
 
     >
       <article class="flex justify-between items-center text-gray-900">
-        <span class="cursor-pointer hover:text-gray-600 transition duration-200 hover:scale-105">
+        <span v-if="editingListId !== list.id" class="cursor-pointer hover:text-gray-600 transition duration-200 hover:scale-105">
           <router-link title="List detail" :to="{ name: 'list-detail', params: { id: list.id } }">
             <Typewrite v-if="list.isNew" :text="list.name" @done="list.isNew = false"/>
             <span v-else>
@@ -125,13 +79,31 @@ async function addList() {
           </router-link>
         </span>
 
-        <a
-          class="text-red-500 text-xl hover:scale-110 transition"
-          @click.prevent="remove(list.id)"
-          href="#"
+        <form
+          v-else
+          @submit.prevent="saveListName(list)"
+          class="flex items-center gap-2"
         >
-          X
-        </a>
+          <input
+            v-model="list.name"
+            type="text"
+            class="border-b p-1 text-xl focus:outline-none"
+          />
+          <button type="submit" class="text-green-600 cursor-pointer">✔</button>
+        </form>
+
+        <div class="controls flex items-center gap-2">
+          <a href="#" @click.prevent="startEditList(list)" class="hover:scale-110 transition">
+            <HandDrawnPencil sizeClass="w-9 h-9" />
+          </a>
+          <a
+            class="text-red-500 text-xl hover:scale-110 transition"
+            @click.prevent="removeList(list.id)"
+            href="#"
+          >
+            ×
+          </a>
+        </div>
       </article>
 
     </li>

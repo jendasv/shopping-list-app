@@ -4,19 +4,18 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
   const response = await fetch(`${API_URL}${endpoint}`, {
     headers: {
       'Content-Type': 'application/json',
-      ...(options.headers || {})
+      ...(options.headers || {}),
     },
-    ...options
+    ...options,
   })
 
   if (!response.ok) {
     throw new Error(`API error: ${response.status}`)
   }
 
-  // pokud je 204 No Content, vrátíme undefined
   if (response.status === 204) {
     return undefined as unknown as T
   }
 
-  return await response.json() as Promise<T>
+  return (await response.json()) as Promise<T>
 }

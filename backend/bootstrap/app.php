@@ -1,8 +1,11 @@
 <?php
 
+use App\Exceptions\ApiException;
+use App\Exceptions\Domain\ValidationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\JsonResponse;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -14,5 +17,13 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (ApiException $e): JsonResponse {
+            $body = ['error' => $e->getMessage()];
+
+            if ($e instanceof ValidationException && $e->getDetails() !== []) {
+                $body['details'] = $e->getDetails();
+            }
+
+            return new JsonResponse($body, $e->getStatusCode());
+        });
     })->create();

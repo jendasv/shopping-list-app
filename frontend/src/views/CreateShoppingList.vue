@@ -2,20 +2,12 @@
 import HandDrawnDivider from "@/components/elements/HandDrawnDivider.vue";
 import { ref } from 'vue'
 import AddItemForm from '@/components/form/AddItemForm.vue'
-import type { iItem, iNewList, iShoppingList } from '@/types'
+import type { iItem } from '@/types'
 import ArrowLeft from "@/components/icons/ArrowLeft.vue";
 import Typewrite from "@/components/animations/Typewrite.vue";
-import {useRoute} from "vue-router";
 import AlertMessage from "@/components/elements/AlertMessage.vue";
 import IconPlusCircle from "@/components/icons/IconPlusCircle.vue";
-import {apiFetch} from "@/serivices/api.ts";
-
-interface iNewList {
-  name: string
-  items: iItem[]
-}
-
-const router = useRoute()
+import { createList } from '@/services/shoppingListService'
 const shoppingListName = ref('')
 const items = ref<iItem[]>([])
 const showItemAddForm = ref(false)
@@ -36,20 +28,8 @@ async function createShoppingList() {
     return
   }
 
-  const newList: iNewList = {
-    name: shoppingListName.value,
-    items: items.value
-  }
-
   try {
-    await apiFetch('/lists', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: shoppingListName.value,
-        items: items.value
-      })
-    })
+    await createList(shoppingListName.value, items.value)
 
     shoppingListName.value = ''
     items.value = []

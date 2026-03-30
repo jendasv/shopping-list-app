@@ -5,9 +5,9 @@
       :class="['group cursor-pointer transition-all duration-200', customClass]"
       fill="none"
     >
-      <path :class="strokeClass" d="M20 10 Q22 18 20 28" stroke="#222222" fill="none" stroke-width="2.5" stroke-linecap="round"/>
-      <path :class="strokeClass" d="M14 22 Q18 26 20 28" stroke="#222222" fill="none" stroke-width="2.5" stroke-linecap="round"/>
-      <path :class="strokeClass" d="M26 22 Q22 26 20 28" stroke="#222222" fill="none" stroke-width="2.5" stroke-linecap="round"/>
+      <path :class="strokeClass" d="M20 10 Q22 18 20 28" fill="none" stroke-width="2.5" stroke-linecap="round"/>
+      <path :class="strokeClass" d="M14 22 Q18 26 20 28" fill="none" stroke-width="2.5" stroke-linecap="round"/>
+      <path :class="strokeClass" d="M26 22 Q22 26 20 28" fill="none" stroke-width="2.5" stroke-linecap="round"/>
     </svg>
   </div>
 </template>

@@ -1,8 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import ListDetail from '../views/ListDetail.vue'
-import CreateShoppingList from "@/views/CreateShoppingList.vue";
-import {apiFetch} from "@/serivices/api.ts";
+import CreateShoppingList from '@/views/CreateShoppingList.vue'
+import { fetchList } from '@/services/shoppingListService'
+import type { iShoppingList } from '@/types'
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    list?: iShoppingList
+  }
+}
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -18,10 +25,7 @@ const router = createRouter({
       component: ListDetail,
       beforeEnter: async (to) => {
         try {
-          const id = to.params.id
-
-          await apiFetch(`/lists/${id}/items`, { method: 'GET' })
-
+          to.meta.list = await fetchList(to.params.id as string)
           return true
         } catch (e) {
           return { name: 'home' }

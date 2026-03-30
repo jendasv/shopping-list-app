@@ -1,0 +1,14 @@
+{
+    "preset": "laravel",
+    "exclude": [
+        "config",
+        "database",
+        "public",
+        "bootstrap",
+        "routes",
+        "tests"
+    ],
+    "rules": {
+        "declare_strict_types": true
+    }
+}

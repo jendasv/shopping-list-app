@@ -6,6 +6,9 @@ services:
       dockerfile: docker/php/Dockerfile
     container_name: shopping_php
     working_dir: /var/www
+    environment:
+      HOME: /tmp
+      COMPOSER_HOME: /tmp/composer
     volumes:
       - ./backend:/var/www
     user: "${UID:-1000}:${GID:-1000}"

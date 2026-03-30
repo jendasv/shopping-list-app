@@ -11,7 +11,7 @@ export default defineConfig({
     vue(),
     vueDevTools(),
     tailwindcss(),
-    checker({typescript: true})
+    checker({ vueTsc: true })
   ],
   resolve: {
     alias: {

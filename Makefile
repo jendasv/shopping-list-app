@@ -28,5 +28,17 @@ php:
 console:
 	$(PHP) php bin/console $(filter-out $@,$(MAKECMDGOALS))
 
+artisan:
+	$(PHP) php artisan $(filter-out $@,$(MAKECMDGOALS))
+
 composer:
 	$(PHP) composer $(filter-out $@,$(MAKECMDGOALS))
+
+phpstan:
+	$(PHP) ./vendor/bin/phpstan analyse --memory-limit=512M
+
+pint:
+	$(PHP) ./vendor/bin/pint
+
+pint-test:
+	$(PHP) ./vendor/bin/pint --test

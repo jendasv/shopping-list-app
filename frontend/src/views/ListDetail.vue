@@ -1,154 +1,20 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useRoute } from 'vue-router'
-import ArrowLeft from "@/components/icons/ArrowLeft.vue";
-import type {iShoppingList, iItem} from "@/types/index.ts"
-import HandDrawnDivider from "@/components/elements/HandDrawnDivider.vue";
-import IconPlusCircle from "@/components/icons/IconPlusCircle.vue";
-import Typewrite from "@/components/animations/Typewrite.vue";
-import AddItemForm from "@/components/form/AddItemForm.vue";
-import AlertMessage from "@/components/elements/AlertMessage.vue";
-import HandDrawnPencil from "@/components/icons/HandDrawnPencil.vue";
-import {apiFetch} from "@/serivices/api.ts";
+import ArrowLeft from '@/components/icons/ArrowLeft.vue'
+import HandDrawnDivider from '@/components/elements/HandDrawnDivider.vue'
+import IconPlusCircle from '@/components/icons/IconPlusCircle.vue'
+import Typewrite from '@/components/animations/Typewrite.vue'
+import AddItemForm from '@/components/form/AddItemForm.vue'
+import AlertMessage from '@/components/elements/AlertMessage.vue'
+import HandDrawnPencil from '@/components/icons/HandDrawnPencil.vue'
+import { useListDetail } from '@/composables/useListDetail'
 
 const route = useRoute()
 const id = route.params.id as string
-const list = ref<iShoppingList | null>(null)
-const error = ref<string>('')
 const showItemAddForm = ref<boolean>(false)
-const editingItemId = ref<number | null>(null)
 
-
-interface iItemInput {
-  name: string
-  quantity: number
-  isCompleted: boolean
-}
-
-const newItem = ref<iItemInput>({
-  name: '',
-  quantity: 1,
-  isCompleted: false
-})
-
-onMounted(async () => {
-  try {
-    list.value =  await apiFetch<iShoppingList>(`/lists/${id}/items`, {
-      method: 'GET',
-    })
-
-  } catch (error: any) {
-    console.error('Failed to remove item:', e)
-  }
-})
-
-async function removeItemFromList(listId: number, itemId: number) {
-  if (!list.value) return
-  try {
-    await apiFetch(`/lists/${listId}/items/${itemId}`, {
-      method: 'DELETE',
-    })
-
-    list.value.items = list.value.items.filter((item: iItem) => item.id !== itemId)
-  } catch (e) {
-    console.error('Failed to remove item:', e)
-    error.value = 'Failed to add item. Try again.'
-  }
-}
-
-async function setComplete(listId: number, itemId: number, isCompleted: boolean) {
-  try {
-    await apiFetch<iItem>(`/lists/${listId}/items/${itemId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        'isCompleted': !isCompleted,
-      })
-    })
-
-    list.value.items = list.value.items.map((item: iItem) => {
-      if (item.id === itemId) {
-        return { ...item, isCompleted: !isCompleted }
-      }
-      return item
-    })
-  } catch (e) {
-    console.error('Failed to remove item:', e)
-    error.value = 'Failed to add item. Try again.'
-  }
-}
-async function addItem(item: iItem) {
-  const name: string = item.name.trim()
-  // return
-  if (!name) {
-    error.value = 'Please enter a item name!'
-    return
-  }
-
-  if (newItem.value.quantity < 1) {
-    error.value = 'Please enter a quantity greater than 0!'
-    return
-  }
-
-  try {
-    const data: iShoppingList = await apiFetch<iShoppingList>(`/lists/${id}/item`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name,
-        quantity: item.quantity,
-        isCompleted: item.isCompleted
-      })
-    })
-
-    const items: iItem[] = data.items
-
-    const lastItem: iItem = items[items.length - 1]
-    lastItem.isNew = true
-
-    list.value.items.push(lastItem)
-  } catch (e) {
-    console.error('Failed to add item:', e)
-    error.value = 'Failed to add item. Try again.'
-  }
-
-  return;
-}
-
-function startEdit(item: iItem) {
-  editingItemId.value = item.id
-}
-
-async function updateItem(listId: number, item: iItem) {
-
-  if (!item.name.trim()) {
-    error.value = 'Please enter a item name!'
-    return
-  }
-
-  if (item.quantity < 1) {
-    error.value = 'Please enter a quantity greater than 0!'
-    return
-  }
-  try {
-    await apiFetch(`/lists/${listId}/items/${item.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: item.name,
-        quantity: item.quantity,
-        isCompleted: item.isCompleted
-      })
-    })
-
-    item.isNew = true
-    editingItemId.value = null
-  } catch (e) {
-    console.error('Failed to update item:', e)
-    error.value = 'Failed to update item. Try again.'
-    editingItemId.value = null
-  }
-}
+const { list, error, isLoading, editingItemId, removeItemFromList, setComplete, addItem, startEdit, saveItem } = useListDetail(id)
 </script>
 <template>
 
@@ -174,7 +40,9 @@ async function updateItem(listId: number, item: iItem) {
 
   <AlertMessage v-if="error" :message="error" type="error"/>
 
-  <div  v-else-if="list" class="list">
+  <p v-else-if="isLoading" class="text-center text-gray-400 text-2xl mt-6">Loading...</p>
+
+  <div v-else-if="list" class="list">
     <HandDrawnDivider variant="low-wave"/>
     <ul class="text-2xl space-y-6">
       <template v-if="list.items && list.items.length">
@@ -198,7 +66,7 @@ async function updateItem(listId: number, item: iItem) {
 
         <form
           v-else
-          @submit.prevent="updateItem(list.id, item)"
+          @submit.prevent="saveItem(list.id, item)"
           class="flex items-center gap-2"
         >
           <input

@@ -1,58 +1,144 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Shopping list
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Installation
 
-## About Laravel
+````bash
+git clone ...
+cd schopping-list
+````
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Enviroment variables
+Frontend:
+- copy .env.development.example to .env.development
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Backend:
+- copy .env.development.example to .env.dev
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Docker
+- build the docker images and composer install
+````bash
+docker compose up -d --build
+docker compose exec php composer install
+````
 
-## Learning Laravel
+### Migration
+Run the migration:
+````bash
+docker compose exec php php bin/console doctrine:migrations:migrate --no-interaction
+````
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Installation through Makefile
+It is prepared Makefile for shortening the process:
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Create env file
+````bash
+make env ENV=dev
+````
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+### Init project
+````bash
+make init
+````
 
-## Agentic Development
+### Migration
+````bash
+make migration
+````
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+Project:
+- http://localhost:8080/
 
-```bash
-composer require laravel/boost --dev
+Adminer:
+- http://localhost:8081/
 
-php artisan boost:install
-```
+Frontend APP:
+- http://localhost:5173/
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+DB
+- shopping
 
-## Contributing
+# API list
+## Base URL
+````URL
+http://localhost:8080/api/
+````
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## List endpoints
 
-## Code of Conduct
+### Get list
+- Returns a specific list with its items
+````URL
+GET /lists/:id/items
+````
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Create list
+- Create a new list, it is also possible to create with items
+````URL
+POST /lists
+````
 
-## Security Vulnerabilities
+````json
+{
+    "name": "My new list with mapper",
+    "items": [
+        {
+            "name": "Milk"
+        },
+        {
+            "name": "Bread"
+        },
+        {
+            "name": "Socks"
+        }
+    ]
+}
+````
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Delete list
+- Remove a specific list
+````URL
+DELETE /lists/:id
+````
 
-## License
+## Items endpoints
+### Get item
+- Returns a specific item from a specific list
+````URL
+GET /lists/:id/items/:itemId
+````
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Create item
+- Add a new item to a specific list
+````URL
+POST /lists/:id/item
+````
+
+````json
+{
+  "name": "Potatoes",
+  "quantity": 5,
+  "isCompleted": false
+}
+````
+
+### Update item
+- Change an item in a specific list
+````URL
+PUT /lists/:id/items/:itemId
+````
+
+````json
+{
+  "name": "Potatoes",
+  "quantity": 5,
+  "isCompleted": false
+}
+````
+
+### Remove item
+- Remove an item from a specific list
+````URL
+DELETE /lists/:id
+````
+
+
