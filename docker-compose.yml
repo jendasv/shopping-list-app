@@ -48,6 +48,32 @@ services:
     depends_on:
       - mysql
 
+  reverb:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: shopping_reverb
+    working_dir: /var/www
+    command: php artisan reverb:start --host=0.0.0.0 --port=6001
+    environment:
+      HOME: /tmp
+      COMPOSER_HOME: /tmp/composer
+    volumes:
+      - ./backend:/var/www
+    ports:
+      - "6001:6001"
+    user: "${UID:-1000}:${GID:-1000}"
+    depends_on:
+      - mysql
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: shopping_mailpit
+    restart: always
+    ports:
+      - "8025:8025"  # Web UI
+      - "1025:1025"  # SMTP
+
   frontend:
     build:
       context: ./frontend

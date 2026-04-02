@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="80" fill="#000000"/>
+  <!-- List lines -->
+  <rect x="160" y="152" width="192" height="18" rx="9" fill="white"/>
+  <rect x="160" y="214" width="192" height="18" rx="9" fill="white"/>
+  <rect x="160" y="276" width="128" height="18" rx="9" fill="white"/>
+  <!-- Checkmark on last item -->
+  <polyline points="310,282 326,302 358,268" stroke="white" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

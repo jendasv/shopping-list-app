@@ -6,12 +6,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
+ * @property int|null $household_id
+ * @property int|null $created_by
  * @property string $name
+ * @property string $visibility
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Collection<int, Item> $items
@@ -20,11 +24,17 @@ class ShoppingList extends Model
 {
     protected $table = 'shopping_list';
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'household_id', 'created_by', 'visibility'];
 
     /** @return HasMany<Item, $this> */
     public function items(): HasMany
     {
         return $this->hasMany(Item::class);
+    }
+
+    /** @return BelongsTo<Household, $this> */
+    public function household(): BelongsTo
+    {
+        return $this->belongsTo(Household::class);
     }
 }

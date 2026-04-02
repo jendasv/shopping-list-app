@@ -9,10 +9,14 @@ export async function fetchList(id: number | string): Promise<iShoppingList> {
   return apiFetch<iShoppingList>(`/lists/${id}/items`, { method: 'GET' })
 }
 
-export async function createList(name: string, items?: { name: string; quantity: number }[]): Promise<iShoppingList> {
+export async function createList(
+  name: string,
+  visibility: 'shared' | 'private',
+  items?: { name: string; quantity: number }[],
+): Promise<iShoppingList> {
   return apiFetch<iShoppingList>('/lists', {
     method: 'POST',
-    body: JSON.stringify({ name, items }),
+    body: JSON.stringify({ name, visibility, items }),
   })
 }
 

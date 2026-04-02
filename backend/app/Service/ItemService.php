@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Events\ItemAdded;
+use App\Events\ItemDeleted;
+use App\Events\ItemUpdated;
 use App\Exceptions\Domain\ResourceNotFoundException;
 use App\Exceptions\Domain\ValidationException;
 use App\Exceptions\Infrastructure\DatabaseOperationException;
@@ -11,6 +14,7 @@ use App\Mapper\ItemMapper;
 use App\Mapper\ShoppingListMapper;
 use App\Models\Item;
 use App\Models\ShoppingList;
+use App\Models\User;
 use Throwable;
 
 class ItemService
@@ -18,27 +22,15 @@ class ItemService
     public function __construct(
         private readonly ItemMapper $itemMapper,
         private readonly ShoppingListMapper $shoppingListMapper,
+        private readonly ShoppingListService $shoppingListService,
     ) {}
-
-    /**
-     * @return array<int, array<string, mixed>>
-     */
-    public function getItemsForList(int $listId): array
-    {
-        $list = $this->findList($listId);
-
-        return $list->items
-            ->map(fn ($item) => $this->itemMapper->map($item))
-            ->values()
-            ->all();
-    }
 
     /**
      * @return array<string, mixed>
      */
-    public function getItem(int $listId, int $itemId): array
+    public function getItem(int $listId, int $itemId, User $user): array
     {
-        $item = $this->findItem($listId, $itemId);
+        $item = $this->findItem($listId, $itemId, $user);
 
         return $this->itemMapper->map($item);
     }
@@ -61,6 +53,10 @@ class ItemService
             throw new DatabaseOperationException('Failed to create item: '.$e->getMessage());
         }
 
+        if ($list->household_id) {
+            broadcast(new ItemAdded($list->household_id, $this->itemMapper->map($item)))->toOthers();
+        }
+
         return $item;
     }
 
@@ -68,9 +64,9 @@ class ItemService
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
-    public function createItemForList(int $listId, array $data): array
+    public function createItemForList(int $listId, array $data, User $user): array
     {
-        $list = $this->findList($listId);
+        $list = $this->shoppingListService->findList($listId, $user);
         $this->createItem($data, $list);
         $list->load('items');
 
@@ -81,9 +77,9 @@ class ItemService
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
-    public function updateItem(int $listId, int $itemId, array $data): array
+    public function updateItem(int $listId, int $itemId, array $data, User $user): array
     {
-        $item = $this->findItem($listId, $itemId);
+        $item = $this->findItem($listId, $itemId, $user);
 
         $this->validateItemData($data, $itemId);
 
@@ -96,34 +92,35 @@ class ItemService
             throw new DatabaseOperationException('Failed to update item: '.$e->getMessage());
         }
 
+        $list = $item->shoppingList;
+        if ($list->household_id) {
+            broadcast(new ItemUpdated($list->household_id, $this->itemMapper->map($item)))->toOthers();
+        }
+
         return $this->itemMapper->map($item);
     }
 
-    public function deleteItem(int $listId, int $itemId): void
+    public function deleteItem(int $listId, int $itemId, User $user): void
     {
-        $item = $this->findItem($listId, $itemId);
+        $item = $this->findItem($listId, $itemId, $user);
+
+        $list = $item->shoppingList;
 
         try {
             $item->delete();
         } catch (Throwable $e) {
             throw new DatabaseOperationException('Failed to delete item: '.$e->getMessage());
         }
-    }
 
-    private function findList(int $listId): ShoppingList
-    {
-        $list = ShoppingList::with('items')->find($listId);
-
-        if ($list === null) {
-            throw new ResourceNotFoundException('Shopping list not found.');
+        if ($list->household_id) {
+            broadcast(new ItemDeleted($list->household_id, ['id' => $itemId, 'listId' => $listId]))->toOthers();
         }
-
-        return $list;
     }
 
-    private function findItem(int $listId, int $itemId): Item
+    private function findItem(int $listId, int $itemId, User $user): Item
     {
-        $this->findList($listId);
+        // Ověř přístup k listu přes ShoppingListService (respektuje household + visibility)
+        $this->shoppingListService->findList($listId, $user);
 
         $item = Item::where('id', $itemId)
             ->where('shopping_list_id', $listId)

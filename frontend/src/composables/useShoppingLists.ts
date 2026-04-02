@@ -45,7 +45,7 @@ export function useShoppingLists() {
       return
     }
     try {
-      const data = await createList(name.trim())
+      const data = await createList(name.trim(), 'private')
       lists.value.push({ id: data.id, name: data.name, isNew: true, items: [] })
     } catch (e) {
       console.error('Failed to create list:', e)

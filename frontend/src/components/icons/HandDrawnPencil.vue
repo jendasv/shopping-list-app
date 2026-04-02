@@ -31,7 +31,7 @@
   </svg>
 </template>
 
-<script setup>
+<script setup lang="ts">
 //group cursor-pointer transition-all duration-200 p-2
 defineProps({
   sizeClass: {

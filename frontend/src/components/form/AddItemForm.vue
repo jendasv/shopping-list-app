@@ -66,8 +66,8 @@ const emit = defineEmits<{
   (e: 'add', item: iItem): void
 }>()
 
-const props = defineProps<{
-  showAddForm: Boolean
+defineProps<{
+  showAddForm: boolean
 }>()
 
 const item = ref<iItem>({

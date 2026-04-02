@@ -9,34 +9,30 @@ use App\Http\Requests\StoreItemRequest;
 use App\Http\Requests\UpdateItemRequest;
 use App\Service\ItemService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ItemController extends Controller
 {
     public function __construct(private readonly ItemService $itemService) {}
 
-    public function index(int $id): JsonResponse
+    public function show(Request $request, int $id, int $itemId): JsonResponse
     {
-        return new JsonResponse($this->itemService->getItemsForList($id));
-    }
-
-    public function show(int $id, int $itemId): JsonResponse
-    {
-        return new JsonResponse($this->itemService->getItem($id, $itemId));
+        return new JsonResponse($this->itemService->getItem($id, $itemId, $request->user()));
     }
 
     public function store(StoreItemRequest $request, int $id): JsonResponse
     {
-        return new JsonResponse($this->itemService->createItemForList($id, $request->validated()), 201);
+        return new JsonResponse($this->itemService->createItemForList($id, $request->validated(), $request->user()), 201);
     }
 
     public function update(UpdateItemRequest $request, int $id, int $itemId): JsonResponse
     {
-        return new JsonResponse($this->itemService->updateItem($id, $itemId, $request->validated()));
+        return new JsonResponse($this->itemService->updateItem($id, $itemId, $request->validated(), $request->user()));
     }
 
-    public function destroy(int $id, int $itemId): JsonResponse
+    public function destroy(Request $request, int $id, int $itemId): JsonResponse
     {
-        $this->itemService->deleteItem($id, $itemId);
+        $this->itemService->deleteItem($id, $itemId, $request->user());
 
         return new JsonResponse(null, 204);
     }

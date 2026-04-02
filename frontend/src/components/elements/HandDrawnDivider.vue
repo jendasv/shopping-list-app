@@ -37,7 +37,7 @@
   </svg>
 </template>
 
-<script setup>
+<script setup lang="ts">
 defineProps({
   customClass: {
     type: String,

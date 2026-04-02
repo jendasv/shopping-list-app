@@ -1,3 +1,30 @@
+export interface iUser {
+  id: number
+  name: string
+  email: string
+  emailVerifiedAt: string | null
+  isSuperAdmin: boolean
+}
+
+export interface iHouseholdMember {
+  id: number
+  name: string
+  email: string
+  role: 'owner' | 'member'
+}
+
+export interface iHousehold {
+  id: number
+  name: string
+  isActive: boolean
+  members: iHouseholdMember[]
+}
+
+export interface iHouseholdOverview {
+  ownHousehold: iHousehold
+  joinedHouseholds: iHousehold[]
+}
+
 export interface iItem {
   id: number
   name: string

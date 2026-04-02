@@ -25,9 +25,6 @@ reset:
 php:
 	$(PHP) bash
 
-console:
-	$(PHP) php bin/console $(filter-out $@,$(MAKECMDGOALS))
-
 artisan:
 	$(PHP) php artisan $(filter-out $@,$(MAKECMDGOALS))
 
