@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\InvitationStatus;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * @property \Carbon\Carbon $expires_at
+ * @property Carbon $expires_at
  */
 #[Fillable(['household_id', 'invited_by', 'email', 'token', 'status', 'expires_at'])]
 class Invitation extends Model

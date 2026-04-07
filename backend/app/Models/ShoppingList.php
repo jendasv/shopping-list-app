@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Collection<int, Item> $items
+ * @property int|null $user_sort_order virtual — set via LEFT JOIN in getAllLists or manually after createList
  */
 class ShoppingList extends Model
 {

@@ -7,13 +7,13 @@
 
       <!-- Own household -->
       <section>
-        <h2 class="text-base font-semibold mb-4 border-b-2 border-black pb-1">My household</h2>
+        <h2 class="text-xl font-semibold mb-4 border-b-2 border-black pb-1">My household</h2>
 
         <!-- Name -->
-        <form @submit.prevent="saveHousehold" class="space-y-3 mb-6">
-          <div>
-            <label class="block text-sm font-medium mb-1">Household name</label>
-            <input v-model="householdName" type="text" required class="input-field" />
+        <form @submit.prevent="saveHousehold" class="space-y-4 mb-6">
+          <div class="flex items-baseline gap-3 text-xl">
+            <label class="text-gray-900 shrink-0" for="householdName">Household name</label>
+            <input id="householdName" v-model="householdName" placeholder="Your household's name" type="text" required class="flex-1 p-2 focus:outline-none focus:border-gray-600 text-gray-900" />
           </div>
           <AlertMessage v-if="nameError" type="error" :message="nameError" />
           <AlertMessage v-if="nameSuccess" type="success" :message="nameSuccess" />
@@ -22,20 +22,24 @@
           </button>
         </form>
 
+        <HandDrawnDivider class="my-6" />
+
         <!-- Invite -->
         <div class="mb-6">
-          <p class="text-sm font-medium mb-2 flex items-center gap-2">
+          <p class="text-xl font-medium mb-3 flex items-center gap-2">
             Invite member
             <span class="text-xs bg-black text-white px-1.5 py-0.5 rounded font-medium">Pro</span>
           </p>
-          <form @submit.prevent="sendInvite" class="flex gap-2">
+          <form @submit.prevent="sendInvite" class="flex items-baseline gap-3 text-xl">
+            <label class="text-gray-900 shrink-0" for="inviteEmail">Email</label>
             <input
+              id="inviteEmail"
               v-model="inviteEmail"
               type="email"
               placeholder="Member's email"
-              class="input-field flex-1"
+              class="flex-1 p-2 focus:outline-none focus:border-gray-600 text-gray-900"
             />
-            <button type="submit" :disabled="inviteLoading" class="btn-primary whitespace-nowrap">
+            <button type="submit" :disabled="inviteLoading" class="btn-primary whitespace-nowrap shrink-0">
               {{ inviteLoading ? '...' : 'Invite' }}
             </button>
           </form>
@@ -43,17 +47,19 @@
           <AlertMessage v-if="inviteSuccess" type="success" :message="inviteSuccess" class="mt-2" />
         </div>
 
+        <HandDrawnDivider class="my-6" />
+
         <!-- Members -->
         <div>
-          <p class="text-sm font-medium mb-2">Members</p>
-          <ul class="space-y-2">
+          <p class="text-xl font-medium mb-3">Members</p>
+          <ul class="space-y-3">
             <li
               v-for="member in data.ownHousehold.members"
               :key="member.id"
-              class="flex items-center justify-between text-sm"
+              class="flex items-center justify-between text-xl"
             >
-              <span>{{ member.name }} <span class="text-gray-400">({{ member.email }})</span></span>
-              <span class="text-xs text-gray-400 capitalize">{{ member.role === 'owner' ? 'Owner' : 'Member' }}</span>
+              <span>{{ member.name }} <span class="text-gray-400 text-base">({{ member.email }})</span></span>
+              <span class="text-base text-gray-400 capitalize">{{ member.role === 'owner' ? 'Owner' : 'Member' }}</span>
             </li>
           </ul>
         </div>
@@ -61,13 +67,13 @@
 
       <!-- Joined households -->
       <section v-if="data.joinedHouseholds.length > 0">
-        <h2 class="text-base font-semibold mb-4 border-b-2 border-black pb-1">Joined households</h2>
+        <h2 class="text-xl font-semibold mb-4 border-b-2 border-black pb-1">Joined households</h2>
 
         <ul class="space-y-3">
           <li
             v-for="household in data.joinedHouseholds"
             :key="household.id"
-            class="flex items-center justify-between text-sm"
+            class="flex items-center justify-between text-xl"
           >
             <span class="font-medium">{{ household.name }}</span>
             <button @click="leave(household.id)" class="text-red-600 underline hover:text-red-800 cursor-pointer">
@@ -86,6 +92,7 @@
 import { ref, onMounted } from 'vue'
 import { householdService } from '@/services/householdService'
 import AlertMessage from '@/components/elements/AlertMessage.vue'
+import HandDrawnDivider from '@/components/elements/HandDrawnDivider.vue'
 import type { iHouseholdOverview } from '@/types'
 
 const loading = ref(true)

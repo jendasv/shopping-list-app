@@ -11,7 +11,11 @@ const authStore = useAuthStore()
     <div class="w-full max-w-xl min-h-screen shadow-xl relative flex flex-col paper">
       <AppHeader v-if="authStore.isAuthenticated" />
       <main class="flex-1 p-8">
-        <RouterView />
+        <RouterView v-slot="{ Component }">
+          <Transition name="page" mode="out-in">
+            <component :is="Component" />
+          </Transition>
+        </RouterView>
       </main>
     </div>
   </div>

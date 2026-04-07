@@ -46,12 +46,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // Lists
     Route::get('/lists', [ShoppingListController::class, 'index']);
     Route::post('/lists', [ShoppingListController::class, 'store']);
+    Route::post('/lists/reorder', [ShoppingListController::class, 'reorder']);
     Route::get('/lists/{id}/items', [ShoppingListController::class, 'show']);
     Route::put('/lists/{id}', [ShoppingListController::class, 'update']);
     Route::delete('/lists/{id}', [ShoppingListController::class, 'destroy']);
 
     // Items
     Route::post('/lists/{id}/item', [ItemController::class, 'store']);
+    Route::post('/lists/{id}/items/reorder', [ItemController::class, 'reorder']);
     Route::get('/lists/{id}/items/{itemId}', [ItemController::class, 'show']);
     Route::put('/lists/{id}/items/{itemId}', [ItemController::class, 'update']);
     Route::delete('/lists/{id}/items/{itemId}', [ItemController::class, 'destroy']);

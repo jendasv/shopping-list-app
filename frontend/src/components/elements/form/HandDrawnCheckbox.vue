@@ -19,7 +19,7 @@
       <!-- čtverec (ručně kreslený) -->
       <path
         :class="strokeClass"
-        d="M8 10 Q10 6 20 8 Q30 10 32 20 Q30 30 20 32 Q10 30 8 20 Z"
+        d="M8 9 C 14 7.5, 26 8.5, 32 9 C 32.5 15, 32 25, 32 31 C 26 32.5, 14 31.5, 8 31 C 7.5 25, 8 15, 8 9 Z"
         stroke-width="2.2"
         stroke-linecap="round"
         stroke-linejoin="round"
@@ -29,7 +29,7 @@
       <path
         v-if="model"
         :class="strokeClass"
-        d="M12 22 Q18 28 20 26 Q26 18 34 12"
+        d="M11 22 Q18 29 20 27 Q27 18 36 11"
         stroke-width="2.2"
         stroke-linecap="round"
         stroke-linejoin="round"

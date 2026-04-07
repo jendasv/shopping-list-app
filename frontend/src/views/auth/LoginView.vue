@@ -2,11 +2,11 @@
   <div class="min-h-screen flex items-center justify-center px-8 py-12">
     <div class="w-full max-w-sm">
       <h1 class="text-2xl font-bold mb-2">Sign in</h1>
-      <p class="text-gray-500 text-sm mb-8">Welcome back.</p>
+      <p class="text-gray-500 text-base mb-8">Welcome back.</p>
 
       <form @submit.prevent="handleLogin" class="space-y-4">
         <div>
-          <label class="block text-sm font-medium mb-1">Email</label>
+          <label class="block text-base font-medium mb-1">Email</label>
           <input
             v-model="form.email"
             type="email"
@@ -16,7 +16,7 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1">Password</label>
+          <label class="block text-base font-medium mb-1">Password</label>
           <input
             v-model="form.password"
             type="password"
@@ -27,7 +27,7 @@
           <div class="text-right mt-1">
             <RouterLink
               :to="{ name: 'forgot-password' }"
-              class="text-xs text-gray-500 hover:underline"
+              class="text-sm text-gray-500 hover:underline"
             >
               Forgot password?
             </RouterLink>
@@ -41,7 +41,7 @@
         </button>
       </form>
 
-      <p class="text-center text-sm text-gray-500 mt-6">
+      <p class="text-center text-base text-gray-500 mt-6">
         Don't have an account?
         <RouterLink :to="{ name: 'landing' }" class="font-medium underline">
           Sign up

@@ -13,7 +13,8 @@ RUN apt-get update && apt-get install -y \
         pdo_mysql \
         intl \
         zip \
-        mbstring
+        mbstring \
+        pcntl
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 

@@ -2,16 +2,16 @@
   <div class="min-h-screen flex flex-col md:flex-row">
 
     <!-- Right side — registration (first on mobile) -->
-    <div class="flex-1 flex flex-col justify-center px-8 py-12 md:px-12 order-1 md:order-2">
+    <div class="flex-1 flex flex-col justify-center px-8 py-12 md:pl-8 md:pr-0 order-1 md:order-2">
       <div class="max-w-sm mx-auto w-full">
         <h1 class="text-2xl font-bold mb-2">Get started</h1>
-        <p class="text-gray-500 text-sm mb-8">
+        <p class="text-gray-500 text-base mb-8">
           No credit card. No complexity.
         </p>
 
         <form @submit.prevent="handleRegister" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium mb-1">Name</label>
+            <label class="block text-base font-medium mb-1">Name</label>
             <input
               v-model="form.name"
               type="text"
@@ -21,7 +21,7 @@
             />
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Email</label>
+            <label class="block text-base font-medium mb-1">Email</label>
             <input
               v-model="form.email"
               type="email"
@@ -31,7 +31,7 @@
             />
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Password</label>
+            <label class="block text-base font-medium mb-1">Password</label>
             <input
               v-model="form.password"
               type="password"
@@ -41,7 +41,7 @@
             />
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Confirm password</label>
+            <label class="block text-base font-medium mb-1">Confirm password</label>
             <input
               v-model="form.password_confirmation"
               type="password"
@@ -62,7 +62,7 @@
           </button>
         </form>
 
-        <p class="text-center text-sm text-gray-500 mt-6">
+        <p class="text-center text-base text-gray-500 mt-6">
           Already have an account?
           <RouterLink :to="{ name: 'login' }" class="font-medium underline">
             Sign in
@@ -72,14 +72,14 @@
     </div>
 
     <!-- Left side — preview (second on mobile) -->
-    <div class="flex-1 flex flex-col justify-center items-center px-8 py-12 border-b-2 md:border-b-0 md:border-r-2 border-black order-2 md:order-1">
+    <div class="flex-1 flex flex-col justify-center items-center px-8 py-12 md:pr-8 md:pl-0 border-b-2 md:border-b-0 md:border-r-2 border-black order-2 md:order-1">
       <div class="max-w-sm text-center">
         <Typewrite
           :texts="['Shopping.', 'Packing for trips.', 'Shared with family.']"
           class="text-3xl font-bold mb-6"
         />
         <HandDrawnDivider class="mb-6" />
-        <ul class="space-y-3 text-left text-sm">
+        <ul class="space-y-3 text-left text-base">
           <li class="flex items-start gap-2">
             <span class="mt-0.5">✓</span>
             <span>Real-time shared lists with your partner or family</span>

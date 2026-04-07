@@ -1,11 +1,14 @@
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import type { iShoppingList, iItem } from '@/types'
 import { fetchList } from '@/services/shoppingListService'
 import { createItem, updateItem, deleteItem } from '@/services/itemService'
+import { useAuthStore } from '@/stores/auth'
+import echo from '@/plugins/echo'
 
 export function useListDetail(id: string) {
   const route = useRoute()
+  const authStore = useAuthStore()
   const list = ref<iShoppingList | null>(null)
   const error = ref<string>('')
   const isLoading = ref<boolean>(false)
@@ -14,16 +17,47 @@ export function useListDetail(id: string) {
   onMounted(async () => {
     if (route.meta.list) {
       list.value = route.meta.list
-      return
+    } else {
+      isLoading.value = true
+      try {
+        list.value = await fetchList(id)
+      } catch (e) {
+        console.error('Failed to load list:', e)
+      } finally {
+        isLoading.value = false
+      }
     }
-    isLoading.value = true
-    try {
-      list.value = await fetchList(id)
-    } catch (e) {
-      console.error('Failed to load list:', e)
-    } finally {
-      isLoading.value = false
-    }
+
+    const householdId = authStore.user?.householdId
+    if (!householdId) return
+
+    echo
+      .private(`household.${householdId}`)
+      .listen('.ItemAdded', (data: iItem & { shoppingListId: number }) => {
+        if (!list.value || data.shoppingListId !== list.value.id) return
+        if (list.value.items.some((i) => i.id === data.id)) return
+        list.value.items.push(data)
+      })
+      .listen('.ItemUpdated', (data: iItem & { shoppingListId: number }) => {
+        if (!list.value || data.shoppingListId !== list.value.id) return
+        list.value.items = list.value.items.map((i) => (i.id === data.id ? { ...i, ...data } : i))
+      })
+      .listen('.ItemDeleted', (data: { id: number; listId: number }) => {
+        if (!list.value || data.listId !== list.value.id) return
+        list.value.items = list.value.items.filter((i) => i.id !== data.id)
+      })
+      .listen('.ItemsReordered', (data: { listId: number; order: number[] }) => {
+        if (!list.value || data.listId !== list.value.id) return
+        const indexMap = new Map(data.order.map((id, pos) => [id, pos]))
+        list.value.items = [...list.value.items].sort(
+          (a, b) => (indexMap.get(a.id) ?? 0) - (indexMap.get(b.id) ?? 0),
+        )
+      })
+  })
+
+  onUnmounted(() => {
+    const householdId = authStore.user?.householdId
+    if (householdId) echo.leave(`household.${householdId}`)
   })
 
   async function removeItemFromList(listId: number, itemId: number) {
@@ -39,12 +73,15 @@ export function useListDetail(id: string) {
 
   async function setComplete(listId: number, itemId: number, isCompleted: boolean) {
     if (!list.value) return
+    list.value.items = list.value.items.map((item: iItem) =>
+      item.id === itemId ? { ...item, isCompleted: !isCompleted } : item,
+    )
     try {
       await updateItem(listId, itemId, { isCompleted: !isCompleted })
-      list.value.items = list.value.items.map((item: iItem) =>
-        item.id === itemId ? { ...item, isCompleted: !isCompleted } : item,
-      )
     } catch (e) {
+      list.value.items = list.value.items.map((item: iItem) =>
+        item.id === itemId ? { ...item, isCompleted } : item,
+      )
       console.error('Failed to update item:', e)
       error.value = 'Failed to update item. Try again.'
     }

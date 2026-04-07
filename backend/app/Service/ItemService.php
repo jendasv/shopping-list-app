@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\Events\ItemAdded;
 use App\Events\ItemDeleted;
+use App\Events\ItemsReordered;
 use App\Events\ItemUpdated;
 use App\Exceptions\Domain\ResourceNotFoundException;
 use App\Exceptions\Domain\ValidationException;
@@ -48,6 +49,7 @@ class ItemService
             $item->quantity = (int) $data['quantity'];
             $item->is_completed = false;
             $item->shopping_list_id = $list->id;
+            $item->sort_order = Item::where('shopping_list_id', $list->id)->max('sort_order') + 1;
             $item->save();
         } catch (Throwable $e) {
             throw new DatabaseOperationException('Failed to create item: '.$e->getMessage());
@@ -98,6 +100,24 @@ class ItemService
         }
 
         return $this->itemMapper->map($item);
+    }
+
+    /**
+     * @param  array<int, int>  $orderedIds
+     */
+    public function reorderItems(int $listId, array $orderedIds, User $user): void
+    {
+        $list = $this->shoppingListService->findList($listId, $user);
+
+        foreach ($orderedIds as $position => $itemId) {
+            Item::where('id', $itemId)
+                ->where('shopping_list_id', $listId)
+                ->update(['sort_order' => $position]);
+        }
+
+        if ($list->household_id) {
+            broadcast(new ItemsReordered($list->household_id, $listId, $orderedIds))->toOthers();
+        }
     }
 
     public function deleteItem(int $listId, int $itemId, User $user): void

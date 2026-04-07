@@ -32,7 +32,7 @@
     <!-- CHECKBOX -->
     <div class="flex items-center gap-2">
       <HandDrawnCheckbox v-model="item.isCompleted" sizeClass="w-7 h-7">
-        Already bought?
+        Fulfilled?
       </HandDrawnCheckbox>
     </div>
 

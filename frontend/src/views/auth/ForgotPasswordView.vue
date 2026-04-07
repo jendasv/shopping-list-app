@@ -2,13 +2,13 @@
   <div class="min-h-screen flex items-center justify-center px-8 py-12">
     <div class="w-full max-w-sm">
       <h1 class="text-2xl font-bold mb-2">Forgot password</h1>
-      <p class="text-gray-500 text-sm mb-8">
+      <p class="text-gray-500 text-base mb-8">
         Enter your email and we'll send you a reset link.
       </p>
 
       <form v-if="!sent" @submit.prevent="handleSubmit" class="space-y-4">
         <div>
-          <label class="block text-sm font-medium mb-1">Email</label>
+          <label class="block text-base font-medium mb-1">Email</label>
           <input
             v-model="email"
             type="email"
@@ -31,7 +31,7 @@
         message="Link sent. Check your email."
       />
 
-      <p class="text-center text-sm text-gray-500 mt-6">
+      <p class="text-center text-base text-gray-500 mt-6">
         <RouterLink :to="{ name: 'login' }" class="font-medium underline">
           Back to sign in
         </RouterLink>

@@ -36,4 +36,12 @@ class ItemController extends Controller
 
         return new JsonResponse(null, 204);
     }
+
+    public function reorder(Request $request, int $id): JsonResponse
+    {
+        $request->validate(['order' => ['required', 'array'], 'order.*' => ['integer']]);
+        $this->itemService->reorderItems($id, $request->input('order'), $request->user());
+
+        return new JsonResponse(null, 204);
+    }
 }

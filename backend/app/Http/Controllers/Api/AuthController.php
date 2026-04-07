@@ -151,6 +151,7 @@ class AuthController extends Controller
             'email' => $user->email,
             'emailVerifiedAt' => $user->email_verified_at,
             'isSuperAdmin' => $user->isSuperAdmin(),
+            'householdId' => $user->household()?->id,
         ];
     }
 }

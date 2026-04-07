@@ -4,15 +4,17 @@
 
     <!-- Profile -->
     <section>
-      <h2 class="text-base font-semibold mb-4 border-b-2 border-black pb-1">Profile</h2>
-      <form @submit.prevent="saveProfile" class="space-y-3">
-        <div>
-          <label class="block text-sm font-medium mb-1">Name</label>
-          <input v-model="profile.name" type="text" required class="input-field" />
+      <h2 class="text-xl font-semibold mb-4 border-b-2 border-black pb-1">Profile</h2>
+      <form @submit.prevent="saveProfile" class="space-y-4">
+        <div class="flex flex-col text-xl">
+          <label class="text-gray-900 mb-1">Name
+            <input v-model="profile.name" type="text" required class="w-full p-2 focus:outline-none focus:border-gray-600 text-gray-900" />
+          </label>
         </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Email</label>
-          <input v-model="profile.email" type="email" required class="input-field" />
+        <div class="flex flex-col text-xl">
+          <label class="text-gray-900 mb-1">Email
+            <input v-model="profile.email" type="email" required class="w-full p-2 focus:outline-none focus:border-gray-600 text-gray-900" />
+          </label>
         </div>
         <AlertMessage v-if="profileError" type="error" :message="profileError" />
         <AlertMessage v-if="profileSuccess" type="success" :message="profileSuccess" />
@@ -24,19 +26,22 @@
 
     <!-- Password -->
     <section>
-      <h2 class="text-base font-semibold mb-4 border-b-2 border-black pb-1">Change password</h2>
-      <form @submit.prevent="savePassword" class="space-y-3">
-        <div>
-          <label class="block text-sm font-medium mb-1">Current password</label>
-          <input v-model="password.current" type="password" required class="input-field" />
+      <h2 class="text-xl font-semibold mb-4 border-b-2 border-black pb-1">Change password</h2>
+      <form @submit.prevent="savePassword" class="space-y-4">
+        <div class="flex flex-col text-xl">
+          <label class="text-gray-900 mb-1">Current password
+            <input v-model="password.current" type="password" required class="w-full p-2 focus:outline-none focus:border-gray-600 text-gray-900" />
+          </label>
         </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">New password</label>
-          <input v-model="password.next" type="password" placeholder="At least 8 characters" required class="input-field" />
+        <div class="flex flex-col text-xl">
+          <label class="text-gray-900 mb-1">New password
+            <input v-model="password.next" type="password" placeholder="At least 8 characters" required class="w-full p-2 focus:outline-none focus:border-gray-600 text-gray-900" />
+          </label>
         </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Confirm new password</label>
-          <input v-model="password.confirm" type="password" required class="input-field" />
+        <div class="flex flex-col text-xl">
+          <label class="text-gray-900 mb-1">Confirm new password
+            <input v-model="password.confirm" type="password" required class="w-full p-2 focus:outline-none focus:border-gray-600 text-gray-900" />
+          </label>
         </div>
         <AlertMessage v-if="passwordError" type="error" :message="passwordError" />
         <AlertMessage v-if="passwordSuccess" type="success" :message="passwordSuccess" />
@@ -114,7 +119,4 @@ async function savePassword() {
     passwordLoading.value = false
   }
 }
-
-
 </script>
-

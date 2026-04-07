@@ -1,8 +1,11 @@
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import type { iShoppingList } from '@/types'
 import { fetchAllLists, createList, updateList, deleteList } from '@/services/shoppingListService'
+import { useAuthStore } from '@/stores/auth'
+import echo from '@/plugins/echo'
 
 export function useShoppingLists() {
+  const authStore = useAuthStore()
   const lists = ref<iShoppingList[]>([])
   const error = ref<string>('')
   const isLoading = ref<boolean>(false)
@@ -18,6 +21,18 @@ export function useShoppingLists() {
     } finally {
       isLoading.value = false
     }
+
+    const householdId = authStore.user?.householdId
+    if (!householdId) return
+
+    echo.private(`household.${householdId}`).listen('.ListUpdated', (data: iShoppingList) => {
+      lists.value = lists.value.map((l) => (l.id === data.id ? { ...l, name: data.name } : l))
+    })
+  })
+
+  onUnmounted(() => {
+    const householdId = authStore.user?.householdId
+    if (householdId) echo.leave(`household.${householdId}`)
   })
 
   function startEditList(list: iShoppingList) {
@@ -46,7 +61,7 @@ export function useShoppingLists() {
     }
     try {
       const data = await createList(name.trim(), 'private')
-      lists.value.push({ id: data.id, name: data.name, isNew: true, items: [] })
+      lists.value.push({ id: data.id, name: data.name, visibility: data.visibility, isOwner: data.isOwner, sortOrder: data.sortOrder, isNew: true, items: [] })
     } catch (e) {
       console.error('Failed to create list:', e)
       error.value = 'Failed to create list. Try again.'

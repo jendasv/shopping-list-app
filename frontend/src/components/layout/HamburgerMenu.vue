@@ -29,7 +29,7 @@
           :key="item.name"
           :to="item.to"
           @click="close"
-          class="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-gray-50 transition-colors"
+          class="flex items-center gap-3 px-4 py-3 text-xl font-medium hover:bg-gray-50 transition-colors"
         >
           {{ item.label }}
         </RouterLink>

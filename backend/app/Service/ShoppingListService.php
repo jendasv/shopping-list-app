@@ -12,14 +12,19 @@ use App\Exceptions\Infrastructure\DatabaseOperationException;
 use App\Mapper\ShoppingListMapper;
 use App\Models\ShoppingList;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class ShoppingListService
 {
     public function __construct(
         private readonly ShoppingListMapper $shoppingListMapper,
-        private readonly ItemService $itemService,
     ) {}
+
+    private function itemService(): ItemService
+    {
+        return app(ItemService::class);
+    }
 
     /**
      * @return array<int, array<string, mixed>>
@@ -28,20 +33,26 @@ class ShoppingListService
     {
         $household = $user->household();
 
-        $query = ShoppingList::with('items');
+        $query = ShoppingList::with(['items' => fn ($q) => $q->orderBy('sort_order')])
+            ->leftJoin('list_user_order', function ($join) use ($user) {
+                $join->on('list_user_order.shopping_list_id', '=', 'shopping_list.id')
+                    ->where('list_user_order.user_id', '=', $user->id);
+            })
+            ->select('shopping_list.*', 'list_user_order.sort_order as user_sort_order')
+            ->orderByRaw('ISNULL(list_user_order.sort_order), list_user_order.sort_order');
 
         if ($household) {
-            $query->where('household_id', $household->id)
+            $query->where('shopping_list.household_id', $household->id)
                 ->where(function ($q) use ($user) {
-                    $q->where('visibility', ShoppingListVisibility::Shared->value)
-                        ->orWhere('created_by', $user->id);
+                    $q->where('shopping_list.visibility', ShoppingListVisibility::Shared->value)
+                        ->orWhere('shopping_list.created_by', $user->id);
                 });
         } else {
-            $query->where('created_by', $user->id);
+            $query->where('shopping_list.created_by', $user->id);
         }
 
         return $query->get()
-            ->map(fn ($list) => $this->shoppingListMapper->map($list, listOnly: true))
+            ->map(fn ($list) => $this->shoppingListMapper->map($list, listOnly: true, user: $user))
             ->values()
             ->all();
     }
@@ -50,7 +61,7 @@ class ShoppingListService
     {
         $household = $user->household();
 
-        $query = ShoppingList::with('items')->where('id', $id);
+        $query = ShoppingList::with(['items' => fn ($q) => $q->orderBy('sort_order')])->where('id', $id);
 
         if ($household) {
             $query->where('household_id', $household->id)
@@ -76,7 +87,7 @@ class ShoppingListService
      */
     public function getList(int $id, User $user): array
     {
-        return $this->shoppingListMapper->map($this->findList($id, $user));
+        return $this->shoppingListMapper->map($this->findList($id, $user), user: $user);
     }
 
     /**
@@ -99,16 +110,28 @@ class ShoppingListService
 
             if (! empty($data['items']) && is_array($data['items'])) {
                 foreach ($data['items'] as $itemData) {
-                    $this->itemService->createItem($itemData, $list);
+                    $this->itemService()->createItem($itemData, $list);
                 }
             }
 
             $list->load('items');
+
+            $maxOrder = DB::table('list_user_order')->where('user_id', $user->id)->max('sort_order') ?? -1;
+            DB::table('list_user_order')->insert([
+                'user_id' => $user->id,
+                'shopping_list_id' => $list->id,
+                'sort_order' => $maxOrder + 1,
+            ]);
         } catch (Throwable $e) {
             throw new DatabaseOperationException('Failed to create shopping list: '.$e->getMessage());
         }
 
-        return $this->shoppingListMapper->map($list);
+        $list->user_sort_order = DB::table('list_user_order')
+            ->where('user_id', $user->id)
+            ->where('shopping_list_id', $list->id)
+            ->value('sort_order');
+
+        return $this->shoppingListMapper->map($list, user: $user);
     }
 
     /**
@@ -133,7 +156,20 @@ class ShoppingListService
             broadcast(new ListUpdated($list->household_id, $this->shoppingListMapper->map($list, listOnly: true)))->toOthers();
         }
 
-        return $this->shoppingListMapper->map($list);
+        return $this->shoppingListMapper->map($list, user: $user);
+    }
+
+    /**
+     * @param  array<int, int>  $orderedIds
+     */
+    public function reorderLists(array $orderedIds, User $user): void
+    {
+        foreach ($orderedIds as $position => $id) {
+            DB::table('list_user_order')->updateOrInsert(
+                ['user_id' => $user->id, 'shopping_list_id' => $id],
+                ['sort_order' => $position],
+            );
+        }
     }
 
     public function deleteList(int $id, User $user): void

@@ -30,3 +30,17 @@ export async function updateList(id: number, name: string): Promise<iShoppingLis
 export async function deleteList(id: number): Promise<void> {
   return apiFetch<void>(`/lists/${id}`, { method: 'DELETE' })
 }
+
+export async function reorderLists(order: number[]): Promise<void> {
+  return apiFetch<void>('/lists/reorder', {
+    method: 'POST',
+    body: JSON.stringify({ order }),
+  })
+}
+
+export async function reorderItems(listId: number, order: number[]): Promise<void> {
+  return apiFetch<void>(`/lists/${listId}/items/reorder`, {
+    method: 'POST',
+    body: JSON.stringify({ order }),
+  })
+}

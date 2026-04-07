@@ -1,8 +1,9 @@
-const API_URL = import.meta.env.VITE_API_URL as string
-const BASE_URL = import.meta.env.VITE_BASE_URL as string
+import echo from '@/plugins/echo'
+
+const API_URL = '/api'
 
 async function getCsrfCookie(): Promise<void> {
-  await fetch(`${BASE_URL}/sanctum/csrf-cookie`, {
+  await fetch('/sanctum/csrf-cookie', {
     credentials: 'include',
   })
 }
@@ -19,11 +20,13 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
     await getCsrfCookie()
   }
 
+  const socketId = echo.socketId()
   const response = await fetch(`${API_URL}${endpoint}`, {
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
       'X-XSRF-TOKEN': getXsrfToken(),
+      ...(socketId ? { 'X-Socket-Id': socketId } : {}),
       ...options.headers,
     },
     credentials: 'include',

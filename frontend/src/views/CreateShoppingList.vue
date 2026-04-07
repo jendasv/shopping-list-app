@@ -9,15 +9,16 @@
     </div>
 
     <!-- List name -->
-    <div class="mb-6">
-      <label class="block text-sm font-medium mb-1">List name</label>
-      <input
-        v-model="shoppingListName"
-        type="text"
-        placeholder="e.g. Weekly shopping"
-        class="input-field"
-        @input="error = ''"
-      />
+    <div class="mb-6 flex flex-col text-xl">
+      <label class="text-gray-900 mb-1">List name
+        <input
+          v-model="shoppingListName"
+          type="text"
+          placeholder="e.g. Weekly shopping"
+          class="w-full p-2 focus:outline-none focus:border-gray-600 text-gray-900"
+          @input="error = ''"
+        />
+      </label>
     </div>
 
     <HandDrawnDivider class="mb-5" />
@@ -37,17 +38,17 @@
 
       <AddItemForm @add="addItem" v-model:showAddForm="showItemAddForm" />
 
-      <ul v-if="items.length" class="space-y-2 mt-3">
+      <ul v-if="items.length" class="space-y-6 mt-3">
         <li
           v-for="item in items"
           :key="item.id"
-          class="flex items-center justify-between border-2 border-black rounded-md px-3 py-2 text-sm"
+          class="flex items-center justify-between"
         >
-          <span :class="item.isCompleted ? 'line-through text-gray-400' : ''">
-            <Typewrite v-if="item.isNew" :text="item.name + ' — ' + item.quantity + 'x'" @done="item.isNew = false" />
-            <span v-else>{{ item.name }} — {{ item.quantity }}x</span>
+          <span class="text-2xl" :class="item.isCompleted ? 'line-through text-gray-400' : ''">
+            <Typewrite v-if="item.isNew" :text="item.quantity > 1 ? item.name + ' — ' + item.quantity + 'x' : item.name" @done="item.isNew = false" />
+            <span v-else>{{ item.name }}{{ item.quantity > 1 ? ' — ' + item.quantity + 'x' : '' }}</span>
           </span>
-          <button @click="removeItem(item.id)" class="text-red-400 hover:text-red-600 text-xl leading-none ml-2">×</button>
+          <button @click="removeItem(item.id)" class="text-red-400 hover:text-red-600 text-3xl leading-none ml-3">×</button>
         </li>
       </ul>
       <p v-else-if="!showItemAddForm" class="text-sm text-gray-400 mt-2">No items yet.</p>

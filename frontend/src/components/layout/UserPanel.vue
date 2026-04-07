@@ -16,8 +16,8 @@
       >
         <!-- User info -->
         <div class="px-4 py-3 border-b border-gray-100">
-          <p class="text-sm font-semibold truncate">{{ user?.name }}</p>
-          <p class="text-xs text-gray-500 truncate">{{ user?.email }}</p>
+          <p class="text-base font-semibold truncate">{{ user?.name }}</p>
+          <p class="text-sm text-gray-500 truncate">{{ user?.email }}</p>
         </div>
 
         <!-- Menu items -->
@@ -25,7 +25,7 @@
           <RouterLink
             :to="{ name: 'settings' }"
             @click="close"
-            class="flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50 transition-colors"
+            class="flex items-center gap-2 px-4 py-2 text-xl hover:bg-gray-50 transition-colors"
           >
             Settings
           </RouterLink>
@@ -34,7 +34,7 @@
         <div class="border-t border-gray-100 py-1">
           <button
             @click="handleLogout"
-            class="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+            class="flex w-full items-center gap-2 px-4 py-2 text-xl text-red-600 hover:bg-red-50 transition-colors"
           >
             Sign out
           </button>

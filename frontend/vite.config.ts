@@ -56,8 +56,12 @@ export default defineConfig({
   },
   server: {
     host: true,
-    // proxy: {
-    //   '/api': 'http://localhost:8080'
-    // }
+    allowedHosts: 'all',
+    proxy: {
+      '/api': { target: 'http://nginx:80', changeOrigin: true },
+      '/sanctum': { target: 'http://nginx:80', changeOrigin: true },
+      '/broadcasting': { target: 'http://nginx:80', changeOrigin: true },
+      '/app': { target: 'ws://reverb:6001', ws: true, changeOrigin: true },
+    },
   },
 })

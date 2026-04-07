@@ -201,6 +201,7 @@ Bez toho to nefunguje:
 - [ ] Sdílený nákupní seznam s real-time sync (Laravel Reverb)
 - [ ] Přidat / odškrtnout / smazat položku
 - [ ] PWA — instalovatelné na telefon
+- [ ] Zaškrtnutá položka se automaticky přesune na spodek seznamu (sort_order)
 
 ### Fáze 2 — Superadmin
 Správa systému — lepší mít od začátku než dodělávat zpětně:
@@ -218,7 +219,25 @@ Musí být před šablonami — vše ostatní stojí na katalogu:
 - [ ] Uložit položku ze seznamu do katalogu
 - [ ] Přidat produkt z katalogu do seznamu
 
-### Fáze 4 — Templates (šablony)
+### Fáze 4 — Skupiny a štítky položek v seznamu
+Obdoba skupin karet v Google Chrome — logické sekce uvnitř jednoho seznamu realizované přes štítky (labels):
+- [ ] Štítek (Label) — předdefinovaný v rámci household, s názvem a barvou (např. "Osobní věci" 🔵, "Koupelna" 🟣, "Ovoce" 🟢, "Pekárna" 🟡)
+- [ ] Položka může mít přiřazený štítek → vizuálně barevný border na levé straně + kurzivový nadpis skupiny
+- [ ] Položky bez štítku tvoří výchozí skupinu
+- [ ] Drag & drop položek mezi skupinami i uvnitř skupin
+- [ ] Skupiny lze sbalit / rozbalit
+- [ ] Použití: balení na cesty (sekce per osoba), nákup (sekce per oddělení supermarketu)
+
+### Fáze 5 — Hromadné akce a řazení v seznamech
+- [ ] Hromadný výběr položek (checkbox mode) — aktivuje se dlouhým stiskem nebo dedikovaným tlačítkem
+- [ ] Hromadné mazání vybraných položek
+- [ ] Hromadné přiřazení štítku / skupiny
+- [ ] Hromadné označení jako splněno / nesplněno
+- [ ] Řazení seznamu — podle názvu (A–Z), počtu kusů, stavu (splněno/nesplněno), vlastního pořadí (drag & drop)
+- [ ] Řazení je dočasné (view preference) nebo trvalé — TBD
+
+### Fáze 6 — Templates (šablony)
+
 Šablony nahrazují původní koncept receptů — jsou obecnější:
 - [ ] Template = pojmenovaná skupina produktů z katalogu
 - [ ] Kategorie šablon (Vaření / Cestování / Domácnost / Sport / ...)
@@ -226,16 +245,16 @@ Musí být před šablonami — vše ostatní stojí na katalogu:
 - [ ] Vytvořit nový seznam ze šablony
 - [ ] Příklady: Chleba, Dovolená u moře, Horská turistika, Úklid bytu, Grilování...
 
-### Fáze 5 — Inventář
+### Fáze 7 — Inventář
 - [ ] Potvrzení dokončeného nákupu
 - [ ] Automatická aktualizace zásob po potvrzení
 - [ ] Přehled co máš doma
 - [ ] Návrhy co dochází při tvoření nového seznamu
 
-### Fáze 6 — Notifikace
+### Fáze 8 — Notifikace
 - [ ] In-app notifikace — oznámení o sdílení seznamu, přidání položky partnerem apod.
 
-### Fáze 7 — Monetizace a růst
+### Fáze 9 — Monetizace a růst
 Filozofie: co nejvíc uživatelů za malou částku. Ne vysoký ticket, ale objem.
 - [ ] Onboarding pro nové uživatele
 - [ ] Štědrý free tier — uživatel musí zažít hodnotu než zaplatí
@@ -255,6 +274,11 @@ Filozofie: co nejvíc uživatelů za malou částku. Ne vysoký ticket, ale obje
 #### Infrastruktura
 - **Nyní:** Hetzner VPS (~€4/měsíc) — běží vše na jednom serveru (PHP, MySQL, Reverb), Resend pro emaily (free tier)
 - **Do budoucna:** Škálování řešit až při potřebě (500+ aktivních uživatelů)
+
+#### ⚠️ Před nasazením na produkci — Queue Worker
+Broadcasting eventy (`ItemAdded`, `ItemUpdated`, `ItemDeleted`, `ListUpdated`) aktuálně používají `ShouldBroadcastNow` — broadcast se provede synchronně v rámci HTTP requestu (bez fronty).
+Na produkci přepnout na `ShouldBroadcast` a spustit queue worker (`php artisan queue:work`).
+To vyžaduje: supervisor nebo systemd service na VPS, nebo dedikovaný worker kontejner v Docker Compose.
 
 ---
 

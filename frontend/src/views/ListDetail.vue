@@ -1,11 +1,12 @@
 <template>
   <div class="py-4">
+    <div v-if="menuOpenItemId !== null" class="fixed inset-0 z-10" @click="closeMenu()" />
     <!-- Header -->
     <div class="flex items-center gap-3 mb-6">
-      <RouterLink :to="{ name: 'home' }" class="text-gray-400 hover:text-black transition" title="Back">
+      <RouterLink :to="{ name: 'home' }" class="text-gray-400 hover:text-black transition shrink-0" title="Back">
         <ArrowLeft customClass="w-6 h-6" />
       </RouterLink>
-      <h1 v-if="list" class="text-2xl font-bold flex-1 truncate">{{ list.name }}</h1>
+      <h1 v-if="list" class="text-2xl font-bold flex-1 text-center truncate">{{ list.name }}</h1>
       <button
         v-if="!showItemAddForm"
         @click="showItemAddForm = true"
@@ -26,48 +27,63 @@
       <HandDrawnDivider class="my-4" />
 
       <!-- Items -->
-      <ul v-if="list.items && list.items.length" class="space-y-2">
+      <VueDraggablePlus
+        v-if="list.items && list.items.length"
+        v-model="list.items"
+        tag="ul"
+        class="space-y-3"
+        handle=".drag-handle"
+        @end="onReorderItems"
+      >
         <li
           v-for="item in list.items"
           :key="item.id"
-          class="flex items-center justify-between border-2 rounded-md px-3 py-2 transition-colors"
-          :class="item.isCompleted ? 'border-gray-200 bg-gray-50' : 'border-black'"
+          class="group flex items-center justify-between transition-colors"
         >
           <template v-if="editingItemId !== item.id">
+            <span class="drag-handle cursor-grab active:cursor-grabbing text-gray-200 group-hover:text-gray-400 mr-2 shrink-0 text-2xl leading-none select-none transition-colors">⠿</span>
             <button
-              class="flex-1 text-left text-sm transition"
-              :class="item.isCompleted ? 'line-through text-gray-400' : ''"
+              class="flex-1 text-left text-2xl transition hover:text-gray-600 hover:scale-105 duration-200"
+              :class="item.isCompleted ? 'text-gray-400' : ''"
               @click="setComplete(list.id, item.id, item.isCompleted)"
             >
-              <Typewrite v-if="item.isNew" :text="item.name + ' — ' + item.quantity + 'x'" @done="item.isNew = false" />
-              <span v-else>{{ item.name }} — {{ item.quantity }}x</span>
+              <Typewrite v-if="item.isNew" :text="item.quantity > 1 ? item.name + ' — ' + item.quantity + 'x' : item.name" @done="item.isNew = false" />
+              <HandDrawnStrikethrough v-else-if="item.isCompleted" :seed="item.id">{{ item.name }}{{ item.quantity > 1 ? ' — ' + item.quantity + 'x' : '' }}</HandDrawnStrikethrough>
+              <span v-else>{{ item.name }}{{ item.quantity > 1 ? ' — ' + item.quantity + 'x' : '' }}</span>
             </button>
-            <div class="flex items-center gap-2 ml-2 shrink-0">
-              <button @click="startEdit(item)" class="text-gray-400 hover:text-black transition" title="Edit">
-                <HandDrawnPencil sizeClass="w-5 h-5" />
-              </button>
-              <button @click="removeItemFromList(list.id, item.id)" class="text-red-400 hover:text-red-600 text-xl leading-none transition" title="Delete">×</button>
-            </div>
+
+            <RowActions :id="item.id" :open="menuOpenItemId === item.id" @toggle="toggleMenu" @close="closeMenu">
+              <template #desktop>
+                <button @click="startEdit(item)" class="text-gray-400 hover:text-black transition" title="Edit">
+                  <HandDrawnPencil sizeClass="w-11 h-11" />
+                </button>
+                <button @click="removeItemFromList(list.id, item.id)" class="text-red-400 hover:text-red-600 text-4xl leading-none transition cursor-pointer" title="Delete">×</button>
+              </template>
+              <template #menu>
+                <button @click="startEdit(item); closeMenu()" class="w-full px-4 py-1.5 text-left text-base hover:bg-gray-50 transition-colors">Edit</button>
+                <button @click="removeItemFromList(list.id, item.id); closeMenu()" class="w-full px-4 py-1.5 text-left text-base text-red-500 hover:bg-red-50 transition-colors">Delete</button>
+              </template>
+            </RowActions>
           </template>
 
           <form v-else @submit.prevent="saveItem(list.id, item)" class="flex items-center gap-2 w-full">
             <input
               v-model="item.name"
               type="text"
-              class="flex-1 border-b-2 border-black text-sm px-1 py-0.5 outline-none"
+              class="flex-1 border-b-2 border-black text-base px-1 py-1 outline-none"
               autofocus
             />
             <input
               v-model.number="item.quantity"
               type="number"
               min="1"
-              class="w-14 border-b-2 border-black text-sm px-1 py-0.5 outline-none"
+              class="w-14 border-b-2 border-black text-base px-1 py-1 outline-none"
             />
-            <button type="submit" class="text-sm font-medium text-green-700">Save</button>
-            <button type="button" @click="editingItemId = null" class="text-sm text-gray-400">Cancel</button>
+            <button type="submit" class="text-base font-medium text-green-700 px-1 py-0.5 cursor-pointer">Save</button>
+            <button type="button" @click="editingItemId = null" class="text-base text-gray-400 px-1 py-0.5 cursor-pointer">Cancel</button>
           </form>
         </li>
-      </ul>
+      </VueDraggablePlus>
 
       <p v-else class="text-sm text-gray-400 text-center mt-6">
         No items yet. Add your first above.
@@ -79,17 +95,28 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { VueDraggable as VueDraggablePlus } from 'vue-draggable-plus'
 import { useListDetail } from '@/composables/useListDetail'
+import { reorderItems } from '@/services/shoppingListService'
 import AddItemForm from '@/components/form/AddItemForm.vue'
 import AlertMessage from '@/components/elements/AlertMessage.vue'
 import HandDrawnDivider from '@/components/elements/HandDrawnDivider.vue'
 import ArrowLeft from '@/components/icons/ArrowLeft.vue'
 import HandDrawnPencil from '@/components/icons/HandDrawnPencil.vue'
 import Typewrite from '@/components/animations/Typewrite.vue'
+import HandDrawnStrikethrough from '@/components/animations/HandDrawnStrikethrough.vue'
+import RowActions from '@/components/ui/RowActions.vue'
+import { useContextMenu } from '@/composables/useContextMenu'
 
 const route = useRoute()
 const id = route.params.id as string
 const showItemAddForm = ref(false)
+const { menuOpenId: menuOpenItemId, toggleMenu, closeMenu } = useContextMenu()
 
 const { list, error, isLoading, editingItemId, removeItemFromList, setComplete, addItem, startEdit, saveItem } = useListDetail(id)
+
+async function onReorderItems() {
+  if (!list.value) return
+  await reorderItems(list.value.id, list.value.items.map((i) => i.id))
+}
 </script>

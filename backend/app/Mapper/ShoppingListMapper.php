@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Mapper;
 
 use App\Models\ShoppingList;
+use App\Models\User;
 
 class ShoppingListMapper
 {
@@ -13,11 +14,14 @@ class ShoppingListMapper
     /**
      * @return array<string, mixed>
      */
-    public function map(ShoppingList $shoppingList, bool $listOnly = false): array
+    public function map(ShoppingList $shoppingList, bool $listOnly = false, ?User $user = null): array
     {
         $data = [
             'id' => $shoppingList->id,
             'name' => $shoppingList->name,
+            'visibility' => $shoppingList->visibility,
+            'isOwner' => $user !== null ? (int) $shoppingList->created_by === $user->id : null,
+            'sortOrder' => isset($shoppingList->user_sort_order) ? (int) $shoppingList->user_sort_order : null,
             'createdAt' => $shoppingList->created_at?->format('Y-m-d H:i:s'),
             'updatedAt' => $shoppingList->updated_at?->format('Y-m-d H:i:s'),
         ];

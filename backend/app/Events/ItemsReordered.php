@@ -10,14 +10,15 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class ListUpdated implements ShouldBroadcastNow
+class ItemsReordered implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public function __construct(
         private readonly int $householdId,
-        /** @var array<string, mixed> $data */
-        private readonly array $data,
+        private readonly int $listId,
+        /** @var array<int, int> $order */
+        private readonly array $order,
     ) {}
 
     public function broadcastOn(): array
@@ -29,12 +30,15 @@ class ListUpdated implements ShouldBroadcastNow
 
     public function broadcastAs(): string
     {
-        return 'ListUpdated';
+        return 'ItemsReordered';
     }
 
     /** @return array<string, mixed> */
     public function broadcastWith(): array
     {
-        return $this->data;
+        return [
+            'listId' => $this->listId,
+            'order' => $this->order,
+        ];
     }
 }

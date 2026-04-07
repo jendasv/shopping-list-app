@@ -41,4 +41,12 @@ class ShoppingListController extends Controller
 
         return new JsonResponse(null, 204);
     }
+
+    public function reorder(Request $request): JsonResponse
+    {
+        $request->validate(['order' => ['required', 'array'], 'order.*' => ['integer']]);
+        $this->shoppingListService->reorderLists($request->input('order'), $request->user());
+
+        return new JsonResponse(null, 204);
+    }
 }

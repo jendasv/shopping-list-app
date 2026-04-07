@@ -4,6 +4,7 @@ export interface iUser {
   email: string
   emailVerifiedAt: string | null
   isSuperAdmin: boolean
+  householdId: number | null
 }
 
 export interface iHouseholdMember {
@@ -39,6 +40,9 @@ export interface iItem {
 export interface iShoppingList {
   id: number
   name: string
+  visibility: 'shared' | 'private'
+  isOwner: boolean | null
+  sortOrder: number | null
   createdAt?: string
   updatedAt?: string
   isNew?: boolean

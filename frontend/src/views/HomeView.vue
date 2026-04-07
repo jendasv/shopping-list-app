@@ -1,5 +1,6 @@
 <template>
   <div class="py-4">
+    <div v-if="menuOpenId !== null" class="fixed inset-0 z-10" @click="closeMenu()" />
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold">My lists</h1>
       <RouterLink :to="{ name: 'new-list' }" class="btn-primary">+ New list</RouterLink>
@@ -7,40 +8,59 @@
 
     <p v-if="isLoading" class="text-sm text-gray-400 text-center mt-10">Loading...</p>
 
-    <ul v-else-if="lists.length" class="space-y-2">
+    <VueDraggablePlus
+      v-else-if="lists.length"
+      v-model="lists"
+      tag="ul"
+      class="space-y-3"
+      handle=".drag-handle"
+      @end="onReorderLists"
+    >
       <li
         v-for="list in lists"
         :key="list.id"
-        class="flex items-center justify-between border-2 border-black rounded-md px-3 py-2"
+        class="group flex items-center justify-between"
       >
         <template v-if="editingListId !== list.id">
+          <span class="drag-handle cursor-grab active:cursor-grabbing text-gray-200 group-hover:text-gray-400 mr-2 shrink-0 text-2xl leading-none select-none transition-colors">⠿</span>
           <RouterLink
             :to="{ name: 'list-detail', params: { id: list.id } }"
-            class="flex-1 text-sm font-medium hover:underline"
+            class="flex-1 flex items-baseline gap-3 hover:text-gray-600 transition duration-200 hover:scale-105"
           >
-            <Typewrite v-if="list.isNew" :text="list.name" @done="list.isNew = false" />
-            <span v-else>{{ list.name }}</span>
+            <span class="text-2xl">
+              <Typewrite v-if="list.isNew" :text="list.name" @done="list.isNew = false" />
+              <span v-else>{{ list.name }}</span>
+            </span>
+            <span v-if="list.visibility === 'shared'" class="text-gray-400 text-base">
+              shared — {{ list.isOwner ? 'owner' : 'member' }}
+            </span>
           </RouterLink>
-          <div class="flex items-center gap-2 ml-2 shrink-0">
-            <button @click="startEditList(list)" class="text-gray-400 hover:text-black transition" title="Rename">
-              <HandDrawnPencil sizeClass="w-5 h-5" />
-            </button>
-            <button @click="removeList(list.id)" class="text-red-400 hover:text-red-600 text-xl leading-none transition" title="Delete">×</button>
-          </div>
+          <RowActions :id="list.id" :open="menuOpenId === list.id" @toggle="toggleMenu" @close="closeMenu">
+            <template #desktop>
+              <button @click="startEditList(list)" class="text-gray-400 hover:text-black transition" title="Rename">
+                <HandDrawnPencil sizeClass="w-11 h-11" />
+              </button>
+              <button @click="removeList(list.id)" class="text-red-400 hover:text-red-600 text-4xl leading-none transition cursor-pointer" title="Delete">×</button>
+            </template>
+            <template #menu>
+              <button @click="startEditList(list); closeMenu()" class="w-full px-4 py-1.5 text-left text-base hover:bg-gray-50 transition-colors">Rename</button>
+              <button @click="removeList(list.id); closeMenu()" class="w-full px-4 py-1.5 text-left text-base text-red-500 hover:bg-red-50 transition-colors">Delete</button>
+            </template>
+          </RowActions>
         </template>
 
         <form v-else @submit.prevent="saveListName(list)" class="flex items-center gap-2 w-full">
           <input
             v-model="list.name"
             type="text"
-            class="flex-1 border-b-2 border-black text-sm px-1 py-0.5 outline-none"
+            class="flex-1 border-b-2 border-black text-base px-1 py-1 outline-none"
             autofocus
           />
-          <button type="submit" class="text-sm font-medium text-green-700">Save</button>
-          <button type="button" @click="editingListId = null" class="text-sm text-gray-400">Cancel</button>
+          <button type="submit" class="text-base font-medium text-green-700 px-1 py-0.5 cursor-pointer">Save</button>
+          <button type="button" @click="editingListId = null" class="text-base text-gray-400 px-1 py-0.5 cursor-pointer">Cancel</button>
         </form>
       </li>
-    </ul>
+    </VueDraggablePlus>
 
     <p v-else class="text-sm text-gray-400 text-center mt-10">
       No lists yet.
@@ -51,10 +71,18 @@
 
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
+import { VueDraggable as VueDraggablePlus } from 'vue-draggable-plus'
 import { useShoppingLists } from '@/composables/useShoppingLists'
+import { useContextMenu } from '@/composables/useContextMenu'
+import { reorderLists } from '@/services/shoppingListService'
 import Typewrite from '@/components/animations/Typewrite.vue'
 import HandDrawnPencil from '@/components/icons/HandDrawnPencil.vue'
+import RowActions from '@/components/ui/RowActions.vue'
 
 const { lists, isLoading, editingListId, startEditList, saveListName, removeList } = useShoppingLists()
-</script>
+const { menuOpenId, toggleMenu, closeMenu } = useContextMenu()
 
+async function onReorderLists() {
+  await reorderLists(lists.value.map((l) => l.id))
+}
+</script>

@@ -2,10 +2,12 @@
 
 use App\Exceptions\ApiException;
 use App\Exceptions\Domain\ValidationException;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,6 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->render(function (AuthenticationException $e, Request $request): JsonResponse {
+            return new JsonResponse(['error' => 'Unauthenticated.'], 401);
+        });
+
         $exceptions->render(function (ApiException $e): JsonResponse {
             $body = ['error' => $e->getMessage()];
 
