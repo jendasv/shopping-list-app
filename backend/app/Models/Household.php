@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'owner_id'])]
+#[Fillable(['name', 'owner_id', 'is_active'])]
 class Household extends Model
 {
     /** @return BelongsToMany<User, $this> */

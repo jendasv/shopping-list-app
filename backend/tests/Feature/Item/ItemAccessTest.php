@@ -1,0 +1,109 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Feature\Item;
+
+use App\Models\Item;
+use App\Models\ShoppingList;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class ItemAccessTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_user_cannot_add_item_to_another_users_list(): void
+    {
+        $owner = $this->createUserWithHousehold();
+        $other = $this->createUserWithHousehold();
+
+        $list = ShoppingList::factory()->create([
+            'household_id' => $owner->household()->id,
+            'created_by' => $owner->id,
+            'visibility' => 'shared',
+        ]);
+
+        $response = $this->actingAs($other)->postJson("/api/lists/{$list->id}/item", [
+            'name' => 'Milk',
+            'quantity' => 1,
+        ]);
+
+        $response->assertStatus(404);
+        $this->assertDatabaseMissing('item', ['shopping_list_id' => $list->id]);
+    }
+
+    public function test_user_cannot_update_item_on_another_users_list(): void
+    {
+        $owner = $this->createUserWithHousehold();
+        $other = $this->createUserWithHousehold();
+
+        $list = ShoppingList::factory()->create([
+            'household_id' => $owner->household()->id,
+            'created_by' => $owner->id,
+            'visibility' => 'shared',
+        ]);
+        $item = Item::factory()->create(['shopping_list_id' => $list->id]);
+
+        $response = $this->actingAs($other)->putJson("/api/lists/{$list->id}/items/{$item->id}", [
+            'name' => 'Hacked',
+            'quantity' => 1,
+            'isCompleted' => false,
+        ]);
+
+        $response->assertStatus(404);
+        $this->assertDatabaseMissing('item', ['id' => $item->id, 'name' => 'Hacked']);
+    }
+
+    public function test_user_cannot_delete_item_on_another_users_list(): void
+    {
+        $owner = $this->createUserWithHousehold();
+        $other = $this->createUserWithHousehold();
+
+        $list = ShoppingList::factory()->create([
+            'household_id' => $owner->household()->id,
+            'created_by' => $owner->id,
+            'visibility' => 'shared',
+        ]);
+        $item = Item::factory()->create(['shopping_list_id' => $list->id]);
+
+        $response = $this->actingAs($other)->deleteJson("/api/lists/{$list->id}/items/{$item->id}");
+
+        $response->assertStatus(404);
+        $this->assertDatabaseHas('item', ['id' => $item->id]);
+    }
+
+    public function test_household_member_can_add_item_to_shared_list(): void
+    {
+        $owner = $this->createUserWithHousehold();
+        $member = \App\Models\User::factory()->create();
+        $owner->household()->members()->attach($member->id, ['role' => 'member']);
+
+        $list = ShoppingList::factory()->create([
+            'household_id' => $owner->household()->id,
+            'created_by' => $owner->id,
+            'visibility' => 'shared',
+        ]);
+
+        $response = $this->actingAs($member)->postJson("/api/lists/{$list->id}/item", [
+            'name' => 'Butter',
+            'quantity' => 1,
+        ]);
+
+        $response->assertStatus(201);
+        $this->assertDatabaseHas('item', ['name' => 'Butter', 'shopping_list_id' => $list->id]);
+    }
+
+    public function test_nonexistent_item_returns_404(): void
+    {
+        $user = $this->createUserWithHousehold();
+        $list = ShoppingList::factory()->create([
+            'household_id' => $user->household()->id,
+            'created_by' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->deleteJson("/api/lists/{$list->id}/items/99999");
+
+        $response->assertStatus(404);
+    }
+}

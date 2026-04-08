@@ -35,6 +35,7 @@ services:
       MYSQL_DATABASE: shopping
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
     # more secure
 #    ports:
 #      - "3306:3306"

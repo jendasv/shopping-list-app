@@ -203,13 +203,71 @@ Bez toho to nefunguje:
 - [ ] PWA — instalovatelné na telefon
 - [ ] Zaškrtnutá položka se automaticky přesune na spodek seznamu (sort_order)
 
-### Fáze 2 — Superadmin
-Správa systému — lepší mít od začátku než dodělávat zpětně:
-- [ ] Superadmin flag na User modelu
-- [ ] Přehled uživatelů a households
-- [ ] Správa uživatelů (deaktivace, reset hesla)
-- [ ] Základní systémové statistiky
-- [ ] Do budoucna: notifikace, objednávky, fakturace
+### Fáze 1.1 — Backend testy ✅ HOTOVO
+
+**Infrastruktura**
+- [x] `shopping_test` MySQL databáze, `phpunit.xml` přepnut z SQLite na MySQL
+- [x] `TestCase` rozšířen o `spaPostJson()` a `createUserWithHousehold()` helpery
+
+**Implementované testy (79 testů / 164 assertions)**
+```
+tests/
+├── Feature/
+│   ├── Auth/
+│   │   ├── RegisterTest.php         — 7 testů (registrace, household auto-vytvoření, validace)
+│   │   ├── LoginTest.php            — 5 testů (správné/špatné heslo, validace)
+│   │   └── LogoutTest.php           — 2 testy
+│   ├── ShoppingList/
+│   │   ├── ShoppingListCrudTest.php    — 7 testů (CRUD, list_user_order)
+│   │   └── ShoppingListAccessTest.php  — 5 testů (cizí list = 404, shared/private viditelnost)
+│   ├── Item/
+│   │   ├── ItemCrudTest.php         — 7 testů (CRUD, validace, mark completed)
+│   │   └── ItemAccessTest.php       — 5 testů (cizí list = 404, member může přidat)
+│   ├── Household/
+│   │   └── HouseholdTest.php        — 10 testů (show, rename, leave, přesun listů)
+│   └── Invitation/
+│       └── InvitationTest.php       — 13 testů (send, accept, decline, expiry, reuse)
+└── Unit/
+    ├── Mapper/
+    │   ├── ItemMapperTest.php        — 3 testy (mapování polí, bool cast)
+    │   └── ShoppingListMapperTest.php — 8 testů (listOnly, isOwner, sortOrder, items)
+    └── Service/
+        └── ItemServiceTest.php      — 5 testů (createItem validace, sort_order, reorder)
+```
+
+**Nalezené a opravené bugy při psaní testů**
+- `is_active` chybělo v `fillable` na `Household` modelu → deaktivace household při přijetí pozvánky tiše selhávala
+
+**Pravidlo pro další vývoj**
+Při každé nové backend feature zvážit, zda přidat testy. Testy jsou nutné zejména pro:
+- business logiku s více kroky (invitation flow, přesun listů, billing)
+- access control (kdo má přístup k čemu)
+- validaci dat na vstupu
+
+Jednoduché CRUD bez logiky testovat není nutné.
+
+**Do budoucna (souběžně s dalšími fázemi)**
+- Policy/Authorization testy — owner vs member, superadmin (Fáze 2)
+- Billing testy — Stripe webhook handlery, trial expiry (Fáze 9)
+
+---
+
+### Fáze 2 — Superadmin (Filament)
+Správa systému přes **Filament admin panel** (`/admin`) — lepší mít od začátku než dodělávat zpětně.
+
+**Technologie: Filament v3**
+- Běží na `/admin`, odděleno od `/api`
+- Auth přes `is_super_admin` flag na `User` modelu
+- Instalace: `composer require filament/filament` + `php artisan filament:install --panels`
+- Žádný extra Docker service — běží v PHP kontejneru
+
+**Implementovat:**
+- [ ] Instalace Filament, superadmin middleware
+- [ ] Resource: Users — seznam, deaktivace, reset hesla, superadmin flag
+- [ ] Resource: Households — název, owner, počet členů, is_active
+- [ ] Resource: Shopping Lists — název, household, visibility, počet položek
+- [ ] Resource: Invitations — status, email, expiry, možnost zrušit
+- [ ] Dashboard widgety — počty uživatelů, listů, aktivní households
 
 ### Fáze 3 — Produktový katalog
 Musí být před šablonami — vše ostatní stojí na katalogu:
@@ -254,6 +312,27 @@ Obdoba skupin karet v Google Chrome — logické sekce uvnitř jednoho seznamu r
 ### Fáze 8 — Notifikace
 - [ ] In-app notifikace — oznámení o sdílení seznamu, přidání položky partnerem apod.
 
+### Fáze 8.1 — Frontend testy (před nasazením)
+
+Implementovat těsně před Fází 9 — když jsou core features stabilní a přicházejí platící uživatelé.
+
+**Vitest — unit testy composables**
+- `useShoppingLists` — fetch, create, delete, reorder
+- `useListDetail` — optimistický update, live sync eventy
+- `useContextMenu` — toggle, close
+- `auth store` — fetchUser, login, logout
+
+**Playwright — E2E kritické flows**
+- Login → vytvoření listu → přidání položky → odškrtnutí
+- Registrace → ověření emailu → první list
+- Sdílení listu → live sync mezi dvěma uživateli
+
+**Co netestovat**
+- Vizuální styl (SVG přeškrtnutí, animace)
+- Jednotlivé UI komponenty bez logiky
+
+---
+
 ### Fáze 9 — Monetizace a růst
 Filozofie: co nejvíc uživatelů za malou částku. Ne vysoký ticket, ale objem.
 - [ ] Onboarding pro nové uživatele
@@ -265,94 +344,6 @@ Filozofie: co nejvíc uživatelů za malou částku. Ne vysoký ticket, ale obje
 - [ ] Archivace faktur (7 let dle rakouského zákona)
 - [ ] Nativní mobilní app (pokud bude zájem po validaci)
 
-### Fáze 10 - testování
-Feature testy — HTTP integrace, testuje celý stack
-- Auth, lists, items, household, invitations
-
-Unit testy — izolovaná logika
-- Service třídy, Mapper třídy, pomocné funkce
-
-Database testy — integrita dat
-- Kaskádové mazání (smazání household → listy → položky)
-- Pivot tabulky, reordering
-
-  ---
-Do budoucna podle plánu:
-
-Policy / Authorization testy — až přibude více rolí
-- Owner vs member oprávnění v household
-- Private vs shared list viditelnost
-- Superadmin přístup (Fáze 2)
-
-Broadcasting testy — real-time eventy
-- Že ItemAdded se vyšle správnému household channelu
-- Že toOthers() nevysílá zpět odesílateli
-
-API Contract testy — struktura JSON response
-- Že response vždy obsahuje očekávané klíče
-- Důležité až přibude mobilní app (nativní)
-
-Billing testy — až Stripe/Cashier (Fáze 9)
-- Webhook handlery (platba proběhla, platba selhala)
-- Trial expiry, downgrade na free tier
-
-  ---
-Co záměrně netestovat:
-- Laravel framework samotný (routes, middleware registrace)
-- Eloquent základní CRUD bez vlastní logiky
-- Věci pokryté Laravelem v jeho vlastních testech
-
-Krok 1 — Infrastruktura
-
-- Přidat shopping_test databázi do MySQL kontejneru (init skript v docker-compose.yml)
-- Aktualizovat phpunit.xml: přepnout z SQLite na MySQL test DB
-- Přidat DB_TEST_* proměnné do backend/.env
-
-Krok 2 — Struktura testů
-
-tests/
-├── Feature/
-│   ├── Auth/
-│   │   ├── RegisterTest.php        — validace, duplicate email, household auto-vytvoření
-│   │   ├── LoginTest.php           — správné/špatné heslo, neověřený email
-│   │   ├── LogoutTest.php
-│   │   └── PasswordResetTest.php   — token flow
-│   ├── ShoppingList/
-│   │   ├── ShoppingListCrudTest.php    — create, read, update, delete
-│   │   └── ShoppingListAccessTest.php  — cizí list = 403/404
-│   ├── Item/
-│   │   ├── ItemCrudTest.php
-│   │   └── ItemAccessTest.php
-│   ├── Household/
-│   │   └── HouseholdTest.php       — edit názvu, members, leave
-│   └── Invitation/
-│       └── InvitationTest.php      — send, accept, decline, expiry
-└── Unit/
-├── Mapper/
-│   ├── ShoppingListMapperTest.php
-│   └── ItemMapperTest.php
-└── Service/
-└── ItemServiceTest.php     — reorder logika
-
-Krok 3 — Pořadí implementace (priorita)
-
-┌────────┬────────────────────────────┬─────────────────────────────────────────────┐
-│ Pořadí │           Modul            │                    Proč                     │
-├────────┼────────────────────────────┼─────────────────────────────────────────────┤
-│ 1      │ Infrastruktura             │ Vše ostatní stojí na tom                    │
-├────────┼────────────────────────────┼─────────────────────────────────────────────┤
-│ 2      │ Auth                       │ Každý test potřebuje přihlášeného uživatele │
-├────────┼────────────────────────────┼─────────────────────────────────────────────┤
-│ 3      │ ShoppingList CRUD + access │ Hlavní feature, nejvíce rizika              │
-├────────┼────────────────────────────┼─────────────────────────────────────────────┤
-│ 4      │ Item CRUD + access         │ Závisí na listech                           │
-├────────┼────────────────────────────┼─────────────────────────────────────────────┤
-│ 5      │ Household                  │ Menší riziko rozbití                        │
-├────────┼────────────────────────────┼─────────────────────────────────────────────┤
-│ 6      │ Invitation                 │ Nejsložitější flow                          │
-├────────┼────────────────────────────┼─────────────────────────────────────────────┤
-│ 7      │ Unit testy                 │ Mappers + Service logika                    │
-└────────┴────────────────────────────┴─────────────────────────────────────────────┘
 
 #### Daňové a právní poznámky (Rakousko)
 - Podnikání registrováno v **Rakousku**
@@ -507,7 +498,7 @@ form/AddItemForm.vue
 Po každém balíku změn (ať frontend nebo backend) provést **code review a testy** před tím, než se pokračuje dál:
 
 **Backend**
-- `php artisan test` — spustit test suite
+- `php artisan test` — spustit PHPUnit test suite (Feature + Unit testy proti MySQL `shopping_test` DB)
 - `./vendor/bin/pint --test` — zkontrolovat formátování kódu
 - `./vendor/bin/phpstan analyse` — statická analýza
 
@@ -516,6 +507,9 @@ Po každém balíku změn (ať frontend nebo backend) provést **code review a t
 - `npm run lint` — ESLint + Oxlint
 
 Vzor z optimalizace: kód se neodkládá do stavu "funguje, ale neotestovaný". Každý balík změn = otestovaný balík.
+
+**Pravidlo pro testy při novém vývoji**
+Při každé nové backend feature se vždy posoudí, zda jsou testy potřeba. Rozhoduje se případ od případu — není povinné testovat vše, ale je povinné se ptát.
 
 ---
 
