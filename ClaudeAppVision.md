@@ -252,22 +252,33 @@ Jednoduché CRUD bez logiky testovat není nutné.
 
 ---
 
-### Fáze 2 — Superadmin (Filament)
+### Fáze 2 — Superadmin (Filament) ✅ HOTOVO
+
 Správa systému přes **Filament admin panel** (`/admin`) — lepší mít od začátku než dodělávat zpětně.
 
-**Technologie: Filament v3**
+**Technologie: Filament v4** (v3 nekompatibilní s Laravel 13)
 - Běží na `/admin`, odděleno od `/api`
-- Auth přes `is_super_admin` flag na `User` modelu
-- Instalace: `composer require filament/filament` + `php artisan filament:install --panels`
+- Auth přes `is_super_admin` flag na `User` modelu (implementuje `FilamentUser`)
+- Pouze superadmini mají přístup (`canAccessPanel()`)
 - Žádný extra Docker service — běží v PHP kontejneru
 
-**Implementovat:**
-- [ ] Instalace Filament, superadmin middleware
-- [ ] Resource: Users — seznam, deaktivace, reset hesla, superadmin flag
-- [ ] Resource: Households — název, owner, počet členů, is_active
-- [ ] Resource: Shopping Lists — název, household, visibility, počet položek
+**Hotovo:**
+- [x] Instalace Filament v4, superadmin middleware (`canAccessPanel`)
+- [x] Resource: Users — seznam, deaktivace (`is_active`), superadmin flag, edit hesla
+- [x] Resource: Households — název, owner name, počet členů, is_active
+- [x] Resource: Shopping Lists — název, household, creator, visibility badge, počet položek
+- [x] Dashboard widget — StatsOverview: počty uživatelů, aktivních households, listů
+- [x] Artisan příkaz `admin:create {email}` — povýší existujícího nebo vytvoří nového superadmina
+- [x] Migrace `is_active` na tabulce `users`
+
+**Přístup k panelu:** `http://localhost:8080/admin`
+**Vytvoření/povýšení superadmina:**
+```bash
+docker compose exec php php artisan admin:create email@example.com
+```
+
+**Zbývá do budoucna:**
 - [ ] Resource: Invitations — status, email, expiry, možnost zrušit
-- [ ] Dashboard widgety — počty uživatelů, listů, aktivní households
 
 ### Fáze 3 — Produktový katalog
 Musí být před šablonami — vše ostatní stojí na katalogu:

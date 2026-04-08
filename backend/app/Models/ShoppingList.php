@@ -42,4 +42,10 @@ class ShoppingList extends Model
     {
         return $this->belongsTo(Household::class);
     }
+
+    /** @return BelongsTo<User, $this> */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 }
