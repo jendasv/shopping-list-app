@@ -1,47 +1,41 @@
 <template>
   <div class="py-4 space-y-10">
-    <h1 class="text-2xl font-bold">Settings</h1>
+    <h1 class="text-2xl font-bold text-center">Profile settings</h1>
 
     <!-- Profile -->
     <section>
-      <h2 class="text-xl font-semibold mb-4 border-b-2 border-black pb-1">Profile</h2>
+      <h2 class="text-xl font-semibold mb-4">Profile</h2>
       <form @submit.prevent="saveProfile" class="space-y-4">
-        <div class="flex flex-col text-xl">
-          <label class="text-gray-900 mb-1">Name
-            <input v-model="profile.name" type="text" required class="w-full p-2 focus:outline-none focus:border-gray-600 text-gray-900" />
-          </label>
+        <div class="flex items-center gap-4 text-xl">
+          <label class="w-32 shrink-0 text-gray-900">Name</label>
+          <input v-model="profile.name" type="text" readonly placeholder="Your name" class="flex-1 p-2 focus:outline-none text-gray-900 bg-transparent cursor-default" />
         </div>
-        <div class="flex flex-col text-xl">
-          <label class="text-gray-900 mb-1">Email
-            <input v-model="profile.email" type="email" required class="w-full p-2 focus:outline-none focus:border-gray-600 text-gray-900" />
-          </label>
+        <div class="flex items-center gap-4 text-xl">
+          <label class="w-32 shrink-0 text-gray-900">Email</label>
+          <input v-model="profile.email" type="email" readonly placeholder="your@email.com" class="flex-1 p-2 focus:outline-none text-gray-900 bg-transparent cursor-default" />
         </div>
         <AlertMessage v-if="profileError" type="error" :message="profileError" />
         <AlertMessage v-if="profileSuccess" type="success" :message="profileSuccess" />
-        <button type="submit" :disabled="profileLoading" class="btn-primary">
-          {{ profileLoading ? 'Saving...' : 'Save changes' }}
-        </button>
       </form>
     </section>
 
+    <HandDrawnDivider />
+
     <!-- Password -->
     <section>
-      <h2 class="text-xl font-semibold mb-4 border-b-2 border-black pb-1">Change password</h2>
+      <h2 class="text-xl font-semibold mb-4">Change password</h2>
       <form @submit.prevent="savePassword" class="space-y-4">
-        <div class="flex flex-col text-xl">
-          <label class="text-gray-900 mb-1">Current password
-            <input v-model="password.current" type="password" required class="w-full p-2 focus:outline-none focus:border-gray-600 text-gray-900" />
-          </label>
+        <div class="flex items-center gap-4 text-xl">
+          <label class="w-32 shrink-0 text-gray-900">Current</label>
+          <input v-model="password.current" type="password" required placeholder="Current password" class="flex-1 p-2 focus:outline-none text-gray-900" />
         </div>
-        <div class="flex flex-col text-xl">
-          <label class="text-gray-900 mb-1">New password
-            <input v-model="password.next" type="password" placeholder="At least 8 characters" required class="w-full p-2 focus:outline-none focus:border-gray-600 text-gray-900" />
-          </label>
+        <div class="flex items-center gap-4 text-xl">
+          <label class="w-32 shrink-0 text-gray-900">New</label>
+          <input v-model="password.next" type="password" required placeholder="At least 8 characters" class="flex-1 p-2 focus:outline-none text-gray-900" />
         </div>
-        <div class="flex flex-col text-xl">
-          <label class="text-gray-900 mb-1">Confirm new password
-            <input v-model="password.confirm" type="password" required class="w-full p-2 focus:outline-none focus:border-gray-600 text-gray-900" />
-          </label>
+        <div class="flex items-center gap-4 text-xl">
+          <label class="w-32 shrink-0 text-gray-900">Confirm</label>
+          <input v-model="password.confirm" type="password" required placeholder="Repeat new password" class="flex-1 p-2 focus:outline-none text-gray-900" />
         </div>
         <AlertMessage v-if="passwordError" type="error" :message="passwordError" />
         <AlertMessage v-if="passwordSuccess" type="success" :message="passwordSuccess" />
@@ -59,6 +53,7 @@ import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { authService } from '@/services/authService'
 import AlertMessage from '@/components/elements/AlertMessage.vue'
+import HandDrawnDivider from '@/components/elements/HandDrawnDivider.vue'
 
 const authStore = useAuthStore()
 

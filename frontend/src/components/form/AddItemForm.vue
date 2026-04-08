@@ -9,7 +9,7 @@
           v-model="item.name"
           type="text"
           placeholder="Item name"
-          class="p-2 focus:outline-none focus:border-gray-600 text-gray-900"
+          class="px-2 pt-2 focus:outline-none focus:border-gray-600 text-gray-900"
           @input="error = ''"
         />
       </label>

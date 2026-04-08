@@ -5,20 +5,19 @@
       <RouterLink :to="{ name: 'home' }" class="text-gray-400 hover:text-black transition" title="Back">
         <ArrowLeft customClass="w-6 h-6" />
       </RouterLink>
-      <h1 class="text-2xl font-bold">New list</h1>
+      <h1 class="text-2xl font-bold flex-1 text-center">New list</h1>
     </div>
 
     <!-- List name -->
-    <div class="mb-6 flex flex-col text-xl">
-      <label class="text-gray-900 mb-1">List name
-        <input
-          v-model="shoppingListName"
-          type="text"
-          placeholder="e.g. Weekly shopping"
-          class="w-full p-2 focus:outline-none focus:border-gray-600 text-gray-900"
-          @input="error = ''"
-        />
-      </label>
+    <div class="mb-6 flex items-center gap-4 text-xl">
+      <label class="shrink-0 text-gray-900">List name</label>
+      <input
+        v-model="shoppingListName"
+        type="text"
+        placeholder="e.g. Weekly shopping"
+        class="flex-1 p-2 focus:outline-none text-gray-900"
+        @input="error = ''"
+      />
     </div>
 
     <HandDrawnDivider class="mb-5" />
@@ -26,7 +25,7 @@
     <!-- Items -->
     <div class="mb-6">
       <div class="flex items-center justify-between mb-3">
-        <h2 class="text-sm font-semibold">Items</h2>
+        <h2 class="text-xl font-semibold">Items</h2>
         <button
           v-if="!showItemAddForm"
           @click="showItemAddForm = true"
@@ -51,7 +50,7 @@
           <button @click="removeItem(item.id)" class="text-red-400 hover:text-red-600 text-3xl leading-none ml-3">×</button>
         </li>
       </ul>
-      <p v-else-if="!showItemAddForm" class="text-sm text-gray-400 mt-2">No items yet.</p>
+      <p v-else-if="!showItemAddForm" class="text-base text-gray-400 mt-2">No items yet.</p>
     </div>
 
     <HandDrawnDivider class="mb-5" />
@@ -61,7 +60,7 @@
       <HandDrawnCheckbox v-model="isShared">
         Share with household
       </HandDrawnCheckbox>
-      <p class="text-xs text-gray-400 mt-1 ml-9">Shared lists are visible to all household members.</p>
+      <p class="text-base text-gray-400 mt-1">Shared lists are visible to all household members.</p>
     </div>
 
     <AlertMessage v-if="error" type="error" :message="error" />

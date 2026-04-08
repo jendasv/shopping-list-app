@@ -1,13 +1,13 @@
 <template>
   <div class="py-4 space-y-10">
-    <h1 class="text-2xl font-bold">Household</h1>
+    <h1 class="text-2xl font-bold text-center">Household</h1>
 
     <div v-if="loading" class="text-sm text-gray-500">Loading...</div>
     <template v-else-if="data">
 
       <!-- Own household -->
       <section>
-        <h2 class="text-xl font-semibold mb-4 border-b-2 border-black pb-1">My household</h2>
+        <h2 class="text-xl font-semibold mb-4">Settings</h2>
 
         <!-- Name -->
         <form @submit.prevent="saveHousehold" class="space-y-4 mb-6">
@@ -26,7 +26,7 @@
 
         <!-- Invite -->
         <div class="mb-6">
-          <p class="text-xl font-medium mb-3 flex items-center gap-2">
+          <p class="text-xl font-bold mb-3 flex items-center gap-2">
             Invite member
             <span class="text-xs bg-black text-white px-1.5 py-0.5 rounded font-medium">Pro</span>
           </p>
@@ -51,7 +51,7 @@
 
         <!-- Members -->
         <div>
-          <p class="text-xl font-medium mb-3">Members</p>
+          <p class="text-xl font-bold mb-3">Members</p>
           <ul class="space-y-3">
             <li
               v-for="member in data.ownHousehold.members"
@@ -67,7 +67,8 @@
 
       <!-- Joined households -->
       <section v-if="data.joinedHouseholds.length > 0">
-        <h2 class="text-xl font-semibold mb-4 border-b-2 border-black pb-1">Joined households</h2>
+        <HandDrawnDivider class="my-6" />
+        <h2 class="text-xl font-semibold mb-4">Joined households</h2>
 
         <ul class="space-y-3">
           <li
