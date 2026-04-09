@@ -70,5 +70,5 @@ function cycleTexts(index: number) {
 </script>
 
 <template>
-  <span class="written">{{ displayed }}</span>
+  <span class="written">{{ displayed || '\u00A0' }}</span>
 </template>

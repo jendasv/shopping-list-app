@@ -2,7 +2,8 @@
 
 declare(strict_types=1);
 
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use App\Models\User;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -10,12 +11,21 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Email verification — Laravel pošle link na tento endpoint
-Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-    $request->fulfill();
-    // Přesměruj na frontend po úspěšném ověření
-    return redirect(env('FRONTEND_URL', 'http://localhost:5173') . '/email-verified');
-})->middleware(['auth', 'signed'])->name('verification.verify');
+// Email verification — link z emailu, uživatel nemusí být přihlášen (SPA flow)
+Route::get('/email/verify/{id}/{hash}', function (Request $request, string $id, string $hash) {
+    $user = User::findOrFail($id);
+
+    if (! hash_equals(sha1($user->getEmailForVerification()), $hash)) {
+        abort(403, 'Invalid verification link.');
+    }
+
+    if (! $user->hasVerifiedEmail()) {
+        $user->markEmailAsVerified();
+        event(new Verified($user));
+    }
+
+    return redirect(config('app.frontend_url').'/email-verified');
+})->middleware(['signed'])->name('verification.verify');
 
 Route::post('/email/verification-notification', function (Request $request) {
     $request->user()->sendEmailVerificationNotification();

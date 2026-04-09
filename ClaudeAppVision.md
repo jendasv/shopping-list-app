@@ -194,14 +194,14 @@ InventoryItem
 
 ## Fáze vývoje
 
-### Fáze 1 — Použitelné pro domácnost (základ)
+### Fáze 1 — Použitelné pro domácnost (základ) ✅ HOTOVO
 Bez toho to nefunguje:
-- [ ] Autentizace — registrace, login, reset hesla, ověření emailu
-- [ ] Household — vytvoření, pozvání partnera emailem (invitation systém)
-- [ ] Sdílený nákupní seznam s real-time sync (Laravel Reverb)
-- [ ] Přidat / odškrtnout / smazat položku
-- [ ] PWA — instalovatelné na telefon
-- [ ] Zaškrtnutá položka se automaticky přesune na spodek seznamu (sort_order)
+- [x] Autentizace — registrace, login, reset hesla, ověření emailu
+- [x] Household — vytvoření, pozvání partnera emailem (invitation systém)
+- [x] Sdílený nákupní seznam s real-time sync (Laravel Reverb)
+- [x] Přidat / odškrtnout / smazat položku
+- [x] PWA — instalovatelné na telefon
+- [x] Zaškrtnutá položka se automaticky přesune na spodek seznamu (sort_order)
 
 ### Fáze 1.1 — Backend testy ✅ HOTOVO
 
@@ -277,8 +277,7 @@ Správa systému přes **Filament admin panel** (`/admin`) — lepší mít od z
 docker compose exec php php artisan admin:create email@example.com
 ```
 
-**Zbývá do budoucna:**
-- [ ] Resource: Invitations — status, email, expiry, možnost zrušit
+- [x] Resource: Invitations — status, email, expiry, možnost zrušit (Revoke akce)
 
 ### Fáze 3 — Produktový katalog
 Musí být před šablonami — vše ostatní stojí na katalogu:

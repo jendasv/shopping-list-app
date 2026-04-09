@@ -36,20 +36,18 @@
       </HandDrawnCheckbox>
     </div>
 
+    <!-- ERROR -->
+    <p v-if="error" class="text-red-500 text-base">{{ error }}</p>
+
     <!-- SUBMIT -->
     <div class="flex">
       <button
         type="submit"
         class="mt-4 ml-auto text-gray-900 hover:text-gray-600 text-2xl flex items-center gap-2 cursor-pointer transition duration-200 hover:scale-105"
-        :disabled="!item.name.trim()"
+        :class="{ shake: shaking }"
       >
         Add item
       </button>
-    </div>
-
-    <!-- ERROR -->
-    <div v-if="error">
-      <span class="text-red-500 text-sm">{{ error }}</span>
     </div>
   </form>
   </Transition>
@@ -80,19 +78,26 @@ const item = ref<iItem>({
 })
 
 const error = ref('')
+const shaking = ref(false)
+
+function triggerShake() {
+  shaking.value = true
+  setTimeout(() => { shaking.value = false }, 500)
+}
 
 function onSubmit() {
   if (!item.value.name.trim()) {
     error.value = 'Name is required'
+    triggerShake()
     return
   }
   if (item.value.quantity <= 0) {
     error.value = 'Quantity must be greater than 0'
+    triggerShake()
     return
   }
 
-  emit('add', { ...item.value }) // pošli kopii itemu
-  // reset formu
+  emit('add', { ...item.value })
   item.value = {
     id: Date.now(),
     name: '',
@@ -104,3 +109,18 @@ function onSubmit() {
   error.value = ''
 }
 </script>
+
+<style scoped>
+@keyframes shake {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(-8px); }
+  40%  { transform: translateX(8px); }
+  60%  { transform: translateX(-6px); }
+  80%  { transform: translateX(4px); }
+  100% { transform: translateX(0); }
+}
+
+.shake {
+  animation: shake 0.5s ease-in-out;
+}
+</style>

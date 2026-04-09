@@ -95,7 +95,9 @@ class InvitationController extends Controller
             $ownHousehold->update(['is_active' => false]);
         }
 
-        $targetHousehold->members()->attach($user->id, ['role' => HouseholdRole::Member->value]);
+        if (! $targetHousehold->members()->wherePivot('user_id', $user->id)->exists()) {
+            $targetHousehold->members()->attach($user->id, ['role' => HouseholdRole::Member->value]);
+        }
 
         $invitation->update(['status' => InvitationStatus::Accepted->value]);
 

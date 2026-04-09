@@ -4,6 +4,9 @@
     <!-- Right side — registration (first on mobile) -->
     <div class="flex-1 flex flex-col justify-center px-8 py-12 md:pl-8 md:pr-0 order-1 md:order-2">
       <div class="max-w-sm mx-auto w-full">
+        <!-- App name — mobile only -->
+        <p class="md:hidden text-xs font-bold tracking-widest uppercase text-gray-400 mb-5">Lists</p>
+
         <h1 class="text-2xl font-bold mb-2">Get started</h1>
         <p class="text-gray-500 text-base mb-8">
           No credit card. No complexity.
@@ -72,8 +75,11 @@
     </div>
 
     <!-- Left side — preview (second on mobile) -->
-    <div class="flex-1 flex flex-col justify-center items-center px-8 py-12 md:pr-8 md:pl-0 border-b-2 md:border-b-0 md:border-r-2 border-black order-2 md:order-1">
+    <div class="flex-1 flex flex-col justify-center items-center px-8 py-12 md:pr-8 md:pl-0 md:border-r-2 border-black order-2 md:order-1">
       <div class="max-w-sm text-center">
+        <!-- App name — desktop only -->
+        <p class="hidden md:block text-xs font-bold tracking-widest uppercase text-gray-400 mb-4">Lists</p>
+
         <Typewrite
           :texts="['Shopping.', 'Packing for trips.', 'Shared with family.']"
           class="text-3xl font-bold mb-6"

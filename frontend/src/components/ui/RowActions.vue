@@ -24,12 +24,26 @@ defineEmits<{
       title="Options"
     >⋯</button>
 
-    <div
-      v-if="open"
-      class="absolute right-0 bottom-full mb-1 z-20 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
-      @click.stop
-    >
-      <slot name="menu" />
-    </div>
+    <Transition name="dropdown">
+      <div
+        v-if="open"
+        class="absolute right-0 bottom-full mb-2 z-20 bg-white border-2 border-black rounded-lg shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden min-w-[140px]"
+        @click.stop
+      >
+        <slot name="menu" />
+      </div>
+    </Transition>
   </div>
 </template>
+
+<style scoped>
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(4px);
+}
+</style>

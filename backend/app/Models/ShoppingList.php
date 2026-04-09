@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Database\Factories\ShoppingListFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -24,7 +25,7 @@ use Illuminate\Support\Carbon;
  */
 class ShoppingList extends Model
 {
-    /** @use HasFactory<\Database\Factories\ShoppingListFactory> */
+    /** @use HasFactory<ShoppingListFactory> */
     use HasFactory;
 
     protected $table = 'shopping_list';

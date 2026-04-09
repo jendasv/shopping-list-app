@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace App\Filament\Resources\Households\Pages;
+namespace App\Filament\Resources\Invitations\Pages;
 
-use App\Filament\Resources\Households\HouseholdResource;
+use App\Filament\Resources\Invitations\InvitationResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
-class ListHouseholds extends ListRecords
+class ListInvitations extends ListRecords
 {
-    protected static string $resource = HouseholdResource::class;
+    protected static string $resource = InvitationResource::class;
 
     protected function getHeaderActions(): array
     {

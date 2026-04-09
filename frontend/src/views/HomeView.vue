@@ -43,8 +43,8 @@
               <button @click="removeList(list.id)" class="text-red-400 hover:text-red-600 text-4xl leading-none transition cursor-pointer" title="Delete">×</button>
             </template>
             <template #menu>
-              <button @click="startEditList(list); closeMenu()" class="w-full px-4 py-1.5 text-left text-base hover:bg-gray-50 transition-colors">Rename</button>
-              <button @click="removeList(list.id); closeMenu()" class="w-full px-4 py-1.5 text-left text-base text-red-500 hover:bg-red-50 transition-colors">Delete</button>
+              <button @click="startEditList(list); closeMenu()" class="w-full px-4 py-3 text-left text-xl hover:bg-gray-50 transition-colors">Rename</button>
+              <button @click="removeList(list.id); closeMenu()" class="w-full px-4 py-3 text-left text-xl text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100">Delete</button>
             </template>
           </RowActions>
         </template>

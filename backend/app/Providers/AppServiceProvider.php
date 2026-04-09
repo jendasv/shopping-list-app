@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -24,6 +26,16 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Broadcast::routes(['middleware' => ['auth:sanctum']]);
+
+        VerifyEmail::createUrlUsing(function (object $notifiable): string {
+            URL::forceRootUrl(config('app.url'));
+
+            return URL::temporarySignedRoute(
+                'verification.verify',
+                now()->addMinutes((int) config('auth.verification.expire', 60)),
+                ['id' => $notifiable->getKey(), 'hash' => sha1($notifiable->getEmailForVerification())]
+            );
+        });
 
         ResetPassword::createUrlUsing(function (object $user, string $token): string {
             return config('app.frontend_url')

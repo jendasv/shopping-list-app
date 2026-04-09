@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Widgets;
 
 use App\Models\Household;
@@ -17,7 +19,7 @@ class StatsOverview extends StatsOverviewWidget
                 ->description('Registered accounts')
                 ->color('primary'),
             Stat::make('Active households', Household::where('is_active', true)->count())
-                ->description('Out of ' . Household::count() . ' total')
+                ->description('Out of '.Household::count().' total')
                 ->color('success'),
             Stat::make('Shopping lists', ShoppingList::count())
                 ->description('Across all households')

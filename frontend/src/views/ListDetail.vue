@@ -38,14 +38,15 @@
         <li
           v-for="item in list.items"
           :key="item.id"
-          class="group flex items-center justify-between transition-colors"
+          class="group flex items-center justify-between transition-[opacity,transform] duration-[280ms] ease-in-out"
+          :class="animatingItemId === item.id ? 'opacity-0 scale-95' : ''"
         >
           <template v-if="editingItemId !== item.id">
             <span class="drag-handle cursor-grab active:cursor-grabbing text-gray-200 group-hover:text-gray-400 mr-2 shrink-0 text-2xl leading-none select-none transition-colors">⠿</span>
             <button
               class="flex-1 text-left text-2xl transition hover:text-gray-600 hover:scale-105 duration-200"
               :class="item.isCompleted ? 'text-gray-400' : ''"
-              @click="setComplete(list.id, item.id, item.isCompleted)"
+              @click="handleSetComplete(list.id, item.id, item.isCompleted)"
             >
               <Typewrite v-if="item.isNew" :text="item.quantity > 1 ? item.name + ' — ' + item.quantity + 'x' : item.name" @done="item.isNew = false" />
               <HandDrawnStrikethrough v-else-if="item.isCompleted" :seed="item.id">{{ item.name }}{{ item.quantity > 1 ? ' — ' + item.quantity + 'x' : '' }}</HandDrawnStrikethrough>
@@ -60,8 +61,8 @@
                 <button @click="removeItemFromList(list.id, item.id)" class="text-red-400 hover:text-red-600 text-4xl leading-none transition cursor-pointer" title="Delete">×</button>
               </template>
               <template #menu>
-                <button @click="startEdit(item); closeMenu()" class="w-full px-4 py-1.5 text-left text-base hover:bg-gray-50 transition-colors">Edit</button>
-                <button @click="removeItemFromList(list.id, item.id); closeMenu()" class="w-full px-4 py-1.5 text-left text-base text-red-500 hover:bg-red-50 transition-colors">Delete</button>
+                <button @click="startEdit(item); closeMenu()" class="w-full px-4 py-3 text-left text-xl hover:bg-gray-50 transition-colors">Edit</button>
+                <button @click="removeItemFromList(list.id, item.id); closeMenu()" class="w-full px-4 py-3 text-left text-xl text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100">Delete</button>
               </template>
             </RowActions>
           </template>
@@ -93,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { VueDraggable as VueDraggablePlus } from 'vue-draggable-plus'
 import { useListDetail } from '@/composables/useListDetail'
@@ -114,6 +115,17 @@ const showItemAddForm = ref(false)
 const { menuOpenId: menuOpenItemId, toggleMenu, closeMenu } = useContextMenu()
 
 const { list, error, isLoading, editingItemId, removeItemFromList, setComplete, addItem, startEdit, saveItem } = useListDetail(id)
+
+const animatingItemId = ref<number | null>(null)
+
+async function handleSetComplete(listId: number, itemId: number, isCompleted: boolean) {
+  animatingItemId.value = itemId
+  await new Promise((r) => setTimeout(r, 280))
+  await setComplete(listId, itemId, isCompleted)
+  await nextTick()
+  await new Promise((r) => setTimeout(r, 16))
+  animatingItemId.value = null
+}
 
 async function onReorderItems() {
   if (!list.value) return

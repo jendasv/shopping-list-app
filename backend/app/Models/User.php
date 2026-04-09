@@ -43,7 +43,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 
     public function household(): ?Household
     {
-        return $this->households()->first();
+        return $this->households()->where('is_active', true)->first();
     }
 
     public function isSuperAdmin(): bool

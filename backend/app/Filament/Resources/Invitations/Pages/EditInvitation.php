@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace App\Filament\Resources\ShoppingLists\Pages;
+namespace App\Filament\Resources\Invitations\Pages;
 
-use App\Filament\Resources\ShoppingLists\ShoppingListResource;
+use App\Filament\Resources\Invitations\InvitationResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
-class EditShoppingList extends EditRecord
+class EditInvitation extends EditRecord
 {
-    protected static string $resource = ShoppingListResource::class;
+    protected static string $resource = InvitationResource::class;
 
     protected function getHeaderActions(): array
     {

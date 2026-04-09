@@ -14,6 +14,13 @@ export function useListDetail(id: string) {
   const isLoading = ref<boolean>(false)
   const editingItemId = ref<number | null>(null)
 
+  function sortItems(items: iItem[]): iItem[] {
+    return [
+      ...items.filter((i) => !i.isCompleted),
+      ...items.filter((i) => i.isCompleted),
+    ]
+  }
+
   onMounted(async () => {
     if (route.meta.list) {
       list.value = route.meta.list
@@ -40,7 +47,9 @@ export function useListDetail(id: string) {
       })
       .listen('.ItemUpdated', (data: iItem & { shoppingListId: number }) => {
         if (!list.value || data.shoppingListId !== list.value.id) return
-        list.value.items = list.value.items.map((i) => (i.id === data.id ? { ...i, ...data } : i))
+        list.value.items = sortItems(
+          list.value.items.map((i) => (i.id === data.id ? { ...i, ...data } : i)),
+        )
       })
       .listen('.ItemDeleted', (data: { id: number; listId: number }) => {
         if (!list.value || data.listId !== list.value.id) return
@@ -73,14 +82,19 @@ export function useListDetail(id: string) {
 
   async function setComplete(listId: number, itemId: number, isCompleted: boolean) {
     if (!list.value) return
-    list.value.items = list.value.items.map((item: iItem) =>
-      item.id === itemId ? { ...item, isCompleted: !isCompleted } : item,
+    const newCompleted = !isCompleted
+    list.value.items = sortItems(
+      list.value.items.map((item: iItem) =>
+        item.id === itemId ? { ...item, isCompleted: newCompleted } : item,
+      ),
     )
     try {
-      await updateItem(listId, itemId, { isCompleted: !isCompleted })
+      await updateItem(listId, itemId, { isCompleted: newCompleted })
     } catch (e) {
-      list.value.items = list.value.items.map((item: iItem) =>
-        item.id === itemId ? { ...item, isCompleted } : item,
+      list.value.items = sortItems(
+        list.value.items.map((item: iItem) =>
+          item.id === itemId ? { ...item, isCompleted } : item,
+        ),
       )
       console.error('Failed to update item:', e)
       error.value = 'Failed to update item. Try again.'

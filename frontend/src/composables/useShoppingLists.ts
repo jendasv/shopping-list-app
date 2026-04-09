@@ -25,9 +25,19 @@ export function useShoppingLists() {
     const householdId = authStore.user?.householdId
     if (!householdId) return
 
-    echo.private(`household.${householdId}`).listen('.ListUpdated', (data: iShoppingList) => {
-      lists.value = lists.value.map((l) => (l.id === data.id ? { ...l, name: data.name } : l))
-    })
+    echo
+      .private(`household.${householdId}`)
+      .listen('.ListUpdated', (data: iShoppingList) => {
+        lists.value = lists.value.map((l) => (l.id === data.id ? { ...l, name: data.name } : l))
+      })
+      .listen('.ListCreated', (data: iShoppingList) => {
+        if (!lists.value.find((l) => l.id === data.id)) {
+          lists.value.push({ ...data, isNew: false, items: [] })
+        }
+      })
+      .listen('.ListDeleted', (data: { id: number }) => {
+        lists.value = lists.value.filter((l) => l.id !== data.id)
+      })
   })
 
   onUnmounted(() => {

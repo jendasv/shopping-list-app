@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Enums\ShoppingListVisibility;
+use App\Events\ListCreated;
+use App\Events\ListDeleted;
 use App\Events\ListUpdated;
 use App\Exceptions\Domain\ResourceNotFoundException;
 use App\Exceptions\Domain\ValidationException;
@@ -33,7 +35,7 @@ class ShoppingListService
     {
         $household = $user->household();
 
-        $query = ShoppingList::with(['items' => fn ($q) => $q->orderBy('sort_order')])
+        $query = ShoppingList::with(['items' => fn ($q) => $q->orderBy('is_completed')->orderBy('sort_order')])
             ->leftJoin('list_user_order', function ($join) use ($user) {
                 $join->on('list_user_order.shopping_list_id', '=', 'shopping_list.id')
                     ->where('list_user_order.user_id', '=', $user->id);
@@ -61,7 +63,7 @@ class ShoppingListService
     {
         $household = $user->household();
 
-        $query = ShoppingList::with(['items' => fn ($q) => $q->orderBy('sort_order')])->where('id', $id);
+        $query = ShoppingList::with(['items' => fn ($q) => $q->orderBy('is_completed')->orderBy('sort_order')])->where('id', $id);
 
         if ($household) {
             $query->where('household_id', $household->id)
@@ -131,7 +133,13 @@ class ShoppingListService
             ->where('shopping_list_id', $list->id)
             ->value('sort_order');
 
-        return $this->shoppingListMapper->map($list, user: $user);
+        $mapped = $this->shoppingListMapper->map($list, user: $user);
+
+        if ($list->household_id && $list->visibility === ShoppingListVisibility::Shared->value) {
+            broadcast(new ListCreated($list->household_id, array_merge($mapped, ['isOwner' => false])))->toOthers();
+        }
+
+        return $mapped;
     }
 
     /**
@@ -175,11 +183,17 @@ class ShoppingListService
     public function deleteList(int $id, User $user): void
     {
         $list = $this->findList($id, $user);
+        $householdId = $list->household_id;
+        $isShared = $list->visibility === ShoppingListVisibility::Shared->value;
 
         try {
             $list->delete();
         } catch (Throwable $e) {
             throw new DatabaseOperationException('Failed to delete shopping list: '.$e->getMessage());
+        }
+
+        if ($householdId && $isShared) {
+            broadcast(new ListDeleted($householdId, $id))->toOthers();
         }
     }
 

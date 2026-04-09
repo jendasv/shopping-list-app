@@ -56,7 +56,7 @@ export default defineConfig({
   },
   server: {
     host: true,
-    allowedHosts: 'all',
+    allowedHosts: true,
     proxy: {
       '/api': { target: 'http://nginx:80', changeOrigin: true },
       '/sanctum': { target: 'http://nginx:80', changeOrigin: true },
