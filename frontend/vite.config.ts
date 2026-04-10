@@ -47,6 +47,9 @@ export default defineConfig({
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/^\/api/, /^\/sanctum/, /^\/email/],
       },
+      devOptions: {
+        enabled: false,
+      },
     }),
   ],
   resolve: {

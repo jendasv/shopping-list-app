@@ -43,6 +43,8 @@ export interface iShoppingList {
   visibility: 'shared' | 'private'
   isOwner: boolean | null
   sortOrder: number | null
+  itemsCount?: number
+  completedCount?: number
   createdAt?: string
   updatedAt?: string
   isNew?: boolean

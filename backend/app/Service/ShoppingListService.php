@@ -41,6 +41,7 @@ class ShoppingListService
                     ->where('list_user_order.user_id', '=', $user->id);
             })
             ->select('shopping_list.*', 'list_user_order.sort_order as user_sort_order')
+            ->withCount('items')
             ->orderByRaw('ISNULL(list_user_order.sort_order), list_user_order.sort_order');
 
         if ($household) {

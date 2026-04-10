@@ -22,6 +22,8 @@ class ShoppingListMapper
             'visibility' => $shoppingList->visibility,
             'isOwner' => $user !== null ? (int) $shoppingList->created_by === $user->id : null,
             'sortOrder' => isset($shoppingList->user_sort_order) ? (int) $shoppingList->user_sort_order : null,
+            'itemsCount' => isset($shoppingList->items_count) ? (int) $shoppingList->items_count : null,
+            'completedCount' => $shoppingList->relationLoaded('items') ? $shoppingList->items->where('is_completed', true)->count() : null,
             'createdAt' => $shoppingList->created_at?->format('Y-m-d H:i:s'),
             'updatedAt' => $shoppingList->updated_at?->format('Y-m-d H:i:s'),
         ];

@@ -1,8 +1,11 @@
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, watchEffect, onMounted, onUnmounted } from 'vue'
 import type { iShoppingList } from '@/types'
 import { fetchAllLists, createList, updateList, deleteList } from '@/services/shoppingListService'
 import { useAuthStore } from '@/stores/auth'
 import echo from '@/plugins/echo'
+
+export type SortKey = 'custom' | 'az' | 'za' | 'items-desc' | 'items-asc' | 'newest' | 'oldest'
+export type FilterKey = 'all' | 'shared' | 'private'
 
 export function useShoppingLists() {
   const authStore = useAuthStore()
@@ -10,6 +13,51 @@ export function useShoppingLists() {
   const error = ref<string>('')
   const isLoading = ref<boolean>(false)
   const editingListId = ref<number | null>(null)
+
+  const search = ref('')
+  const activeFilter = ref<FilterKey>('all')
+  const activeSort = ref<SortKey>('custom')
+
+  const isDragEnabled = ref(true)
+  const displayedLists = ref<iShoppingList[]>([])
+
+  watchEffect(() => {
+    isDragEnabled.value = activeSort.value === 'custom' && !search.value && activeFilter.value === 'all'
+
+    let result = [...lists.value]
+
+    if (search.value.trim()) {
+      const q = search.value.toLowerCase()
+      result = result.filter((l) => l.name.toLowerCase().includes(q))
+    }
+
+    if (activeFilter.value !== 'all') {
+      result = result.filter((l) => l.visibility === activeFilter.value)
+    }
+
+    switch (activeSort.value) {
+      case 'az':
+        result.sort((a, b) => a.name.localeCompare(b.name))
+        break
+      case 'za':
+        result.sort((a, b) => b.name.localeCompare(a.name))
+        break
+      case 'items-desc':
+        result.sort((a, b) => (b.itemsCount ?? 0) - (a.itemsCount ?? 0))
+        break
+      case 'items-asc':
+        result.sort((a, b) => (a.itemsCount ?? 0) - (b.itemsCount ?? 0))
+        break
+      case 'newest':
+        result.sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))
+        break
+      case 'oldest':
+        result.sort((a, b) => (a.createdAt ?? '').localeCompare(b.createdAt ?? ''))
+        break
+    }
+
+    displayedLists.value = result
+  })
 
   onMounted(async () => {
     isLoading.value = true
@@ -71,7 +119,7 @@ export function useShoppingLists() {
     }
     try {
       const data = await createList(name.trim(), 'private')
-      lists.value.push({ id: data.id, name: data.name, visibility: data.visibility, isOwner: data.isOwner, sortOrder: data.sortOrder, isNew: true, items: [] })
+      lists.value.push({ id: data.id, name: data.name, visibility: data.visibility, isOwner: data.isOwner, sortOrder: data.sortOrder, itemsCount: 0, isNew: true, items: [] })
     } catch (e) {
       console.error('Failed to create list:', e)
       error.value = 'Failed to create list. Try again.'
@@ -88,5 +136,19 @@ export function useShoppingLists() {
     }
   }
 
-  return { lists, error, isLoading, editingListId, startEditList, saveListName, addList, removeList }
+  return {
+    lists,
+    displayedLists,
+    error,
+    isLoading,
+    editingListId,
+    search,
+    activeFilter,
+    activeSort,
+    isDragEnabled,
+    startEditList,
+    saveListName,
+    addList,
+    removeList,
+  }
 }

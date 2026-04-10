@@ -14,11 +14,14 @@ class SuperAdminSeeder extends Seeder
 {
     public function run(): void
     {
+        $email = env('SUPER_ADMIN_EMAIL', 'admin@example.com');
+        $password = env('SUPER_ADMIN_PASSWORD', 'password');
+
         $user = User::updateOrCreate(
-            ['email' => 'jendasv@seznam.cz'],
+            ['email' => $email],
             [
                 'name' => 'Super Admin',
-                'password' => Hash::make('password'),
+                'password' => Hash::make($password),
                 'is_super_admin' => true,
                 'email_verified_at' => now(),
             ]
@@ -30,6 +33,6 @@ class SuperAdminSeeder extends Seeder
             $household->members()->attach($user->id, ['role' => HouseholdRole::Owner->value]);
         }
 
-        $this->command->info("Super admin ready: admin@example.com / password");
+        $this->command->info("Super admin ready: {$email} / {$password}");
     }
 }
