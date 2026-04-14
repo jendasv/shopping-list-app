@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authService } from '../services/authService'
+import { applyLocale, detectLocale } from '../plugins/i18n'
 import type { iUser } from '../types'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -15,6 +16,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await authService.getUser()
       user.value = response.user
+      applyLocale(response.user.locale ?? detectLocale())
     } catch {
       user.value = null
     } finally {
@@ -27,6 +29,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await authService.login({ email, password })
       user.value = response.user
+      applyLocale(response.user.locale ?? detectLocale())
     } finally {
       loading.value = false
     }

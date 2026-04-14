@@ -2,7 +2,7 @@
   <div class="relative" ref="panelRef">
     <button
       @click="toggle"
-      class="flex items-center justify-center w-9 h-9 rounded-full border-2 border-current hover:bg-black/5 transition-colors"
+      class="flex items-center justify-center w-9 h-9 rounded-full border-2 border-current hover:bg-black/5 transition-colors cursor-pointer"
       :class="{ 'bg-black/5': isOpen }"
       aria-label="User menu"
     >
@@ -27,7 +27,7 @@
             @click="close"
             class="flex items-center gap-2 px-4 py-2 text-xl hover:bg-gray-50 transition-colors"
           >
-            Settings
+            {{ $t('settings.title') }}
           </RouterLink>
         </div>
 
@@ -36,7 +36,7 @@
             @click="handleLogout"
             class="flex w-full items-center gap-2 px-4 py-2 text-xl text-red-600 hover:bg-red-50 transition-colors"
           >
-            Sign out
+            {{ $t('common.signOut') }}
           </button>
         </div>
       </div>

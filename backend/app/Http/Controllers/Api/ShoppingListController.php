@@ -17,7 +17,7 @@ class ShoppingListController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        return new JsonResponse($this->shoppingListService->getAllLists($request->user()));
+        return new JsonResponse($this->shoppingListService->getAllLists($request->user(), $request->only(['search', 'filter', 'sort', 'page'])));
     }
 
     public function show(Request $request, int $id): JsonResponse

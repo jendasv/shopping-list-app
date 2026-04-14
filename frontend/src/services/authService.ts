@@ -56,7 +56,7 @@ export const authService = {
     })
   },
 
-  async updateProfile(data: { name: string; email: string }): Promise<AuthResponse> {
+  async updateProfile(data: { name?: string; email?: string; locale?: string | null }): Promise<AuthResponse> {
     return apiFetch<AuthResponse>('/auth/profile', {
       method: 'PUT',
       body: JSON.stringify(data),

@@ -5,6 +5,7 @@ export interface iUser {
   emailVerifiedAt: string | null
   isSuperAdmin: boolean
   householdId: number | null
+  locale: string | null
 }
 
 export interface iHouseholdMember {
@@ -35,6 +36,18 @@ export interface iItem {
   createdAt?: string
   updatedAt?: string
   isNew?: boolean
+}
+
+export interface iListMeta {
+  current_page: number
+  last_page: number
+  total: number
+  per_page: number
+}
+
+export interface iListsResponse<T = unknown> {
+  data: T[]
+  meta: iListMeta
 }
 
 export interface iShoppingList {

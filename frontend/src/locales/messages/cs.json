@@ -1,0 +1,183 @@
+{
+  "common": {
+    "save": "Uložit",
+    "cancel": "Zrušit",
+    "delete": "Smazat",
+    "rename": "Přejmenovat",
+    "edit": "Upravit",
+    "loading": "Načítám...",
+    "back": "Zpět",
+    "options": "Možnosti",
+    "prev": "← Předchozí",
+    "next": "Další →",
+    "sending": "Odesílám...",
+    "saving": "Ukládám...",
+    "signOut": "Odhlásit se"
+  },
+  "auth": {
+    "appName": "Seznamy",
+    "getStarted": "Začít",
+    "signIn": "Přihlásit se",
+    "signUp": "Zaregistrovat se",
+    "welcomeBack": "Vítej zpět.",
+    "createAccount": "Vytvořit účet",
+    "creatingAccount": "Vytvářím účet...",
+    "signingIn": "Přihlašuji...",
+    "forgotPassword": "Zapomenuté heslo",
+    "sendResetLink": "Odeslat odkaz",
+    "setNewPassword": "Nastavit nové heslo",
+    "newPassword": "Nové heslo",
+    "chooseNewPassword": "Zvol nové heslo pro svůj účet.",
+    "verifyEmail": "Ověř svůj e-mail",
+    "emailVerified": "E-mail ověřen",
+    "emailVerifiedDesc": "Tvůj účet je aktivní. Nyní se můžeš přihlásit.",
+    "resendEmail": "Znovu odeslat e-mail",
+    "emailSent": "E-mail odeslán.",
+    "linkSent": "Odkaz odeslán. Zkontroluj svůj e-mail.",
+    "forgotPasswordLink": "Zapomněl/a jsi heslo?",
+    "alreadyHaveAccount": "Už máš účet?",
+    "noAccount": "Nemáš účet?",
+    "alreadyVerified": "Už jsi ověřil/a?",
+    "backToSignIn": "Zpět na přihlášení",
+    "noCredits": "Bez kreditní karty. Bez zbytečné složitosti.",
+    "fields": {
+      "name": "Jméno",
+      "email": "E-mail",
+      "password": "Heslo",
+      "confirmPassword": "Potvrdit heslo",
+      "newPassword": "Nové heslo",
+      "confirmNewPassword": "Potvrdit nové heslo",
+      "currentPassword": "Stávající"
+    },
+    "placeholders": {
+      "name": "Jan Novák",
+      "email": "jan{'@'}example.com",
+      "password": "Alespoň 8 znaků",
+      "repeatPassword": "Zopakuj heslo",
+      "currentPassword": "Stávající heslo",
+      "yourPassword": "Tvoje heslo",
+      "repeatNewPassword": "Zopakuj nové heslo"
+    },
+    "features": {
+      "realtime": "Sdílené seznamy v reálném čase s partnerem nebo rodinou",
+      "versatile": "Nákupní seznamy, balení na cesty a vše, co potřebuješ",
+      "privacy": "Soukromé nebo sdílené — ty rozhoduješ"
+    }
+  },
+  "lists": {
+    "title": "Moje seznamy",
+    "newList": "+ Nový seznam",
+    "shared": "sdílený",
+    "owner": "vlastník",
+    "member": "člen",
+    "noMatch": "Žádné seznamy neodpovídají hledání.",
+    "empty": "Zatím žádné seznamy.",
+    "createFirst": "Vytvoř svůj první.",
+    "filters": {
+      "all": "Vše",
+      "shared": "Sdílené",
+      "private": "Soukromé"
+    },
+    "sort": {
+      "custom": "Vlastní pořadí",
+      "az": "A–Z",
+      "za": "Z–A",
+      "itemsDesc": "Nejvíce položek",
+      "itemsAsc": "Nejméně položek",
+      "newest": "Nejnovější",
+      "oldest": "Nejstarší"
+    },
+    "errors": {
+      "nameRequired": "Zadej prosím název seznamu!",
+      "createFailed": "Nepodařilo se vytvořit seznam. Zkus to znovu.",
+      "updateFailed": "Nepodařilo se upravit seznam. Zkus to znovu.",
+      "deleteFailed": "Nepodařilo se smazat seznam. Zkus to znovu."
+    }
+  },
+  "items": {
+    "name": "Název",
+    "namePlaceholder": "Název položky",
+    "quantity": "Množství",
+    "fulfilled": "Splněno?",
+    "addItem": "Přidat položku",
+    "closeForm": "Zavřít formulář",
+    "noItems": "Zatím žádné položky.",
+    "noItemsAdd": "Zatím žádné položky. Přidej první výše.",
+    "errors": {
+      "nameRequired": "Název je povinný",
+      "quantityInvalid": "Množství musí být větší než 0",
+      "addFailed": "Nepodařilo se přidat položku. Zkus to znovu.",
+      "updateFailed": "Nepodařilo se upravit položku. Zkus to znovu.",
+      "removeFailed": "Nepodařilo se odebrat položku. Zkus to znovu."
+    }
+  },
+  "newList": {
+    "title": "Nový seznam",
+    "listName": "Název seznamu",
+    "listNamePlaceholder": "např. Týdenní nákup",
+    "items": "Položky",
+    "shareWithHousehold": "Sdílet s domácností",
+    "sharedInfo": "Sdílené seznamy vidí všichni členové domácnosti.",
+    "createBtn": "Vytvořit seznam"
+  },
+  "household": {
+    "title": "Domácnost",
+    "settings": "Nastavení",
+    "householdName": "Název domácnosti",
+    "householdNamePlaceholder": "Název vaší domácnosti",
+    "invite": "Pozvat",
+    "inviteMember": "Pozvat člena",
+    "inviteEmail": "E-mail",
+    "inviteEmailPlaceholder": "E-mail člena",
+    "saveNameBtn": "Uložit název",
+    "nameSaved": "Název uložen.",
+    "inviteSent": "Pozvánka odeslána na {email}.",
+    "pro": "Pro",
+    "members": "Členové",
+    "joinedHouseholds": "Připojené domácnosti",
+    "leave": "Odejít",
+    "leaveConfirm": "Opravdu chceš odejít z této domácnosti?",
+    "errors": {
+      "inviteFailed": "Nepodařilo se odeslat pozvánku.",
+      "leaveFailed": "Nepodařilo se odejít z domácnosti.",
+      "nameSaveFailed": "Nepodařilo se uložit název."
+    }
+  },
+  "settings": {
+    "title": "Nastavení profilu",
+    "profile": "Profil",
+    "language": "Jazyk",
+    "changePassword": "Změnit heslo",
+    "passwordChanged": "Heslo změněno.",
+    "fields": {
+      "name": "Jméno",
+      "email": "E-mail",
+      "newPassword": "Nové",
+      "confirmPassword": "Potvrdit"
+    },
+    "placeholders": {
+      "name": "Tvoje jméno",
+      "email": "tvuj{'@'}email.com",
+      "newPassword": "Alespoň 8 znaků",
+      "confirmPassword": "Zopakuj nové heslo"
+    },
+    "profileSaved": "Profil uložen.",
+    "errors": {
+      "saveFailed": "Nepodařilo se uložit profil.",
+      "passwordChangeFailed": "Nepodařilo se změnit heslo."
+    }
+  },
+  "invitation": {
+    "processing": "Zpracovávám pozvánku...",
+    "welcomeTitle": "Vítej!",
+    "declinedTitle": "Pozvánka odmítnuta",
+    "errorTitle": "Něco se pokazilo",
+    "goToLists": "Přejít na moje seznamy",
+    "joined": "Připojil/a jsi se k domácnosti. Tvoje seznamy byly přesunuty.",
+    "declined": "Odmítl/a jsi pozvánku.",
+    "processFailed": "Nepodařilo se zpracovat pozvánku."
+  },
+  "search": {
+    "placeholder": "Hledat..."
+  }
+}

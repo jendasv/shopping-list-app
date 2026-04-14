@@ -1,0 +1,183 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "rename": "Rename",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "back": "Back",
+    "options": "Options",
+    "prev": "← Prev",
+    "next": "Next →",
+    "sending": "Sending...",
+    "saving": "Saving...",
+    "signOut": "Sign out"
+  },
+  "auth": {
+    "appName": "Lists",
+    "getStarted": "Get started",
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "welcomeBack": "Welcome back.",
+    "createAccount": "Create account",
+    "creatingAccount": "Creating account...",
+    "signingIn": "Signing in...",
+    "forgotPassword": "Forgot password",
+    "sendResetLink": "Send reset link",
+    "setNewPassword": "Set new password",
+    "newPassword": "New password",
+    "chooseNewPassword": "Choose a new password for your account.",
+    "verifyEmail": "Verify your email",
+    "emailVerified": "Email verified",
+    "emailVerifiedDesc": "Your account is active. You can now sign in.",
+    "resendEmail": "Resend email",
+    "emailSent": "Email sent.",
+    "linkSent": "Link sent. Check your email.",
+    "forgotPasswordLink": "Forgot your password?",
+    "alreadyHaveAccount": "Already have an account?",
+    "noAccount": "Don't have an account?",
+    "alreadyVerified": "Already verified?",
+    "backToSignIn": "Back to sign in",
+    "noCredits": "No credit card. No complexity.",
+    "fields": {
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "newPassword": "New password",
+      "confirmNewPassword": "Confirm new password",
+      "currentPassword": "Current"
+    },
+    "placeholders": {
+      "name": "Jan Novak",
+      "email": "jan{'@'}example.com",
+      "password": "At least 8 characters",
+      "repeatPassword": "Repeat password",
+      "currentPassword": "Current password",
+      "yourPassword": "Your password",
+      "repeatNewPassword": "Repeat new password"
+    },
+    "features": {
+      "realtime": "Real-time shared lists with your partner or family",
+      "versatile": "Shopping lists, packing lists and everything you need",
+      "privacy": "Private or shared — you decide"
+    }
+  },
+  "lists": {
+    "title": "My lists",
+    "newList": "+ New list",
+    "shared": "shared",
+    "owner": "owner",
+    "member": "member",
+    "noMatch": "No lists match your search.",
+    "empty": "No lists yet.",
+    "createFirst": "Create your first.",
+    "filters": {
+      "all": "All",
+      "shared": "Shared",
+      "private": "Private"
+    },
+    "sort": {
+      "custom": "Custom order",
+      "az": "A–Z",
+      "za": "Z–A",
+      "itemsDesc": "Most items",
+      "itemsAsc": "Fewest items",
+      "newest": "Newest",
+      "oldest": "Oldest"
+    },
+    "errors": {
+      "nameRequired": "Please enter a list name!",
+      "createFailed": "Failed to create list. Try again.",
+      "updateFailed": "Failed to update list. Try again.",
+      "deleteFailed": "Failed to delete list. Try again."
+    }
+  },
+  "items": {
+    "name": "Name",
+    "namePlaceholder": "Item name",
+    "quantity": "Quantity",
+    "fulfilled": "Fulfilled?",
+    "addItem": "Add item",
+    "closeForm": "Close form",
+    "noItems": "No items yet.",
+    "noItemsAdd": "No items yet. Add your first above.",
+    "errors": {
+      "nameRequired": "Name is required",
+      "quantityInvalid": "Quantity must be greater than 0",
+      "addFailed": "Failed to add item. Try again.",
+      "updateFailed": "Failed to update item. Try again.",
+      "removeFailed": "Failed to remove item. Try again."
+    }
+  },
+  "newList": {
+    "title": "New list",
+    "listName": "List name",
+    "listNamePlaceholder": "e.g. Weekly shopping",
+    "items": "Items",
+    "shareWithHousehold": "Share with household",
+    "sharedInfo": "Shared lists are visible to all household members.",
+    "createBtn": "Create list"
+  },
+  "household": {
+    "title": "Household",
+    "settings": "Settings",
+    "householdName": "Household name",
+    "householdNamePlaceholder": "Your household's name",
+    "invite": "Invite",
+    "inviteMember": "Invite member",
+    "inviteEmail": "Email",
+    "inviteEmailPlaceholder": "Member's email",
+    "saveNameBtn": "Save name",
+    "nameSaved": "Name saved.",
+    "inviteSent": "Invitation sent to {email}.",
+    "pro": "Pro",
+    "members": "Members",
+    "joinedHouseholds": "Joined households",
+    "leave": "Leave",
+    "leaveConfirm": "Are you sure you want to leave this household?",
+    "errors": {
+      "inviteFailed": "Failed to send invitation.",
+      "leaveFailed": "Failed to leave household.",
+      "nameSaveFailed": "Failed to save name."
+    }
+  },
+  "settings": {
+    "title": "Profile settings",
+    "profile": "Profile",
+    "language": "Language",
+    "changePassword": "Change password",
+    "passwordChanged": "Password changed.",
+    "fields": {
+      "name": "Name",
+      "email": "Email",
+      "newPassword": "New",
+      "confirmPassword": "Confirm"
+    },
+    "placeholders": {
+      "name": "Your name",
+      "email": "your{'@'}email.com",
+      "newPassword": "At least 8 characters",
+      "confirmPassword": "Repeat new password"
+    },
+    "profileSaved": "Profile saved.",
+    "errors": {
+      "saveFailed": "Failed to save profile.",
+      "passwordChangeFailed": "Failed to change password."
+    }
+  },
+  "invitation": {
+    "processing": "Processing invitation...",
+    "welcomeTitle": "Welcome!",
+    "declinedTitle": "Invitation declined",
+    "errorTitle": "Something went wrong",
+    "goToLists": "Go to my lists",
+    "joined": "You have joined the household. Your lists have been moved.",
+    "declined": "You have declined the invitation.",
+    "processFailed": "Failed to process invitation."
+  },
+  "search": {
+    "placeholder": "Search..."
+  }
+}

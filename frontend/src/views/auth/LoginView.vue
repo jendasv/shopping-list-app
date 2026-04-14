@@ -1,26 +1,29 @@
 <template>
   <div class="min-h-screen flex items-center justify-center px-8 py-12">
+    <div class="absolute top-4 right-4">
+      <LocaleSwitcher />
+    </div>
     <div class="w-full max-w-sm">
-      <h1 class="text-2xl font-bold mb-2">Sign in</h1>
-      <p class="text-gray-500 text-base mb-8">Welcome back.</p>
+      <h1 class="text-2xl font-bold mb-2">{{ $t('auth.signIn') }}</h1>
+      <p class="text-gray-500 text-base mb-8">{{ $t('auth.welcomeBack') }}</p>
 
       <form @submit.prevent="handleLogin" class="space-y-4">
         <div>
-          <label class="block text-base font-medium mb-1">Email</label>
+          <label class="block text-base font-medium mb-1">{{ $t('auth.fields.email') }}</label>
           <input
             v-model="form.email"
             type="email"
-            placeholder="jan@example.com"
+            :placeholder="$t('auth.placeholders.email')"
             required
             class="input-field"
           />
         </div>
         <div>
-          <label class="block text-base font-medium mb-1">Password</label>
+          <label class="block text-base font-medium mb-1">{{ $t('auth.fields.password') }}</label>
           <input
             v-model="form.password"
             type="password"
-            placeholder="Your password"
+            :placeholder="$t('auth.placeholders.yourPassword')"
             required
             class="input-field"
           />
@@ -29,7 +32,7 @@
               :to="{ name: 'forgot-password' }"
               class="text-sm text-gray-500 hover:underline"
             >
-              Forgot password?
+              {{ $t('auth.forgotPasswordLink') }}
             </RouterLink>
           </div>
         </div>
@@ -37,14 +40,14 @@
         <AlertMessage v-if="error" type="error" :message="error" />
 
         <button type="submit" :disabled="authStore.loading" class="btn-primary w-full">
-          {{ authStore.loading ? 'Signing in...' : 'Sign in' }}
+          {{ authStore.loading ? $t('auth.signingIn') : $t('auth.signIn') }}
         </button>
       </form>
 
       <p class="text-center text-base text-gray-500 mt-6">
-        Don't have an account?
+        {{ $t('auth.noAccount') }}
         <RouterLink :to="{ name: 'landing' }" class="font-medium underline">
-          Sign up
+          {{ $t('auth.signUp') }}
         </RouterLink>
       </p>
     </div>
@@ -56,6 +59,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import AlertMessage from '@/components/elements/AlertMessage.vue'
+import LocaleSwitcher from '@/components/ui/LocaleSwitcher.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -80,4 +84,3 @@ async function handleLogin() {
   }
 }
 </script>
-

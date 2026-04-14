@@ -12,7 +12,7 @@
         {{ appName }}
       </RouterLink>
 
-      <!-- User ikona vpravo -->
+      <!-- User icon vpravo -->
       <UserPanel />
     </div>
   </header>

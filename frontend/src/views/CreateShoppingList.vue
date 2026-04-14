@@ -2,19 +2,19 @@
   <div class="py-4">
     <!-- Header -->
     <div class="flex items-center gap-3 mb-6">
-      <RouterLink :to="{ name: 'home' }" class="text-gray-400 hover:text-black transition" title="Back">
+      <RouterLink :to="{ name: 'home' }" class="text-gray-400 hover:text-black transition" :title="$t('common.back')">
         <ArrowLeft customClass="w-6 h-6" />
       </RouterLink>
-      <h1 class="text-2xl font-bold flex-1 text-center">New list</h1>
+      <h1 class="text-2xl font-bold flex-1 text-center">{{ $t('newList.title') }}</h1>
     </div>
 
     <!-- List name -->
     <div class="mb-6 flex items-center gap-4 text-xl">
-      <label class="shrink-0 text-gray-900">List name</label>
+      <label class="shrink-0 text-gray-900">{{ $t('newList.listName') }}</label>
       <input
         v-model="shoppingListName"
         type="text"
-        placeholder="e.g. Weekly shopping"
+        :placeholder="$t('newList.listNamePlaceholder')"
         class="flex-1 p-2 focus:outline-none text-gray-900"
         @input="error = ''"
       />
@@ -25,13 +25,13 @@
     <!-- Items -->
     <div class="mb-6">
       <div class="flex items-center justify-between mb-3">
-        <h2 class="text-xl font-semibold">Items</h2>
+        <h2 class="text-xl font-semibold">{{ $t('newList.items') }}</h2>
         <button
           v-if="!showItemAddForm"
           @click="showItemAddForm = true"
           class="text-sm text-gray-500 hover:text-black underline transition"
         >
-          + Add item
+          + {{ $t('items.addItem') }}
         </button>
       </div>
 
@@ -50,7 +50,7 @@
           <button @click="removeItem(item.id)" class="text-red-400 hover:text-red-600 text-3xl leading-none ml-3">×</button>
         </li>
       </ul>
-      <p v-else-if="!showItemAddForm" class="text-base text-gray-400 mt-2">No items yet.</p>
+      <p v-else-if="!showItemAddForm" class="text-base text-gray-400 mt-2">{{ $t('items.noItems') }}</p>
     </div>
 
     <HandDrawnDivider class="mb-5" />
@@ -58,9 +58,9 @@
     <!-- Visibility -->
     <div class="mb-6">
       <HandDrawnCheckbox v-model="isShared">
-        Share with household
+        {{ $t('newList.shareWithHousehold') }}
       </HandDrawnCheckbox>
-      <p class="text-base text-gray-400 mt-1">Shared lists are visible to all household members.</p>
+      <p class="text-base text-gray-400 mt-1">{{ $t('newList.sharedInfo') }}</p>
     </div>
 
     <AlertMessage v-if="error" type="error" :message="error" />
@@ -72,7 +72,7 @@
         :disabled="!shoppingListName.trim()"
         class="btn-primary"
       >
-        Create list
+        {{ $t('newList.createBtn') }}
       </button>
     </div>
   </div>
@@ -81,6 +81,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import type { iItem } from '@/types'
 import { createList } from '@/services/shoppingListService'
 import AddItemForm from '@/components/form/AddItemForm.vue'
@@ -90,6 +91,7 @@ import HandDrawnDivider from '@/components/elements/HandDrawnDivider.vue'
 import ArrowLeft from '@/components/icons/ArrowLeft.vue'
 import Typewrite from '@/components/animations/Typewrite.vue'
 
+const { t } = useI18n()
 const router = useRouter()
 
 const shoppingListName = ref('')
@@ -109,7 +111,7 @@ function removeItem(id: number) {
 
 async function createShoppingList() {
   if (!shoppingListName.value.trim()) {
-    error.value = 'List name is required.'
+    error.value = t('lists.errors.nameRequired')
     return
   }
   try {
@@ -117,8 +119,7 @@ async function createShoppingList() {
     router.push({ name: 'home' })
   } catch (e) {
     console.error(e)
-    error.value = 'Failed to create list.'
+    error.value = t('lists.errors.createFailed')
   }
 }
 </script>
-

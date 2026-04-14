@@ -13,7 +13,8 @@ services:
       - ./backend:/var/www
     user: "${UID:-1000}:${GID:-1000}"
     depends_on:
-      - mysql
+      # - mysql
+      - postgres
 
   nginx:
     image: nginx:latest
@@ -40,6 +41,18 @@ services:
 #    ports:
 #      - "3306:3306"
 
+  postgres:
+    image: postgres:17
+    container_name: shopping_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: shopping
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sh:/docker-entrypoint-initdb.d/init.sh
+
   adminer:
     image: adminer:latest
     container_name: shopping_adminer
@@ -65,7 +78,8 @@ services:
       - "6001:6001"
     user: "${UID:-1000}:${GID:-1000}"
     depends_on:
-      - mysql
+      # - mysql
+      - postgres
 
   mailpit:
     image: axllent/mailpit:latest
@@ -87,4 +101,5 @@ services:
 
 volumes:
   mysql_data:
+  postgres_data:
   frontend_node_modules:

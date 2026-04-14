@@ -1,8 +1,9 @@
 import { apiFetch } from '@/services/api'
-import type { iShoppingList } from '@/types'
+import type { iShoppingList, iListsResponse } from '@/types'
 
-export async function fetchAllLists(): Promise<iShoppingList[]> {
-  return apiFetch<iShoppingList[]>('/lists', { method: 'GET' })
+export async function fetchAllLists(params: Record<string, string> = {}): Promise<iListsResponse<iShoppingList>> {
+  const query = new URLSearchParams(params).toString()
+  return apiFetch<iListsResponse<iShoppingList>>(`/lists${query ? `?${query}` : ''}`, { method: 'GET' })
 }
 
 export async function fetchList(id: number | string): Promise<iShoppingList> {

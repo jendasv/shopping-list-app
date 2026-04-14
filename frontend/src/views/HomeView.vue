@@ -1,9 +1,8 @@
 <template>
   <div class="py-4">
-    <div v-if="menuOpenId !== null" class="fixed inset-0 z-10" @click="closeMenu()" />
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold">My lists</h1>
-      <RouterLink :to="{ name: 'new-list' }" class="btn-primary">+ New list</RouterLink>
+      <h1 class="text-2xl font-bold">{{ $t('lists.title') }}</h1>
+      <RouterLink :to="{ name: 'new-list' }" class="btn-primary">{{ $t('lists.newList') }}</RouterLink>
     </div>
 
     <FilterBar
@@ -11,24 +10,25 @@
       v-model:filter="activeFilter"
       v-model:sort="activeSort"
       :filterOptions="[
-        { value: 'all', label: 'All' },
-        { value: 'shared', label: 'Shared' },
-        { value: 'private', label: 'Private' },
+        { value: 'all', label: $t('lists.filters.all') },
+        { value: 'shared', label: $t('lists.filters.shared') },
+        { value: 'private', label: $t('lists.filters.private') },
       ]"
       :sortOptions="[
-        { value: 'custom', label: 'Custom order' },
-        { value: 'az', label: 'A–Z' },
-        { value: 'za', label: 'Z–A' },
-        { value: 'items-desc', label: 'Most items' },
-        { value: 'items-asc', label: 'Fewest items' },
-        { value: 'newest', label: 'Newest' },
-        { value: 'oldest', label: 'Oldest' },
+        { value: 'custom', label: $t('lists.sort.custom') },
+        { value: 'az', label: $t('lists.sort.az') },
+        { value: 'za', label: $t('lists.sort.za') },
+        { value: 'items-desc', label: $t('lists.sort.itemsDesc') },
+        { value: 'items-asc', label: $t('lists.sort.itemsAsc') },
+        { value: 'newest', label: $t('lists.sort.newest') },
+        { value: 'oldest', label: $t('lists.sort.oldest') },
       ]"
     />
 
-    <p v-if="isLoading" class="text-sm text-gray-400 text-center mt-10">Loading...</p>
+    <Transition name="page" mode="out-in">
+      <p v-if="isLoading" key="loading" class="text-sm text-gray-400 text-center mt-10">{{ $t('common.loading') }}</p>
 
-    <template v-else>
+      <div v-else key="content">
       <!-- Drag & drop mode -->
       <VueDraggablePlus
         v-if="isDragEnabled && lists.length"
@@ -38,7 +38,7 @@
         handle=".drag-handle"
         @end="onReorderLists"
       >
-        <li v-for="list in lists" :key="list.id" class="group flex items-center justify-between">
+        <li v-for="(list, i) in lists" :key="list.id" class="list-stagger-item group flex items-center justify-between" :style="{ '--i': i }">
           <span class="drag-handle cursor-grab active:cursor-grabbing text-gray-200 group-hover:text-gray-400 mr-2 shrink-0 text-2xl leading-none select-none transition-colors">⠿</span>
           <template v-if="editingListId !== list.id">
             <RouterLink
@@ -51,33 +51,27 @@
               </span>
               <span v-if="list.itemsCount" class="text-gray-400 text-base tabular-nums">{{ list.completedCount }}/{{ list.itemsCount }}</span>
               <span v-if="list.visibility === 'shared'" class="text-gray-400 text-base">
-                shared — {{ list.isOwner ? 'owner' : 'member' }}
+                {{ list.isOwner ? $t('lists.owner') : $t('lists.member') }}
               </span>
             </RouterLink>
-            <RowActions :id="list.id" :open="menuOpenId === list.id" @toggle="toggleMenu" @close="closeMenu">
-              <template #desktop>
-                <button @click="startEditList(list)" class="text-gray-400 hover:text-black transition" title="Rename">
-                  <HandDrawnPencil sizeClass="w-11 h-11" />
-                </button>
-                <button @click="removeList(list.id)" class="text-red-400 hover:text-red-600 text-4xl leading-none transition cursor-pointer" title="Delete">×</button>
-              </template>
-              <template #menu>
-                <button @click="startEditList(list); closeMenu()" class="w-full px-4 py-3 text-left text-xl hover:bg-gray-50 transition-colors">Rename</button>
-                <button @click="removeList(list.id); closeMenu()" class="w-full px-4 py-3 text-left text-xl text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100">Delete</button>
+            <RowActions>
+              <template #menu="{ close }">
+                <button @click="startEditList(list); close()" class="w-full px-4 py-3 text-left text-xl hover:bg-gray-50 transition-colors">{{ $t('common.rename') }}</button>
+                <button @click="removeList(list.id); close()" class="w-full px-4 py-3 text-left text-xl text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100">{{ $t('common.delete') }}</button>
               </template>
             </RowActions>
           </template>
           <form v-else @submit.prevent="saveListName(list)" class="flex items-center gap-2 w-full">
-            <input v-model="list.name" type="text" class="flex-1 border-b-2 border-black text-base px-1 py-1 outline-none" autofocus />
-            <button type="submit" class="text-base font-medium text-green-700 px-1 py-0.5 cursor-pointer">Save</button>
-            <button type="button" @click="editingListId = null" class="text-base text-gray-400 px-1 py-0.5 cursor-pointer">Cancel</button>
+            <input v-model="list.name" type="text" class="flex-1 border-b-2 border-black text-base px-1 py-1 outline-none" v-focus-end />
+            <button type="submit" class="text-base font-medium text-green-700 px-1 py-0.5 cursor-pointer">{{ $t('common.save') }}</button>
+            <button type="button" @click="editingListId = null" class="text-base text-gray-400 px-1 py-0.5 cursor-pointer">{{ $t('common.cancel') }}</button>
           </form>
         </li>
       </VueDraggablePlus>
 
       <!-- Filtered / sorted mode (no drag) -->
-      <ul v-else-if="displayedLists.length" class="space-y-3">
-        <li v-for="list in displayedLists" :key="list.id" class="group flex items-center justify-between">
+      <TransitionGroup v-else-if="lists.length" name="list-stagger" appear tag="ul" class="space-y-3">
+        <li v-for="(list, i) in lists" :key="list.id" class="group flex items-center justify-between" :style="{ '--i': i }">
           <template v-if="editingListId !== list.id">
             <RouterLink
               :to="{ name: 'list-detail', params: { id: list.id } }"
@@ -86,41 +80,51 @@
               <span class="text-2xl">{{ list.name }}</span>
               <span v-if="list.itemsCount" class="text-gray-400 text-base tabular-nums">{{ list.completedCount }}/{{ list.itemsCount }}</span>
               <span v-if="list.visibility === 'shared'" class="text-gray-400 text-base">
-                shared — {{ list.isOwner ? 'owner' : 'member' }}
+                {{ list.isOwner ? $t('lists.owner') : $t('lists.member') }}
               </span>
             </RouterLink>
-            <RowActions :id="list.id" :open="menuOpenId === list.id" @toggle="toggleMenu" @close="closeMenu">
-              <template #desktop>
-                <button @click="startEditList(list)" class="text-gray-400 hover:text-black transition" title="Rename">
-                  <HandDrawnPencil sizeClass="w-11 h-11" />
-                </button>
-                <button @click="removeList(list.id)" class="text-red-400 hover:text-red-600 text-4xl leading-none transition cursor-pointer" title="Delete">×</button>
-              </template>
-              <template #menu>
-                <button @click="startEditList(list); closeMenu()" class="w-full px-4 py-3 text-left text-xl hover:bg-gray-50 transition-colors">Rename</button>
-                <button @click="removeList(list.id); closeMenu()" class="w-full px-4 py-3 text-left text-xl text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100">Delete</button>
+            <RowActions>
+              <template #menu="{ close }">
+                <button @click="startEditList(list); close()" class="w-full px-4 py-3 text-left text-xl hover:bg-gray-50 transition-colors">{{ $t('common.rename') }}</button>
+                <button @click="removeList(list.id); close()" class="w-full px-4 py-3 text-left text-xl text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100">{{ $t('common.delete') }}</button>
               </template>
             </RowActions>
           </template>
           <form v-else @submit.prevent="saveListName(list)" class="flex items-center gap-2 w-full">
-            <input v-model="list.name" type="text" class="flex-1 border-b-2 border-black text-base px-1 py-1 outline-none" autofocus />
-            <button type="submit" class="text-base font-medium text-green-700 px-1 py-0.5 cursor-pointer">Save</button>
-            <button type="button" @click="editingListId = null" class="text-base text-gray-400 px-1 py-0.5 cursor-pointer">Cancel</button>
+            <input v-model="list.name" type="text" class="flex-1 border-b-2 border-black text-base px-1 py-1 outline-none" v-focus-end />
+            <button type="submit" class="text-base font-medium text-green-700 px-1 py-0.5 cursor-pointer">{{ $t('common.save') }}</button>
+            <button type="button" @click="editingListId = null" class="text-base text-gray-400 px-1 py-0.5 cursor-pointer">{{ $t('common.cancel') }}</button>
           </form>
         </li>
-      </ul>
+      </TransitionGroup>
 
       <!-- No results from filter/search -->
-      <p v-else-if="lists.length" class="text-sm text-gray-400 text-center mt-10">
-        No lists match your search.
+      <p v-else-if="search || activeFilter !== 'all'" class="text-sm text-gray-400 text-center mt-10">
+        {{ $t('lists.noMatch') }}
       </p>
 
       <!-- No lists at all -->
       <p v-else class="text-sm text-gray-400 text-center mt-10">
-        No lists yet.
-        <RouterLink :to="{ name: 'new-list' }" class="underline font-medium text-black">Create your first.</RouterLink>
+        {{ $t('lists.empty') }}
+        <RouterLink :to="{ name: 'new-list' }" class="underline font-medium text-black">{{ $t('lists.createFirst') }}</RouterLink>
       </p>
-    </template>
+
+      <!-- Pagination -->
+      <div v-if="meta.last_page > 1" class="flex items-center justify-center gap-6 mt-8 text-sm text-gray-400">
+        <button
+          @click="prevPage"
+          :disabled="meta.current_page === 1"
+          class="disabled:opacity-30 hover:text-black transition cursor-pointer"
+        >{{ $t('common.prev') }}</button>
+        <span>{{ meta.current_page }} / {{ meta.last_page }}</span>
+        <button
+          @click="nextPage"
+          :disabled="meta.current_page === meta.last_page"
+          class="disabled:opacity-30 hover:text-black transition cursor-pointer"
+        >{{ $t('common.next') }}</button>
+      </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -128,28 +132,26 @@
 import { RouterLink } from 'vue-router'
 import { VueDraggable as VueDraggablePlus } from 'vue-draggable-plus'
 import { useShoppingLists } from '@/composables/useShoppingLists'
-import { useContextMenu } from '@/composables/useContextMenu'
 import { reorderLists } from '@/services/shoppingListService'
 import FilterBar from '@/components/ui/FilterBar.vue'
 import Typewrite from '@/components/animations/Typewrite.vue'
-import HandDrawnPencil from '@/components/icons/HandDrawnPencil.vue'
 import RowActions from '@/components/ui/RowActions.vue'
 
 const {
   lists,
-  displayedLists,
   isLoading,
+  meta,
   editingListId,
   search,
   activeFilter,
   activeSort,
   isDragEnabled,
+  prevPage,
+  nextPage,
   startEditList,
   saveListName,
   removeList,
 } = useShoppingLists()
-
-const { menuOpenId, toggleMenu, closeMenu } = useContextMenu()
 
 async function onReorderLists() {
   await reorderLists(lists.value.map((l) => l.id))

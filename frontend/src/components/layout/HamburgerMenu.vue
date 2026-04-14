@@ -3,7 +3,7 @@
     <!-- Hamburger button (tatarka 🥩) -->
     <button
       @click="toggle"
-      class="flex flex-col justify-center items-center w-9 h-9 gap-[5px] hover:bg-black/5 rounded-md transition-colors"
+      class="flex flex-col justify-center items-center w-9 h-9 gap-[5px] hover:bg-black/5 rounded-md transition-colors cursor-pointer"
       aria-label="Menu"
     >
       <span
@@ -31,7 +31,7 @@
           @click="close"
           class="flex items-center gap-3 px-4 py-3 text-xl font-medium hover:bg-gray-50 transition-colors"
         >
-          {{ item.label }}
+          {{ $t(item.labelKey) }}
         </RouterLink>
       </div>
     </Transition>
@@ -46,9 +46,9 @@ const isOpen = ref(false)
 const menuRef = ref<HTMLElement | null>(null)
 
 const menuItems = [
-  { name: 'home', label: 'My lists', to: { name: 'home' } },
-  { name: 'household', label: 'Household', to: { name: 'household' } },
-  { name: 'settings', label: 'Settings', to: { name: 'settings' } },
+  { name: 'home', labelKey: 'lists.title', to: { name: 'home' } },
+  { name: 'household', labelKey: 'household.title', to: { name: 'household' } },
+  { name: 'settings', labelKey: 'settings.title', to: { name: 'settings' } },
 ]
 
 function toggle() { isOpen.value = !isOpen.value }

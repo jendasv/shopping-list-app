@@ -1,14 +1,14 @@
 <template>
   <Transition name="unroll">
   <form @submit.prevent="onSubmit" v-if="showAddForm" class="relative mb-4 flex flex-col gap-4 w-full">
-    <HandDrawnClose title="Close form" :modelValue="showAddForm" @update:modelValue="val => emit('update:showAddForm', val)"/>
+    <HandDrawnClose :title="$t('items.closeForm')" :modelValue="showAddForm" @update:modelValue="val => emit('update:showAddForm', val)"/>
     <!-- NAME -->
     <div class="flex flex-col text-xl">
-      <label class="text-gray-900 mb-1">Name
+      <label class="text-gray-900 mb-1">{{ $t('items.name') }}
         <input
           v-model="item.name"
           type="text"
-          placeholder="Item name"
+          :placeholder="$t('items.namePlaceholder')"
           class="px-2 pt-2 focus:outline-none focus:border-gray-600 text-gray-900"
           @input="error = ''"
         />
@@ -17,7 +17,7 @@
 
     <!-- QUANTITY -->
     <div class="flex flex-col text-xl">
-      <label class="text-gray-900 mb-1">Quantity
+      <label class="text-gray-900 mb-1">{{ $t('items.quantity') }}
         <input
           v-model.number="item.quantity"
           type="number"
@@ -32,7 +32,7 @@
     <!-- CHECKBOX -->
     <div class="flex items-center gap-2">
       <HandDrawnCheckbox v-model="item.isCompleted" sizeClass="w-7 h-7">
-        Fulfilled?
+        {{ $t('items.fulfilled') }}
       </HandDrawnCheckbox>
     </div>
 
@@ -46,7 +46,7 @@
         class="mt-4 ml-auto text-gray-900 hover:text-gray-600 text-2xl flex items-center gap-2 cursor-pointer transition duration-200 hover:scale-105"
         :class="{ shake: shaking }"
       >
-        Add item
+        {{ $t('items.addItem') }}
       </button>
     </div>
   </form>
@@ -55,9 +55,12 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { iItem } from '@/types'
 import HandDrawnCheckbox from "@/components/elements/form/HandDrawnCheckbox.vue";
 import HandDrawnClose from "@/components/icons/HandDrawnClose.vue";
+
+const { t } = useI18n()
 
 const emit = defineEmits<{
   (e: 'update:showAddForm', value: boolean): void
@@ -87,12 +90,12 @@ function triggerShake() {
 
 function onSubmit() {
   if (!item.value.name.trim()) {
-    error.value = 'Name is required'
+    error.value = t('items.errors.nameRequired')
     triggerShake()
     return
   }
   if (item.value.quantity <= 0) {
-    error.value = 'Quantity must be greater than 0'
+    error.value = t('items.errors.quantityInvalid')
     triggerShake()
     return
   }

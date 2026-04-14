@@ -29,11 +29,16 @@ class ShoppingListService
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @param  array<string, string>  $params
+     * @return array<string, mixed>
      */
-    public function getAllLists(User $user): array
+    public function getAllLists(User $user, array $params = []): array
     {
         $household = $user->household();
+        $search = $params['search'] ?? null;
+        $filter = $params['filter'] ?? 'all';
+        $sort = $params['sort'] ?? 'custom';
+        $page = max(1, (int) ($params['page'] ?? 1));
 
         $query = ShoppingList::with(['items' => fn ($q) => $q->orderBy('is_completed')->orderBy('sort_order')])
             ->leftJoin('list_user_order', function ($join) use ($user) {
@@ -41,8 +46,7 @@ class ShoppingListService
                     ->where('list_user_order.user_id', '=', $user->id);
             })
             ->select('shopping_list.*', 'list_user_order.sort_order as user_sort_order')
-            ->withCount('items')
-            ->orderByRaw('ISNULL(list_user_order.sort_order), list_user_order.sort_order');
+            ->withCount('items');
 
         if ($household) {
             $query->where('shopping_list.household_id', $household->id)
@@ -54,10 +58,42 @@ class ShoppingListService
             $query->where('shopping_list.created_by', $user->id);
         }
 
-        return $query->get()
+        if ($search) {
+            $query->where('shopping_list.name', 'ILIKE', "%{$search}%");
+        }
+
+        if ($filter === 'shared') {
+            $query->where('shopping_list.visibility', ShoppingListVisibility::Shared->value);
+        } elseif ($filter === 'private') {
+            $query->where('shopping_list.visibility', ShoppingListVisibility::Private->value);
+        }
+
+        match ($sort) {
+            'az' => $query->orderBy('shopping_list.name', 'ASC'),
+            'za' => $query->orderBy('shopping_list.name', 'DESC'),
+            'items-desc' => $query->orderByRaw('items_count DESC'),
+            'items-asc' => $query->orderByRaw('items_count ASC'),
+            'newest' => $query->orderBy('shopping_list.created_at', 'DESC'),
+            'oldest' => $query->orderBy('shopping_list.created_at', 'ASC'),
+            default => $query->orderByRaw('list_user_order.sort_order IS NULL, list_user_order.sort_order ASC'),
+        };
+
+        $paginated = $query->paginate(10, ['*'], 'page', $page);
+
+        $data = collect($paginated->items())
             ->map(fn ($list) => $this->shoppingListMapper->map($list, listOnly: true, user: $user))
             ->values()
             ->all();
+
+        return [
+            'data' => $data,
+            'meta' => [
+                'current_page' => $paginated->currentPage(),
+                'last_page' => $paginated->lastPage(),
+                'total' => $paginated->total(),
+                'per_page' => $paginated->perPage(),
+            ],
+        ];
     }
 
     public function findList(int $id, User $user): ShoppingList
@@ -119,11 +155,11 @@ class ShoppingListService
 
             $list->load('items');
 
-            $maxOrder = DB::table('list_user_order')->where('user_id', $user->id)->max('sort_order') ?? -1;
+            $minOrder = DB::table('list_user_order')->where('user_id', $user->id)->min('sort_order') ?? 1;
             DB::table('list_user_order')->insert([
                 'user_id' => $user->id,
                 'shopping_list_id' => $list->id,
-                'sort_order' => $maxOrder + 1,
+                'sort_order' => $minOrder - 1,
             ]);
         } catch (Throwable $e) {
             throw new DatabaseOperationException('Failed to create shopping list: '.$e->getMessage());

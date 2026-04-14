@@ -1,24 +1,24 @@
 <template>
   <div class="py-4 space-y-10">
-    <h1 class="text-2xl font-bold text-center">Household</h1>
+    <h1 class="text-2xl font-bold text-center">{{ $t('household.title') }}</h1>
 
-    <div v-if="loading" class="text-sm text-gray-500">Loading...</div>
+    <div v-if="loading" class="text-sm text-gray-500">{{ $t('common.loading') }}</div>
     <template v-else-if="data">
 
       <!-- Own household -->
       <section>
-        <h2 class="text-xl font-semibold mb-4">Settings</h2>
+        <h2 class="text-xl font-semibold mb-4">{{ $t('household.settings') }}</h2>
 
         <!-- Name -->
         <form @submit.prevent="saveHousehold" class="space-y-4 mb-6">
           <div class="flex items-baseline gap-3 text-xl">
-            <label class="text-gray-900 shrink-0" for="householdName">Household name</label>
-            <input id="householdName" v-model="householdName" placeholder="Your household's name" type="text" required class="flex-1 p-2 focus:outline-none focus:border-gray-600 text-gray-900" />
+            <label class="text-gray-900 shrink-0" for="householdName">{{ $t('household.householdName') }}</label>
+            <input id="householdName" v-model="householdName" :placeholder="$t('household.householdNamePlaceholder')" type="text" required class="flex-1 p-2 focus:outline-none focus:border-gray-600 text-gray-900" />
           </div>
           <AlertMessage v-if="nameError" type="error" :message="nameError" />
           <AlertMessage v-if="nameSuccess" type="success" :message="nameSuccess" />
           <button type="submit" :disabled="nameSaving" class="btn-primary">
-            {{ nameSaving ? 'Saving...' : 'Save name' }}
+            {{ nameSaving ? $t('common.saving') : $t('household.saveNameBtn') }}
           </button>
         </form>
 
@@ -27,20 +27,20 @@
         <!-- Invite -->
         <div class="mb-6">
           <p class="text-xl font-bold mb-3 flex items-center gap-2">
-            Invite member
-            <span class="text-xs bg-black text-white px-1.5 py-0.5 rounded font-medium">Pro</span>
+            {{ $t('household.inviteMember') }}
+            <span class="text-xs bg-black text-white px-1.5 py-0.5 rounded font-medium">{{ $t('household.pro') }}</span>
           </p>
           <form @submit.prevent="sendInvite" class="flex items-baseline gap-3 text-xl">
-            <label class="text-gray-900 shrink-0" for="inviteEmail">Email</label>
+            <label class="text-gray-900 shrink-0" for="inviteEmail">{{ $t('household.inviteEmail') }}</label>
             <input
               id="inviteEmail"
               v-model="inviteEmail"
               type="email"
-              placeholder="Member's email"
+              :placeholder="$t('household.inviteEmailPlaceholder')"
               class="flex-1 p-2 focus:outline-none focus:border-gray-600 text-gray-900"
             />
             <button type="submit" :disabled="inviteLoading" class="btn-primary whitespace-nowrap shrink-0">
-              {{ inviteLoading ? '...' : 'Invite' }}
+              {{ inviteLoading ? '...' : $t('household.invite') }}
             </button>
           </form>
           <AlertMessage v-if="inviteError" type="error" :message="inviteError" class="mt-2" />
@@ -51,7 +51,7 @@
 
         <!-- Members -->
         <div>
-          <p class="text-xl font-bold mb-3">Members</p>
+          <p class="text-xl font-bold mb-3">{{ $t('household.members') }}</p>
           <ul class="space-y-3">
             <li
               v-for="member in data.ownHousehold.members"
@@ -59,7 +59,7 @@
               class="flex items-center justify-between text-xl"
             >
               <span>{{ member.name }} <span class="text-gray-400 text-base">({{ member.email }})</span></span>
-              <span class="text-base text-gray-400 capitalize">{{ member.role === 'owner' ? 'Owner' : 'Member' }}</span>
+              <span class="text-base text-gray-400 capitalize">{{ member.role === 'owner' ? $t('lists.owner') : $t('lists.member') }}</span>
             </li>
           </ul>
         </div>
@@ -68,7 +68,7 @@
       <!-- Joined households -->
       <section v-if="data.joinedHouseholds.length > 0">
         <HandDrawnDivider class="my-6" />
-        <h2 class="text-xl font-semibold mb-4">Joined households</h2>
+        <h2 class="text-xl font-semibold mb-4">{{ $t('household.joinedHouseholds') }}</h2>
 
         <ul class="space-y-3">
           <li
@@ -78,7 +78,7 @@
           >
             <span class="font-medium">{{ household.name }}</span>
             <button @click="leave(household.id)" class="text-red-600 underline hover:text-red-800 cursor-pointer">
-              Leave
+              {{ $t('household.leave') }}
             </button>
           </li>
         </ul>
@@ -91,10 +91,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { householdService } from '@/services/householdService'
 import AlertMessage from '@/components/elements/AlertMessage.vue'
 import HandDrawnDivider from '@/components/elements/HandDrawnDivider.vue'
 import type { iHouseholdOverview } from '@/types'
+
+const { t } = useI18n()
 
 const loading = ref(true)
 const data = ref<iHouseholdOverview | null>(null)
@@ -130,10 +133,10 @@ async function saveHousehold() {
   try {
     await householdService.updateHousehold(householdName.value)
     if (data.value) data.value.ownHousehold.name = householdName.value
-    nameSuccess.value = 'Name saved.'
+    nameSuccess.value = t('household.nameSaved')
   } catch (e: unknown) {
     const err = e as { message?: string }
-    nameError.value = err.message ?? 'Failed to save name.'
+    nameError.value = err.message ?? t('household.errors.nameSaveFailed')
   } finally {
     nameSaving.value = false
   }
@@ -145,18 +148,18 @@ async function sendInvite() {
   inviteLoading.value = true
   try {
     await householdService.sendInvitation(inviteEmail.value)
-    inviteSuccess.value = `Invitation sent to ${inviteEmail.value}.`
+    inviteSuccess.value = t('household.inviteSent', { email: inviteEmail.value })
     inviteEmail.value = ''
   } catch (e: unknown) {
     const err = e as { message?: string }
-    inviteError.value = err.message ?? 'Failed to send invitation.'
+    inviteError.value = err.message ?? t('household.errors.inviteFailed')
   } finally {
     inviteLoading.value = false
   }
 }
 
 async function leave(id: number) {
-  if (!confirm('Are you sure you want to leave this household?')) return
+  if (!confirm(t('household.leaveConfirm'))) return
   leaveErrorMsg.value = ''
   try {
     await householdService.leaveHousehold(id)
@@ -165,7 +168,7 @@ async function leave(id: number) {
     }
   } catch (e: unknown) {
     const err = e as { message?: string }
-    leaveErrorMsg.value = err.message ?? 'Failed to leave household.'
+    leaveErrorMsg.value = err.message ?? t('household.errors.leaveFailed')
   }
 }
 </script>

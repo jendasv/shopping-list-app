@@ -1,5 +1,6 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import type { iShoppingList, iItem } from '@/types'
 import { fetchList } from '@/services/shoppingListService'
 import { createItem, updateItem, deleteItem } from '@/services/itemService'
@@ -7,6 +8,7 @@ import { useAuthStore } from '@/stores/auth'
 import echo from '@/plugins/echo'
 
 export function useListDetail(id: string) {
+  const { t } = useI18n()
   const route = useRoute()
   const authStore = useAuthStore()
   const list = ref<iShoppingList | null>(null)
@@ -76,7 +78,7 @@ export function useListDetail(id: string) {
       list.value.items = list.value.items.filter((item) => item.id !== itemId)
     } catch (e) {
       console.error('Failed to remove item:', e)
-      error.value = 'Failed to remove item. Try again.'
+      error.value = t('items.errors.removeFailed')
     }
   }
 
@@ -97,18 +99,18 @@ export function useListDetail(id: string) {
         ),
       )
       console.error('Failed to update item:', e)
-      error.value = 'Failed to update item. Try again.'
+      error.value = t('items.errors.updateFailed')
     }
   }
 
   async function addItem(item: iItem) {
     const name = item.name.trim()
     if (!name) {
-      error.value = 'Please enter an item name!'
+      error.value = t('items.errors.nameRequired')
       return
     }
     if (item.quantity < 1) {
-      error.value = 'Please enter a quantity greater than 0!'
+      error.value = t('items.errors.quantityInvalid')
       return
     }
     try {
@@ -119,7 +121,7 @@ export function useListDetail(id: string) {
       list.value.items.push(lastItem)
     } catch (e) {
       console.error('Failed to add item:', e)
-      error.value = 'Failed to add item. Try again.'
+      error.value = t('items.errors.addFailed')
     }
   }
 
@@ -129,11 +131,11 @@ export function useListDetail(id: string) {
 
   async function saveItem(listId: number, item: iItem) {
     if (!item.name.trim()) {
-      error.value = 'Please enter an item name!'
+      error.value = t('items.errors.nameRequired')
       return
     }
     if (item.quantity < 1) {
-      error.value = 'Please enter a quantity greater than 0!'
+      error.value = t('items.errors.quantityInvalid')
       return
     }
     try {
@@ -142,7 +144,7 @@ export function useListDetail(id: string) {
       editingItemId.value = null
     } catch (e) {
       console.error('Failed to update item:', e)
-      error.value = 'Failed to update item. Try again.'
+      error.value = t('items.errors.updateFailed')
       editingItemId.value = null
     }
   }

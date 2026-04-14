@@ -1,36 +1,36 @@
 <template>
   <div class="min-h-screen flex items-center justify-center px-8 py-12">
     <div class="w-full max-w-sm">
-      <h1 class="text-2xl font-bold mb-2">New password</h1>
-      <p class="text-gray-500 text-base mb-8">Choose a new password for your account.</p>
+      <h1 class="text-2xl font-bold mb-2">{{ $t('auth.newPassword') }}</h1>
+      <p class="text-gray-500 text-base mb-8">{{ $t('auth.chooseNewPassword') }}</p>
 
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <div>
-          <label class="block text-base font-medium mb-1">Email</label>
+          <label class="block text-base font-medium mb-1">{{ $t('auth.fields.email') }}</label>
           <input
             v-model="form.email"
             type="email"
-            placeholder="jan@example.com"
+            :placeholder="$t('auth.placeholders.email')"
             required
             class="input-field"
           />
         </div>
         <div>
-          <label class="block text-base font-medium mb-1">New password</label>
+          <label class="block text-base font-medium mb-1">{{ $t('auth.fields.newPassword') }}</label>
           <input
             v-model="form.password"
             type="password"
-            placeholder="At least 8 characters"
+            :placeholder="$t('auth.placeholders.password')"
             required
             class="input-field"
           />
         </div>
         <div>
-          <label class="block text-base font-medium mb-1">Confirm new password</label>
+          <label class="block text-base font-medium mb-1">{{ $t('auth.fields.confirmNewPassword') }}</label>
           <input
             v-model="form.password_confirmation"
             type="password"
-            placeholder="Repeat password"
+            :placeholder="$t('auth.placeholders.repeatNewPassword')"
             required
             class="input-field"
           />
@@ -39,7 +39,7 @@
         <AlertMessage v-if="error" type="error" :message="error" />
 
         <button type="submit" :disabled="loading" class="btn-primary w-full">
-          {{ loading ? 'Saving...' : 'Set new password' }}
+          {{ loading ? $t('common.saving') : $t('auth.setNewPassword') }}
         </button>
       </form>
     </div>
@@ -88,4 +88,3 @@ async function handleSubmit() {
   }
 }
 </script>
-

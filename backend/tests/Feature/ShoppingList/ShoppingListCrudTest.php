@@ -27,7 +27,7 @@ class ShoppingListCrudTest extends TestCase
         $response = $this->actingAs($user)->getJson('/api/lists');
 
         $response->assertOk()
-            ->assertJsonCount(1)
+            ->assertJsonCount(1, 'data')
             ->assertJsonFragment(['name' => 'My List']);
     }
 

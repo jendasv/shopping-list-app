@@ -1,9 +1,8 @@
 <template>
   <div class="py-4">
-    <div v-if="menuOpenItemId !== null" class="fixed inset-0 z-10" @click="closeMenu()" />
     <!-- Header -->
     <div class="flex items-center gap-3 mb-6">
-      <RouterLink :to="{ name: 'home' }" class="text-gray-400 hover:text-black transition shrink-0" title="Back">
+      <RouterLink :to="{ name: 'home' }" class="text-gray-400 hover:text-black transition shrink-0" :title="$t('common.back')">
         <ArrowLeft customClass="w-6 h-6" />
       </RouterLink>
       <h1 v-if="list" class="text-2xl font-bold flex-1 text-center truncate">{{ list.name }}</h1>
@@ -12,11 +11,11 @@
         @click="showItemAddForm = true"
         class="shrink-0 text-sm text-gray-500 hover:text-black underline transition"
       >
-        + Add item
+        + {{ $t('items.addItem') }}
       </button>
     </div>
 
-    <p v-if="isLoading" class="text-sm text-gray-400 text-center mt-10">Loading...</p>
+    <p v-if="isLoading" class="text-sm text-gray-400 text-center mt-10">{{ $t('common.loading') }}</p>
 
     <div v-else-if="list">
       <!-- Add item form -->
@@ -36,10 +35,11 @@
         @end="onReorderItems"
       >
         <li
-          v-for="item in list.items"
+          v-for="(item, i) in list.items"
           :key="item.id"
-          class="group flex items-center justify-between transition-[opacity,transform] duration-[280ms] ease-in-out"
+          class="list-stagger-item group flex items-center justify-between transition-[opacity,transform] duration-[280ms] ease-in-out"
           :class="animatingItemId === item.id ? 'opacity-0 scale-95' : ''"
+          :style="{ '--i': i }"
         >
           <template v-if="editingItemId !== item.id">
             <span class="drag-handle cursor-grab active:cursor-grabbing text-gray-200 group-hover:text-gray-400 mr-2 shrink-0 text-2xl leading-none select-none transition-colors">⠿</span>
@@ -53,16 +53,10 @@
               <span v-else>{{ item.name }}{{ item.quantity > 1 ? ' — ' + item.quantity + 'x' : '' }}</span>
             </button>
 
-            <RowActions :id="item.id" :open="menuOpenItemId === item.id" @toggle="toggleMenu" @close="closeMenu">
-              <template #desktop>
-                <button @click="startEdit(item)" class="text-gray-400 hover:text-black transition" title="Edit">
-                  <HandDrawnPencil sizeClass="w-11 h-11" />
-                </button>
-                <button @click="removeItemFromList(list.id, item.id)" class="text-red-400 hover:text-red-600 text-4xl leading-none transition cursor-pointer" title="Delete">×</button>
-              </template>
-              <template #menu>
-                <button @click="startEdit(item); closeMenu()" class="w-full px-4 py-3 text-left text-xl hover:bg-gray-50 transition-colors">Edit</button>
-                <button @click="removeItemFromList(list.id, item.id); closeMenu()" class="w-full px-4 py-3 text-left text-xl text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100">Delete</button>
+            <RowActions>
+              <template #menu="{ close }">
+                <button @click="startEdit(item); close()" class="w-full px-4 py-3 text-left text-xl hover:bg-gray-50 transition-colors">{{ $t('common.edit') }}</button>
+                <button @click="removeItemFromList(list.id, item.id); close()" class="w-full px-4 py-3 text-left text-xl text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100">{{ $t('common.delete') }}</button>
               </template>
             </RowActions>
           </template>
@@ -72,7 +66,7 @@
               v-model="item.name"
               type="text"
               class="flex-1 border-b-2 border-black text-base px-1 py-1 outline-none"
-              autofocus
+              v-focus-end
             />
             <input
               v-model.number="item.quantity"
@@ -80,14 +74,14 @@
               min="1"
               class="w-14 border-b-2 border-black text-base px-1 py-1 outline-none"
             />
-            <button type="submit" class="text-base font-medium text-green-700 px-1 py-0.5 cursor-pointer">Save</button>
-            <button type="button" @click="editingItemId = null" class="text-base text-gray-400 px-1 py-0.5 cursor-pointer">Cancel</button>
+            <button type="submit" class="text-base font-medium text-green-700 px-1 py-0.5 cursor-pointer">{{ $t('common.save') }}</button>
+            <button type="button" @click="editingItemId = null" class="text-base text-gray-400 px-1 py-0.5 cursor-pointer">{{ $t('common.cancel') }}</button>
           </form>
         </li>
       </VueDraggablePlus>
 
       <p v-else class="text-sm text-gray-400 text-center mt-6">
-        No items yet. Add your first above.
+        {{ $t('items.noItemsAdd') }}
       </p>
     </div>
   </div>
@@ -103,16 +97,13 @@ import AddItemForm from '@/components/form/AddItemForm.vue'
 import AlertMessage from '@/components/elements/AlertMessage.vue'
 import HandDrawnDivider from '@/components/elements/HandDrawnDivider.vue'
 import ArrowLeft from '@/components/icons/ArrowLeft.vue'
-import HandDrawnPencil from '@/components/icons/HandDrawnPencil.vue'
 import Typewrite from '@/components/animations/Typewrite.vue'
 import HandDrawnStrikethrough from '@/components/animations/HandDrawnStrikethrough.vue'
 import RowActions from '@/components/ui/RowActions.vue'
-import { useContextMenu } from '@/composables/useContextMenu'
 
 const route = useRoute()
 const id = route.params.id as string
 const showItemAddForm = ref(false)
-const { menuOpenId: menuOpenItemId, toggleMenu, closeMenu } = useContextMenu()
 
 const { list, error, isLoading, editingItemId, removeItemFromList, setComplete, addItem, startEdit, saveItem } = useListDetail(id)
 

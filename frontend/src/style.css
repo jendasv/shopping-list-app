@@ -25,6 +25,24 @@
   transform: scale(0.95);
 }
 
+/* List item stagger */
+.list-stagger-enter-active,
+.list-stagger-item {
+  animation: listIn 0.28s ease both;
+  animation-delay: calc(var(--i) * 55ms);
+}
+
+@keyframes listIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @layer components {
   .input-field {
     @apply w-full border-2 border-black rounded-md px-3 py-2 text-base outline-none focus:ring-2 focus:ring-black/20 transition-shadow;

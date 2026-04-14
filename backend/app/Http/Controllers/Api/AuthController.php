@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -108,8 +109,9 @@ class AuthController extends Controller
         $user = $request->user();
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'email' => ['sometimes', 'required', 'email', 'max:255', 'unique:users,email,'.$user->id],
+            'locale' => ['sometimes', 'nullable', 'string', Rule::in(config('locales'))],
         ]);
 
         $user->fill($validated)->save();
@@ -152,6 +154,7 @@ class AuthController extends Controller
             'emailVerifiedAt' => $user->email_verified_at,
             'isSuperAdmin' => $user->isSuperAdmin(),
             'householdId' => $user->household()?->id,
+            'locale' => $user->locale,
         ];
     }
 }

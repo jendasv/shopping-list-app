@@ -1,54 +1,55 @@
 <template>
   <div class="min-h-screen flex flex-col md:flex-row">
+    <div class="absolute top-4 right-4 z-10">
+      <LocaleSwitcher />
+    </div>
 
     <!-- Right side — registration (first on mobile) -->
     <div class="flex-1 flex flex-col justify-center px-8 py-12 md:pl-8 md:pr-0 order-1 md:order-2">
       <div class="max-w-sm mx-auto w-full">
         <!-- App name — mobile only -->
-        <p class="md:hidden text-xs font-bold tracking-widest uppercase text-gray-400 mb-5">Lists</p>
+        <p class="md:hidden text-xs font-bold tracking-widest uppercase text-gray-400 mb-5">{{ $t('auth.appName') }}</p>
 
-        <h1 class="text-2xl font-bold mb-2">Get started</h1>
-        <p class="text-gray-500 text-base mb-8">
-          No credit card. No complexity.
-        </p>
+        <h1 class="text-2xl font-bold mb-2">{{ $t('auth.getStarted') }}</h1>
+        <p class="text-gray-500 text-base mb-8">{{ $t('auth.noCredits') }}</p>
 
         <form @submit.prevent="handleRegister" class="space-y-4">
           <div>
-            <label class="block text-base font-medium mb-1">Name</label>
+            <label class="block text-base font-medium mb-1">{{ $t('auth.fields.name') }}</label>
             <input
               v-model="form.name"
               type="text"
-              placeholder="Jan Novak"
+              :placeholder="$t('auth.placeholders.name')"
               required
               class="input-field"
             />
           </div>
           <div>
-            <label class="block text-base font-medium mb-1">Email</label>
+            <label class="block text-base font-medium mb-1">{{ $t('auth.fields.email') }}</label>
             <input
               v-model="form.email"
               type="email"
-              placeholder="jan@example.com"
+              :placeholder="$t('auth.placeholders.email')"
               required
               class="input-field"
             />
           </div>
           <div>
-            <label class="block text-base font-medium mb-1">Password</label>
+            <label class="block text-base font-medium mb-1">{{ $t('auth.fields.password') }}</label>
             <input
               v-model="form.password"
               type="password"
-              placeholder="At least 8 characters"
+              :placeholder="$t('auth.placeholders.password')"
               required
               class="input-field"
             />
           </div>
           <div>
-            <label class="block text-base font-medium mb-1">Confirm password</label>
+            <label class="block text-base font-medium mb-1">{{ $t('auth.fields.confirmPassword') }}</label>
             <input
               v-model="form.password_confirmation"
               type="password"
-              placeholder="Repeat password"
+              :placeholder="$t('auth.placeholders.repeatPassword')"
               required
               class="input-field"
             />
@@ -61,14 +62,14 @@
             :disabled="authStore.loading"
             class="btn-primary w-full"
           >
-            {{ authStore.loading ? 'Creating account...' : 'Create account' }}
+            {{ authStore.loading ? $t('auth.creatingAccount') : $t('auth.createAccount') }}
           </button>
         </form>
 
         <p class="text-center text-base text-gray-500 mt-6">
-          Already have an account?
+          {{ $t('auth.alreadyHaveAccount') }}
           <RouterLink :to="{ name: 'login' }" class="font-medium underline">
-            Sign in
+            {{ $t('auth.signIn') }}
           </RouterLink>
         </p>
       </div>
@@ -78,7 +79,7 @@
     <div class="flex-1 flex flex-col justify-center items-center px-8 py-12 md:pr-8 md:pl-0 md:border-r-2 border-black order-2 md:order-1">
       <div class="max-w-sm text-center">
         <!-- App name — desktop only -->
-        <p class="hidden md:block text-xs font-bold tracking-widest uppercase text-gray-400 mb-4">Lists</p>
+        <p class="hidden md:block text-xs font-bold tracking-widest uppercase text-gray-400 mb-4">{{ $t('auth.appName') }}</p>
 
         <Typewrite
           :texts="['Shopping.', 'Packing for trips.', 'Shared with family.']"
@@ -88,15 +89,15 @@
         <ul class="space-y-3 text-left text-base">
           <li class="flex items-start gap-2">
             <span class="mt-0.5">✓</span>
-            <span>Real-time shared lists with your partner or family</span>
+            <span>{{ $t('auth.features.realtime') }}</span>
           </li>
           <li class="flex items-start gap-2">
             <span class="mt-0.5">✓</span>
-            <span>Shopping lists, packing lists and everything you need</span>
+            <span>{{ $t('auth.features.versatile') }}</span>
           </li>
           <li class="flex items-start gap-2">
             <span class="mt-0.5">✓</span>
-            <span>Private or shared — you decide</span>
+            <span>{{ $t('auth.features.privacy') }}</span>
           </li>
         </ul>
       </div>
@@ -112,6 +113,7 @@ import { useAuthStore } from '@/stores/auth'
 import AlertMessage from '@/components/elements/AlertMessage.vue'
 import Typewrite from '@/components/animations/Typewrite.vue'
 import HandDrawnDivider from '@/components/elements/HandDrawnDivider.vue'
+import LocaleSwitcher from '@/components/ui/LocaleSwitcher.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -140,4 +142,3 @@ async function handleRegister() {
   }
 }
 </script>
-

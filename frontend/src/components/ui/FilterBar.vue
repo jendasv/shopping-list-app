@@ -4,7 +4,7 @@
     <input
       :value="search"
       type="text"
-      placeholder="Search..."
+      :placeholder="$t('search.placeholder')"
       class="w-full border-b-2 border-black px-1 py-1 text-base outline-none bg-transparent placeholder-gray-400"
       @input="emit('update:search', ($event.target as HTMLInputElement).value)"
     />
@@ -47,7 +47,7 @@ export interface FilterOption {
   label: string
 }
 
-const props = defineProps<{
+defineProps<{
   search: string
   filter: string
   sort: string

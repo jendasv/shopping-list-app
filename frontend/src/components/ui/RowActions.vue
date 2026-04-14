@@ -1,36 +1,27 @@
 <script setup lang="ts">
-defineProps<{
-  id: number
-  open: boolean
-}>()
+import { ref } from 'vue'
+import { onClickOutside } from '@vueuse/core'
 
-defineEmits<{
-  toggle: [id: number]
-  close: []
-}>()
+const isOpen = ref(false)
+const containerRef = ref<HTMLElement | null>(null)
+
+onClickOutside(containerRef, () => { isOpen.value = false })
 </script>
 
 <template>
-  <!-- desktop: shown on group-hover -->
-  <div class="flex items-center gap-3 ml-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity [@media(pointer:coarse)]:hidden">
-    <slot name="desktop" />
-  </div>
-
-  <!-- mobile: ⋯ button + popup menu -->
-  <div class="hidden [@media(pointer:coarse)]:flex ml-3 shrink-0 relative">
+  <div ref="containerRef" class="ml-3 shrink-0 relative">
     <button
-      @click="$emit('toggle', id)"
-      class="text-gray-400 text-2xl leading-none px-1 py-0.5"
-      title="Options"
+      @click.stop="isOpen = !isOpen"
+      class="text-gray-400 hover:text-black text-2xl leading-none px-1 py-0.5 cursor-pointer transition-colors"
+      :title="$t('common.options')"
     >⋯</button>
 
     <Transition name="dropdown">
       <div
-        v-if="open"
-        class="absolute right-0 bottom-full mb-2 z-20 bg-white border-2 border-black rounded-lg shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden min-w-[140px]"
-        @click.stop
+        v-if="isOpen"
+        class="absolute right-0 bottom-full mb-2 z-50 bg-white border-2 border-black rounded-lg shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden min-w-[140px]"
       >
-        <slot name="menu" />
+        <slot name="menu" :close="() => (isOpen = false)" />
       </div>
     </Transition>
   </div>
