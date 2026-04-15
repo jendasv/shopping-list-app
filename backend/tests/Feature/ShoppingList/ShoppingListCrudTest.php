@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\ShoppingList;
 
-use App\Models\ShoppingList;
+use App\Models\Liste;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,7 +17,7 @@ class ShoppingListCrudTest extends TestCase
         $user = $this->createUserWithHousehold();
         $household = $user->household();
 
-        ShoppingList::factory()->create([
+        Liste::factory()->create([
             'name' => 'My List',
             'household_id' => $household->id,
             'created_by' => $user->id,
@@ -48,7 +48,7 @@ class ShoppingListCrudTest extends TestCase
         $response->assertStatus(201)
             ->assertJsonFragment(['name' => 'Weekly Shopping']);
 
-        $this->assertDatabaseHas('shopping_list', ['name' => 'Weekly Shopping', 'created_by' => $user->id]);
+        $this->assertDatabaseHas('lists', ['name' => 'Weekly Shopping', 'created_by' => $user->id]);
     }
 
     public function test_list_name_is_required(): void
@@ -66,7 +66,7 @@ class ShoppingListCrudTest extends TestCase
     public function test_user_can_update_their_list(): void
     {
         $user = $this->createUserWithHousehold();
-        $list = ShoppingList::factory()->create([
+        $list = Liste::factory()->create([
             'household_id' => $user->household()->id,
             'created_by' => $user->id,
             'visibility' => 'shared',
@@ -80,13 +80,13 @@ class ShoppingListCrudTest extends TestCase
         $response->assertOk()
             ->assertJsonFragment(['name' => 'Renamed List']);
 
-        $this->assertDatabaseHas('shopping_list', ['id' => $list->id, 'name' => 'Renamed List']);
+        $this->assertDatabaseHas('lists', ['id' => $list->id, 'name' => 'Renamed List']);
     }
 
     public function test_user_can_delete_their_list(): void
     {
         $user = $this->createUserWithHousehold();
-        $list = ShoppingList::factory()->create([
+        $list = Liste::factory()->create([
             'household_id' => $user->household()->id,
             'created_by' => $user->id,
         ]);
@@ -94,7 +94,7 @@ class ShoppingListCrudTest extends TestCase
         $response = $this->actingAs($user)->deleteJson("/api/lists/{$list->id}");
 
         $response->assertStatus(204);
-        $this->assertDatabaseMissing('shopping_list', ['id' => $list->id]);
+        $this->assertDatabaseMissing('lists', ['id' => $list->id]);
     }
 
     public function test_list_order_entry_is_created_on_new_list(): void
@@ -110,7 +110,7 @@ class ShoppingListCrudTest extends TestCase
 
         $this->assertDatabaseHas('list_user_order', [
             'user_id' => $user->id,
-            'shopping_list_id' => $listId,
+            'list_id' => $listId,
         ]);
     }
 }

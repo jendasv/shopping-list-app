@@ -24,14 +24,14 @@ class MembersRelationManager extends RelationManager
                 TextColumn::make('email')
                     ->searchable(),
                 IconColumn::make('email_verified')
-                    ->label('Verified')
+                    ->label(__('Verified'))
                     ->boolean()
                     ->getStateUsing(fn ($record) => $record->email_verified_at !== null),
                 IconColumn::make('is_active')
-                    ->label('Active')
+                    ->label(__('Active'))
                     ->boolean(),
                 TextColumn::make('pivot.role')
-                    ->label('Role'),
+                    ->label(__('Role')),
             ])
             ->headerActions([])
             ->recordActions([])

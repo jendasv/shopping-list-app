@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\ShoppingList;
 
-use App\Models\ShoppingList;
+use App\Models\Liste;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -18,13 +18,13 @@ class ShoppingListAccessTest extends TestCase
         $owner = $this->createUserWithHousehold();
         $other = $this->createUserWithHousehold();
 
-        $list = ShoppingList::factory()->create([
+        $list = Liste::factory()->create([
             'household_id' => $owner->household()->id,
             'created_by' => $owner->id,
             'visibility' => 'shared',
         ]);
 
-        $response = $this->actingAs($other)->getJson("/api/lists/{$list->id}/items");
+        $response = $this->actingAs($other)->getJson("/api/lists/{$list->id}");
 
         $response->assertStatus(404);
     }
@@ -34,7 +34,7 @@ class ShoppingListAccessTest extends TestCase
         $owner = $this->createUserWithHousehold();
         $other = $this->createUserWithHousehold();
 
-        $list = ShoppingList::factory()->create([
+        $list = Liste::factory()->create([
             'household_id' => $owner->household()->id,
             'created_by' => $owner->id,
             'visibility' => 'shared',
@@ -53,7 +53,7 @@ class ShoppingListAccessTest extends TestCase
         $owner = $this->createUserWithHousehold();
         $other = $this->createUserWithHousehold();
 
-        $list = ShoppingList::factory()->create([
+        $list = Liste::factory()->create([
             'household_id' => $owner->household()->id,
             'created_by' => $owner->id,
             'visibility' => 'shared',
@@ -62,7 +62,7 @@ class ShoppingListAccessTest extends TestCase
         $response = $this->actingAs($other)->deleteJson("/api/lists/{$list->id}");
 
         $response->assertStatus(404);
-        $this->assertDatabaseHas('shopping_list', ['id' => $list->id]);
+        $this->assertDatabaseHas('lists', ['id' => $list->id]);
     }
 
     public function test_shared_list_is_visible_to_household_members(): void
@@ -71,13 +71,13 @@ class ShoppingListAccessTest extends TestCase
         $member = User::factory()->create();
         $owner->household()->members()->attach($member->id, ['role' => 'member']);
 
-        $list = ShoppingList::factory()->create([
+        $list = Liste::factory()->create([
             'household_id' => $owner->household()->id,
             'created_by' => $owner->id,
             'visibility' => 'shared',
         ]);
 
-        $response = $this->actingAs($member)->getJson("/api/lists/{$list->id}/items");
+        $response = $this->actingAs($member)->getJson("/api/lists/{$list->id}");
 
         $response->assertOk();
     }
@@ -88,13 +88,13 @@ class ShoppingListAccessTest extends TestCase
         $member = User::factory()->create();
         $owner->household()->members()->attach($member->id, ['role' => 'member']);
 
-        $list = ShoppingList::factory()->create([
+        $list = Liste::factory()->create([
             'household_id' => $owner->household()->id,
             'created_by' => $owner->id,
             'visibility' => 'private',
         ]);
 
-        $response = $this->actingAs($member)->getJson("/api/lists/{$list->id}/items");
+        $response = $this->actingAs($member)->getJson("/api/lists/{$list->id}");
 
         $response->assertStatus(404);
     }

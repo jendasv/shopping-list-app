@@ -26,14 +26,14 @@ class UsersTable
                     ->label('Email')
                     ->searchable(),
                 IconColumn::make('email_verified_at')
-                    ->label('Verified')
+                    ->label(__('Verified'))
                     ->boolean()
                     ->getStateUsing(fn ($record) => $record->email_verified_at !== null),
                 IconColumn::make('is_active')
-                    ->label('Active')
+                    ->label(__('Active'))
                     ->boolean(),
                 IconColumn::make('is_super_admin')
-                    ->label('Superadmin')
+                    ->label(__('Superadmin'))
                     ->boolean(),
                 TextColumn::make('created_at')
                     ->dateTime()
@@ -41,8 +41,8 @@ class UsersTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                TernaryFilter::make('is_active')->label('Active'),
-                TernaryFilter::make('is_super_admin')->label('Superadmin'),
+                TernaryFilter::make('is_active')->label(__('Active')),
+                TernaryFilter::make('is_super_admin')->label(__('Superadmin')),
             ])
             ->recordActions([
                 ViewAction::make(),

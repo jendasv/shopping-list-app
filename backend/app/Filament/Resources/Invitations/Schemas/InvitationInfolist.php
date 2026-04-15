@@ -14,11 +14,12 @@ class InvitationInfolist
     {
         return $schema->components([
             Section::make()->schema([
-                TextEntry::make('email')->label('Invited email'),
-                TextEntry::make('household.name')->label('Household'),
-                TextEntry::make('invitedBy.name')->label('Invited by'),
+                TextEntry::make('email')->label(__('Invited email')),
+                TextEntry::make('household.name')->label(__('Household')),
+                TextEntry::make('invitedBy.name')->label(__('Invited by')),
                 TextEntry::make('status')
                     ->badge()
+                    ->formatStateUsing(fn (string $state): string => __($state === 'expired' ? 'Expired' : ucfirst($state)))
                     ->color(fn (string $state): string => match ($state) {
                         'pending' => 'warning',
                         'accepted' => 'success',
@@ -26,8 +27,8 @@ class InvitationInfolist
                         'expired' => 'gray',
                         default => 'gray',
                     }),
-                TextEntry::make('expires_at')->label('Expires')->dateTime(),
-                TextEntry::make('created_at')->label('Created')->dateTime(),
+                TextEntry::make('expires_at')->label(__('Expires'))->dateTime(),
+                TextEntry::make('created_at')->label(__('Created'))->dateTime(),
             ])->columns(2),
         ]);
     }

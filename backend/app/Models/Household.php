@@ -27,10 +27,10 @@ class Household extends Model
             ->withTimestamps();
     }
 
-    /** @return HasMany<ShoppingList, $this> */
-    public function shoppingLists(): HasMany
+    /** @return HasMany<Liste, $this> */
+    public function lists(): HasMany
     {
-        return $this->hasMany(ShoppingList::class);
+        return $this->hasMany(Liste::class);
     }
 
     /** @return HasMany<Invitation, $this> */

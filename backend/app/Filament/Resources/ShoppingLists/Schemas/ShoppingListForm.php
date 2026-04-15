@@ -21,7 +21,7 @@ class ShoppingListForm
                 TextInput::make('name')
                     ->required(),
                 Select::make('visibility')
-                    ->options(['shared' => 'Shared', 'private' => 'Private'])
+                    ->options(['shared' => __('Shared'), 'private' => __('Private')])
                     ->default('shared')
                     ->required(),
             ]);

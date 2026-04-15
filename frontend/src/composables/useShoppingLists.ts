@@ -1,7 +1,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { iShoppingList } from '@/types'
-import { fetchAllLists, createList, updateList, deleteList } from '@/services/shoppingListService'
+import type { iList } from '@/types'
+import { fetchAllLists, createList, updateList, deleteList } from '@/services/listService'
 import { useAuthStore } from '@/stores/auth'
 import { useFilterableList } from '@/composables/useFilterableList'
 import echo from '@/plugins/echo'
@@ -9,13 +9,13 @@ import echo from '@/plugins/echo'
 export type SortKey = 'custom' | 'az' | 'za' | 'items-desc' | 'items-asc' | 'newest' | 'oldest'
 export type FilterKey = 'all' | 'shared' | 'private'
 
-export function useShoppingLists() {
+export function useLists() {
   const { t } = useI18n()
   const authStore = useAuthStore()
   const error = ref<string>('')
   const editingListId = ref<number | null>(null)
 
-  const base = useFilterableList<iShoppingList>({
+  const base = useFilterableList<iList>({
     fetchFn: fetchAllLists,
     defaultSort: 'custom',
   })
@@ -45,11 +45,11 @@ export function useShoppingLists() {
     if (householdId) echo.leave(`household.${householdId}`)
   })
 
-  function startEditList(list: iShoppingList) {
+  function startEditList(list: iList) {
     editingListId.value = list.id
   }
 
-  async function saveListName(list: iShoppingList) {
+  async function saveListName(list: iList) {
     if (!list.name.trim()) {
       error.value = t('lists.errors.nameRequired')
       return

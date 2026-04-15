@@ -1,5 +1,5 @@
 <template>
-  <div class="relative" ref="containerRef">
+  <div v-if="availableLocales.length > 1" class="relative" ref="containerRef">
     <button
       @click="toggle"
       class="flex items-center gap-1 text-sm px-2 py-1 border-b-2 border-transparent hover:border-black transition-colors"

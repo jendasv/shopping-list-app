@@ -27,20 +27,6 @@ services:
     depends_on:
       - php
 
-  mysql:
-    image: mysql:8
-    container_name: shopping_mysql
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: shopping
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
-    # more secure
-#    ports:
-#      - "3306:3306"
-
   postgres:
     image: postgres:17
     container_name: shopping_postgres
@@ -60,7 +46,7 @@ services:
     ports:
       - "8081:8080"
     depends_on:
-      - mysql
+      - postgres
 
   reverb:
     build:
@@ -100,6 +86,5 @@ services:
       - "5173:5173"
 
 volumes:
-  mysql_data:
   postgres_data:
   frontend_node_modules:

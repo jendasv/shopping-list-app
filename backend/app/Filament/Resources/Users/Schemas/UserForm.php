@@ -17,7 +17,7 @@ class UserForm
                 TextInput::make('name')
                     ->required(),
                 TextInput::make('email')
-                    ->label('Email address')
+                    ->label(__('Email address'))
                     ->email()
                     ->required()
                     ->unique(ignoreRecord: true),
@@ -26,11 +26,11 @@ class UserForm
                     ->dehydrateStateUsing(fn (string $state): string => bcrypt($state))
                     ->dehydrated(fn (?string $state): bool => filled($state))
                     ->required(fn (string $operation): bool => $operation === 'create')
-                    ->helperText('Leave blank to keep current password'),
+                    ->helperText(__('Leave blank to keep current password')),
                 Toggle::make('is_super_admin')
-                    ->label('Super admin'),
+                    ->label(__('Super admin')),
                 Toggle::make('is_active')
-                    ->label('Active')
+                    ->label(__('Active'))
                     ->default(true),
             ]);
     }

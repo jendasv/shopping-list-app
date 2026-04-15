@@ -131,8 +131,8 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
 import { VueDraggable as VueDraggablePlus } from 'vue-draggable-plus'
-import { useShoppingLists } from '@/composables/useShoppingLists'
-import { reorderLists } from '@/services/shoppingListService'
+import { useLists } from '@/composables/useLists'
+import { reorderLists } from '@/services/listService'
 import FilterBar from '@/components/ui/FilterBar.vue'
 import Typewrite from '@/components/animations/Typewrite.vue'
 import RowActions from '@/components/ui/RowActions.vue'
@@ -151,7 +151,7 @@ const {
   startEditList,
   saveListName,
   removeList,
-} = useShoppingLists()
+} = useLists()
 
 async function onReorderLists() {
   await reorderLists(lists.value.map((l) => l.id))

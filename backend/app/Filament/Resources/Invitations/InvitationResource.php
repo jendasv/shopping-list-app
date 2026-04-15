@@ -23,6 +23,16 @@ class InvitationResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+    public static function getModelLabel(): string
+    {
+        return __('Invitation');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Invitations');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return InvitationForm::configure($schema);

@@ -29,18 +29,18 @@ class ShoppingListsRelationManager extends RelationManager
                         default => 'gray',
                     }),
                 TextColumn::make('items_count')
-                    ->label('Items')
+                    ->label(__('Items'))
                     ->counts('items'),
                 TextColumn::make('created_at')
-                    ->label('Created')
+                    ->label(__('Created'))
                     ->dateTime()
                     ->sortable(),
             ])
             ->filters([
                 SelectFilter::make('visibility')
                     ->options([
-                        'private' => 'Private',
-                        'shared' => 'Shared',
+                        'private' => __('Private'),
+                        'shared' => __('Shared'),
                     ]),
             ])
             ->headerActions([])

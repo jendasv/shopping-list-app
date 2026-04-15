@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Household;
 
-use App\Models\ShoppingList;
+use App\Models\Liste;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -112,7 +112,7 @@ class HouseholdTest extends TestCase
         $member = $this->createUserWithHousehold();
         $owner->household()->members()->attach($member->id, ['role' => 'member']);
 
-        $privateList = ShoppingList::factory()->create([
+        $privateList = Liste::factory()->create([
             'household_id' => $owner->household()->id,
             'created_by' => $member->id,
             'visibility' => 'private',
@@ -120,7 +120,7 @@ class HouseholdTest extends TestCase
 
         $this->actingAs($member)->postJson("/api/household/{$owner->household()->id}/leave");
 
-        $this->assertDatabaseHas('shopping_list', [
+        $this->assertDatabaseHas('lists', [
             'id' => $privateList->id,
             'household_id' => $member->household()->id,
         ]);
@@ -132,7 +132,7 @@ class HouseholdTest extends TestCase
         $member = $this->createUserWithHousehold();
         $owner->household()->members()->attach($member->id, ['role' => 'member']);
 
-        $sharedList = ShoppingList::factory()->create([
+        $sharedList = Liste::factory()->create([
             'household_id' => $owner->household()->id,
             'created_by' => $member->id,
             'visibility' => 'shared',
@@ -140,7 +140,7 @@ class HouseholdTest extends TestCase
 
         $this->actingAs($member)->postJson("/api/household/{$owner->household()->id}/leave");
 
-        $this->assertDatabaseHas('shopping_list', [
+        $this->assertDatabaseHas('lists', [
             'id' => $sharedList->id,
             'household_id' => $owner->household()->id,
         ]);

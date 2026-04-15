@@ -9,7 +9,7 @@ use App\Enums\InvitationStatus;
 use App\Http\Controllers\Controller;
 use App\Mail\HouseholdInvitation;
 use App\Models\Invitation;
-use App\Models\ShoppingList;
+use App\Models\Liste;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -64,7 +64,7 @@ class InvitationController extends Controller
         ]);
 
         $invitation->load(['household', 'invitedBy']);
-        Mail::to($invitation->email)->send(new HouseholdInvitation($invitation));
+        Mail::to($invitee)->send(new HouseholdInvitation($invitation));
 
         return response()->json([
             'message' => 'Invitation sent.',
@@ -89,7 +89,7 @@ class InvitationController extends Controller
         $ownHousehold = $user->households()->wherePivot('role', HouseholdRole::Owner->value)->first();
 
         if ($ownHousehold) {
-            ShoppingList::where('household_id', $ownHousehold->id)
+            Liste::where('household_id', $ownHousehold->id)
                 ->update(['household_id' => $targetHousehold->id]);
 
             $ownHousehold->update(['is_active' => false]);

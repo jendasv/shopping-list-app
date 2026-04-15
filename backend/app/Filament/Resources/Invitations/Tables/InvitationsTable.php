@@ -21,16 +21,17 @@ class InvitationsTable
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('email')
-                    ->label('Invited email')
+                    ->label(__('Invited email'))
                     ->searchable(),
                 TextColumn::make('household.name')
-                    ->label('Household')
+                    ->label(__('Household'))
                     ->searchable(),
                 TextColumn::make('invitedBy.name')
-                    ->label('Invited by')
+                    ->label(__('Invited by'))
                     ->searchable(),
                 TextColumn::make('status')
                     ->badge()
+                    ->formatStateUsing(fn (string $state): string => __($state === 'expired' ? 'Expired' : ucfirst($state)))
                     ->color(fn (string $state): string => match ($state) {
                         'pending' => 'warning',
                         'accepted' => 'success',
@@ -39,11 +40,11 @@ class InvitationsTable
                         default => 'gray',
                     }),
                 IconColumn::make('is_expired')
-                    ->label('Expired')
+                    ->label(__('Expired'))
                     ->boolean()
                     ->getStateUsing(fn ($record) => $record->expires_at->isPast()),
                 TextColumn::make('expires_at')
-                    ->label('Expires')
+                    ->label(__('Expires'))
                     ->dateTime()
                     ->sortable(),
                 TextColumn::make('created_at')
@@ -54,16 +55,16 @@ class InvitationsTable
             ->filters([
                 SelectFilter::make('status')
                     ->options([
-                        'pending' => 'Pending',
-                        'accepted' => 'Accepted',
-                        'declined' => 'Declined',
-                        'expired' => 'Expired',
+                        'pending' => __('Pending'),
+                        'accepted' => __('Accepted'),
+                        'declined' => __('Declined'),
+                        'expired' => __('Expired'),
                     ]),
             ])
             ->recordActions([
                 ViewAction::make(),
                 Action::make('revoke')
-                    ->label('Revoke')
+                    ->label(__('Revoke'))
                     ->color('danger')
                     ->icon('heroicon-o-x-circle')
                     ->requiresConfirmation()

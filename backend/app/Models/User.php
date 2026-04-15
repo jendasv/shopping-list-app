@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Notifications\ResetPasswordNotification;
+use App\Notifications\VerifyEmailNotification;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,7 +22,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password', 'is_active', 'locale'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable implements FilamentUser, MustVerifyEmail
+class User extends Authenticatable implements FilamentUser, HasLocalePreference, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
@@ -42,15 +45,30 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             ->withTimestamps();
     }
 
-    /** @return HasMany<ShoppingList, $this> */
-    public function shoppingLists(): HasMany
+    /** @return HasMany<Liste, $this> */
+    public function lists(): HasMany
     {
-        return $this->hasMany(ShoppingList::class, 'created_by');
+        return $this->hasMany(Liste::class, 'created_by');
     }
 
     public function household(): ?Household
     {
         return $this->households()->where('is_active', true)->first();
+    }
+
+    public function preferredLocale(): string
+    {
+        return $this->locale ?? 'en';
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerifyEmailNotification);
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 
     public function isSuperAdmin(): bool

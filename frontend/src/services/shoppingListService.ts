@@ -1,28 +1,28 @@
 import { apiFetch } from '@/services/api'
-import type { iShoppingList, iListsResponse } from '@/types'
+import type { iList, iListsResponse } from '@/types'
 
-export async function fetchAllLists(params: Record<string, string> = {}): Promise<iListsResponse<iShoppingList>> {
+export async function fetchAllLists(params: Record<string, string> = {}): Promise<iListsResponse<iList>> {
   const query = new URLSearchParams(params).toString()
-  return apiFetch<iListsResponse<iShoppingList>>(`/lists${query ? `?${query}` : ''}`, { method: 'GET' })
+  return apiFetch<iListsResponse<iList>>(`/lists${query ? `?${query}` : ''}`, { method: 'GET' })
 }
 
-export async function fetchList(id: number | string): Promise<iShoppingList> {
-  return apiFetch<iShoppingList>(`/lists/${id}/items`, { method: 'GET' })
+export async function fetchList(id: number | string): Promise<iList> {
+  return apiFetch<iList>(`/lists/${id}`, { method: 'GET' })
 }
 
 export async function createList(
   name: string,
   visibility: 'shared' | 'private',
-  items?: { name: string; quantity: number }[],
-): Promise<iShoppingList> {
-  return apiFetch<iShoppingList>('/lists', {
+  items?: { name: string; quantity: number | null }[],
+): Promise<iList> {
+  return apiFetch<iList>('/lists', {
     method: 'POST',
     body: JSON.stringify({ name, visibility, items }),
   })
 }
 
-export async function updateList(id: number, name: string): Promise<iShoppingList> {
-  return apiFetch<iShoppingList>(`/lists/${id}`, {
+export async function updateList(id: number, name: string): Promise<iList> {
+  return apiFetch<iList>(`/lists/${id}`, {
     method: 'PUT',
     body: JSON.stringify({ name }),
   })

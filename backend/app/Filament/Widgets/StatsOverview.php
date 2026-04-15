@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Widgets;
 
 use App\Models\Household;
-use App\Models\ShoppingList;
+use App\Models\Liste;
 use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -14,15 +14,17 @@ class StatsOverview extends StatsOverviewWidget
 {
     protected function getStats(): array
     {
+        $totalHouseholds = Household::count();
+
         return [
-            Stat::make('Total users', User::count())
-                ->description('Registered accounts')
+            Stat::make(__('Total users'), User::count())
+                ->description(__('Registered accounts'))
                 ->color('primary'),
-            Stat::make('Active households', Household::where('is_active', true)->count())
-                ->description('Out of '.Household::count().' total')
+            Stat::make(__('Active households'), Household::where('is_active', true)->count())
+                ->description(__('Out of :count total', ['count' => $totalHouseholds]))
                 ->color('success'),
-            Stat::make('Shopping lists', ShoppingList::count())
-                ->description('Across all households')
+            Stat::make(__('Shopping lists'), Liste::count())
+                ->description(__('Across all households'))
                 ->color('info'),
         ];
     }

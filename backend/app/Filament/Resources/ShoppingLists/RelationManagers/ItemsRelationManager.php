@@ -20,10 +20,10 @@ class ItemsRelationManager extends RelationManager
                 TextColumn::make('name')->searchable(),
                 TextColumn::make('quantity'),
                 IconColumn::make('is_completed')
-                    ->label('Completed')
+                    ->label(__('Completed'))
                     ->boolean(),
                 TextColumn::make('created_at')
-                    ->label('Added')
+                    ->label(__('Added'))
                     ->dateTime()
                     ->sortable(),
             ])

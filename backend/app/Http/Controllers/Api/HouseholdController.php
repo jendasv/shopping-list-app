@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Enums\HouseholdRole;
-use App\Enums\ShoppingListVisibility;
+use App\Enums\ListVisibility;
 use App\Http\Controllers\Controller;
 use App\Mapper\HouseholdMapper;
-use App\Models\ShoppingList;
+use App\Models\Liste;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -65,9 +65,9 @@ class HouseholdController extends Controller
         $ownHousehold = $user->households()->wherePivot('role', HouseholdRole::Owner->value)->first();
 
         if ($ownHousehold) {
-            ShoppingList::where('household_id', $household->id)
+            Liste::where('household_id', $household->id)
                 ->where('created_by', $user->id)
-                ->where('visibility', ShoppingListVisibility::Private->value)
+                ->where('visibility', ListVisibility::Private->value)
                 ->update(['household_id' => $ownHousehold->id]);
 
             $ownHousehold->update(['is_active' => true]);

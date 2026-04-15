@@ -126,6 +126,44 @@ Po nákupu
 ## Datový model
 
 ```
+────────────────────────────────────────────
+  GLOBÁLNÍ LOOKUP TABULKY (sdílené, seedované)
+────────────────────────────────────────────
+
+Languages
+├── id
+├── code          (en, cs, de, sk, pl, fr...)
+├── name_native   (English, Čeština, Deutsch...)
+├── is_active     (bool — nasazené jazyky)
+└── flag_emoji    (🇬🇧, 🇨🇿, 🇩🇪...)
+
+Units
+├── id
+├── symbol        (g, kg, ml, l, ks, bal, lžíce, lžička...)
+└── type          (weight, volume, count, piece)
+
+UnitTranslations
+├── unit_id       (FK → units)
+├── lang_id       (FK → languages)
+└── value         (gram, kilogram, mililitr, litr, kus...)
+
+GlobalProducts  ← crowdsourced + Open Food Facts, sdílená přes všechny domácnosti
+├── id
+├── barcode       (EAN-13, UPC-A, QR...)
+├── name
+├── brand         (nullable)
+├── default_category_id (nullable, FK → global category)
+├── default_unit_id     (nullable, FK → units)
+├── image_url     (nullable)
+├── source        (enum: user_scan, open_food_facts, admin)
+├── verified      (bool — admin ověřil)
+├── scan_count    (int — kolik domácností potvrdilo produkt)
+└── created_at
+
+────────────────────────────────────────────
+  HOUSEHOLD ENTIY
+────────────────────────────────────────────
+
 User
 ├── is_super_admin (bool)
 └── belongs to many → Households (přes household_user)
@@ -136,9 +174,9 @@ Household
 ├── has many → Members (Users) přes household_user pivot
 │       └── role (owner / member)
 ├── has many → Invitations
-├── has many → Categories
-├── has many → Products
-├── has many → ShoppingLists
+├── has many → Categories (vlastní kategorie domácnosti)
+├── has many → Products (katalog domácnosti)
+├── has many → Lists
 ├── has many → Templates
 └── has many → InventoryItems
 
@@ -147,48 +185,127 @@ Invitation
 ├── belongs to → Household
 └── invited_by → User
 
+────────────────────────────────────────────
+  KATEGORIE (globální i household vlastní)
+────────────────────────────────────────────
+
 Category
-└── name (Pečivo, Mléčné, Zelenina, Drogerie...)
+├── id
+├── household_id  (nullable — null = globální)
+├── is_global     (bool)
+├── name          (nullable — pouze pro custom household kategorie)
+└── sort_order
 
-Product (katalog domácnosti)
-├── name, unit (ks/kg/l/ml...)
-├── belongs to → Household
-└── belongs to → Category
+CategoryTranslations  ← pouze pro globální kategorie
+├── category_id   (FK → categories)
+├── lang_id       (FK → languages)
+└── value         (Pečivo, Bakery, Bäckerei...)
 
-ShoppingList
-├── belongs to → Household
+Logika překladu:
+  is_global = true  → název z CategoryTranslations podle uživatelova jazyka
+  is_global = false → název přímo z category.name (user ho vytvořil ve svém jazyce)
+
+────────────────────────────────────────────
+  PRODUKTOVÝ KATALOG DOMÁCNOSTI
+────────────────────────────────────────────
+
+Product
+├── household_id
+├── global_product_id   (nullable — FK → GlobalProducts; napojení na knihovnu)
+├── category_id         (FK → categories)
+├── name                (může přepsat název z global_product)
+├── barcode             (nullable — pokud není napojeno na global_product)
+├── preferred_unit_id   (FK → units)
+├── preferred_quantity  (decimal, nullable)
+└── notes               (brand preference, obchod, "jen bio", "červené víčko"...)
+
+────────────────────────────────────────────
+  LISTY A POLOŽKY
+────────────────────────────────────────────
+
+List  (dříve ShoppingList)
+├── household_id
 ├── created_by → User
-├── status (active / completed)
-├── visibility (shared / private)   ← shared = vidí všichni členové, private = jen tvůrce
-└── has many → ShoppingListItems
+├── list_type   (enum: shopping, packing, todo)
+├── name
+├── status      (active / completed / archived)
+├── visibility  (shared / private)
+└── has many → ListItems
 
-ShoppingListItem
-├── quantity
+ListItem  (dříve ShoppingListItem)
+├── list_id
+├── product_id  (nullable — FK → products; odkaz na katalog domácnosti)
+├── name        (nullable — free text fallback; pokud product_id, použij produkt.name)
+├── quantity    (decimal, nullable — null pro todo položky)
+├── unit_id     (nullable, FK → units)
 ├── is_completed
-├── belongs to → ShoppingList
-└── belongs to → Product (nebo volný text jako fallback)
+├── sort_order
+└── notes       (nullable)
 
-Template (šablona — recept, balení, úklid, cokoliv opakujícího se)
+────────────────────────────────────────────
+  ŠABLONY & RECEPTY
+────────────────────────────────────────────
+
+TemplateCategory  ← household-specific, bez překladů
+├── id
+├── household_id
+└── name          (Vaření / Cestování / Domácnost / Sport...)
+
+Template
+├── household_id
+├── created_by → User
+├── template_type    (enum: generic, recipe)
+├── template_category_id (nullable, FK → TemplateCategory)
 ├── name, description
-├── belongs to → Household
-├── belongs to → TemplateCategory
+├── default_servings (int, nullable — jen pro template_type = recipe)
 └── has many → TemplateItems
 
-TemplateCategory
-└── name (Vaření / Cestování / Domácnost / Sport / ...)
-
 TemplateItem
-├── quantity
-├── belongs to → Template
-└── belongs to → Product
+├── template_id
+├── product_id  (nullable — FK → products)
+├── name        (nullable — free text fallback)
+├── quantity    (decimal, nullable)
+└── unit_id     (nullable, FK → units)
+
+────────────────────────────────────────────
+  INVENTÁŘ
+────────────────────────────────────────────
 
 InventoryItem
-├── quantity, updated_at
-├── belongs to → Household
-├── belongs to → Product
+├── household_id
+├── product_id     (FK → products)
 ├── created_by → User
-└── visibility (shared / private)   ← zdědí z listu při potvrzení nákupu
+├── quantity
+├── min_quantity   (nullable — minimální hranice; při poklesu auto-add do příštího listu)
+├── updated_at
+└── visibility     (shared / private — zdědí z listu při potvrzení nákupu)
 ```
+
+### Překladový pattern — HasTranslations trait
+
+Pro `Unit` a globální `Category` vlastní Eloquent trait `HasTranslations`:
+- `withTranslation(string $langCode)` scope — JOIN přes `*_translations` + `languages`
+- Fallback na `en` pokud překlad chybí
+- Žádná externí závislost, ~30 řádků
+
+### Barcode scanning — strategie
+
+```
+Uživatel naskenuje čárový kód
+  │
+  ├── 1. Hledej v global_products (vlastní DB, okamžité)
+  │       → nalezeno → "Mouka hladká Mlýn Herold, přidat?" → scan_count++
+  │
+  ├── 2. Nenalezeno → dotaz na Open Food Facts API (free, bez API klíče)
+  │       → nalezeno → ulož do global_products (source: open_food_facts) → zobraz
+  │
+  └── 3. Nenalezeno nikde → uživatel zadá ručně
+              → opt-in: "Přidat do sdílené knihovny?"
+              → pokud ano → global_products (source: user_scan, verified: false)
+```
+
+Technologie: `zxing-wasm` (WebAssembly — funguje ve všech prohlížečích, lazy load ~500kB).
+Web Barcode Detection API pouze jako progressive enhancement tam kde je dostupné.
 
 ---
 
@@ -279,55 +396,139 @@ docker compose exec php php artisan admin:create email@example.com
 
 - [x] Resource: Invitations — status, email, expiry, možnost zrušit (Revoke akce)
 
+### Fáze 2.1 — Lokalizace ✅ HOTOVO
+
+Podporované jazyky: `['en', 'cs']` — definováno v `config/locales.php`.
+Locale uložené na `users.locale` (nullable, fallback `'en'`).
+
+**Architektura překladu — kde co žije:**
+```
+lang/
+├── en/mail.php     ← emaily (PHP pole, dot-notation klíče: mail.invitation.subject)
+├── cs/mail.php     ← emaily CZ
+├── cs.json         ← admin (JSON, klíč = EN string: "Active" → "Aktivní")
+```
+Frontend překládá Vue composable `vue-i18n` — soubory v `frontend/src/locales/`.
+
+**Emaily**
+- `lang/{en,cs}/mail.php` — překlady pro 3 typy emailů: pozvánka, ověření emailu, reset hesla
+- Locale se bere z `User->preferredLocale()` — implementuje `HasLocalePreference`
+- `Mail::to($user)` → locale se nastaví automaticky z uživatele
+- Vlastní `VerifyEmailNotification` + `ResetPasswordNotification` (rozšiřují Laravel třídy, přepisují `toMail()`)
+- Blade šablona pozvánky: `resources/views/emails/household-invitation.blade.php`
+- Email vendor views: `resources/views/vendor/mail/html/` (header, button, layout, message)
+
+**Admin (Filament v4)**
+- `lang/cs.json` — překlady všech labelů (sloupce, filtry, sekce, widgety)
+- `SetLocaleFromUser` middleware zaregistrován v `AdminPanelProvider` — nastaví locale z přihlášeného uživatele
+- Language switcher v user menu (vpravo nahoře) — zobrazí jazyky kromě aktivního, uloží přes `GET /admin/locale/{locale}`
+- Všechny Resources mají `getModelLabel()` + `getPluralModelLabel()` přes `__()`
+
+**Frontend**
+- `vue-i18n`, soubory v `frontend/src/locales/`
+- Přepínač jazyka: `LocaleSwitcher.vue` v UI
+
+### Fáze 2.2 — Refactor: List types + přejmenování
+Nutné před katalogem — levnější teď než po rozsáhlé implementaci.
+- [ ] Migrace: `shopping_lists` → `lists`, `items` → `list_items`
+- [ ] Přidat `list_type` (enum: `shopping`, `packing`, `todo`) na `lists`
+- [ ] Přidat `name` (nullable), `unit_id` (nullable), `notes` (nullable) na `list_items`
+- [ ] Přejmenovat Eloquent modely: `ShoppingList` → `List`, `Item` → `ListItem`
+- [ ] Aktualizovat všechny controllers, services, mappers, testy
+- [ ] Nové tabulky seedované: `languages`, `units`, `unit_translations`
+- [ ] Nová tabulka: `global_products` (prázdná, plní se postupně)
+- [ ] Kategorie: přidat `is_global`, `household_id`, seedovat globální kategorie s překlady
+
 ### Fáze 3 — Produktový katalog
-Musí být před šablonami — vše ostatní stojí na katalogu:
-- [ ] Produktový katalog domácnosti
-- [ ] Kategorie produktů
-- [ ] Vyhledávání / našeptávač při přidávání do seznamu
-- [ ] Uložit položku ze seznamu do katalogu
-- [ ] Přidat produkt z katalogu do seznamu
+Musí být před šablonami — vše ostatní stojí na katalogu. Cíl: katalog se buduje přirozeně při používání, uživatel ho nestaví vědomě od nuly.
 
-### Fáze 4 — Skupiny a štítky položek v seznamu
-Obdoba skupin karet v Google Chrome — logické sekce uvnitř jednoho seznamu realizované přes štítky (labels):
-- [ ] Štítek (Label) — předdefinovaný v rámci household, s názvem a barvou (např. "Osobní věci" 🔵, "Koupelna" 🟣, "Ovoce" 🟢, "Pekárna" 🟡)
-- [ ] Položka může mít přiřazený štítek → vizuálně barevný border na levé straně + kurzivový nadpis skupiny
-- [ ] Položky bez štítku tvoří výchozí skupinu
-- [ ] Drag & drop položek mezi skupinami i uvnitř skupin
-- [ ] Skupiny lze sbalit / rozbalit
-- [ ] Použití: balení na cesty (sekce per osoba), nákup (sekce per oddělení supermarketu)
+**Household katalog**
+- [ ] CRUD pro `products` (katalog domácnosti)
+- [ ] CRUD pro vlastní kategorie domácnosti
+- [ ] Vyhledávání / našeptávač při přidávání do seznamu (`GET /products?q=mo...`)
+- [ ] Přidat produkt z katalogu přímo do konkrétního seznamu
+- [ ] Uložit položku ze seznamu do katalogu (free text → produkt)
+- [ ] Preferované množství + jednotka uloženy jako default při přidávání do seznamu
+- [ ] Poznámky k produktu — brand preference, obchod, "jen bio", "červené víčko"
 
-### Fáze 5 — Hromadné akce a řazení v seznamech
-- [ ] Hromadný výběr položek (checkbox mode) — aktivuje se dlouhým stiskem nebo dedikovaným tlačítkem
-- [ ] Hromadné mazání vybraných položek
-- [ ] Hromadné přiřazení štítku / skupiny
-- [ ] Hromadné označení jako splněno / nesplněno
-- [ ] Řazení seznamu — podle názvu (A–Z), počtu kusů, stavu (splněno/nesplněno), vlastního pořadí (drag & drop)
-- [ ] Řazení je dočasné (view preference) nebo trvalé — TBD
+**Barcode scanning**
+- [ ] Integrace `zxing-wasm` — lazy load, funguje ve všech prohlížečích
+- [ ] Scan flow: own DB → Open Food Facts API → manuální zadání + opt-in příspěvek
+- [ ] Pokud kamera nedostupná (desktop) → tlačítko skryto
 
-### Fáze 6 — Templates (šablony)
+**Globální produktová knihovna**
+- [ ] `GlobalProductController` — vyhledávání podle barcode / názvu
+- [ ] Při úspěšném scanu: uložit do `global_products` (source, verified = false)
+- [ ] Při přidání z knihovny: vytvořit `Product` v household katalogu s `global_product_id`
+- [ ] Admin (Filament): správa `global_products` — verify, merge duplicates, edit
 
-Šablony nahrazují původní koncept receptů — jsou obecnější:
+**Nové API routes (Fáze 3)**
+```
+GET    /products                    ProductController@index   → katalog domácnosti (search, pagination)
+POST   /products                    ProductController@store   → přidat do katalogu
+PUT    /products/{id}               ProductController@update
+DELETE /products/{id}               ProductController@destroy
+POST   /products/{id}/add-to-list   ProductController@addToList → přidat z katalogu do listu
+
+GET    /categories                  CategoryController@index  → globální + household kategorie
+POST   /categories                  CategoryController@store  → vytvořit vlastní kategorii
+PUT    /categories/{id}             CategoryController@update
+DELETE /categories/{id}             CategoryController@destroy
+
+GET    /global-products/search      GlobalProductController@search  → hledat v knihovně (barcode / název)
+```
+
+### Fáze 3.1 — Onboarding
+Uživatel musí zažít hodnotu do 3 minut. Bez guided flow většina odejde dřív, než pochopí co app umí.
+- [ ] First-run flow pro nového uživatele — krok za krokem: vytvoř seznam → přidej první položky → ulož do katalogu → pozvi partnera
+- [ ] Prázdné stavy s výzvou k akci (ne jen "žádné položky") — každá prázdná obrazovka navede co udělat dál
+- [ ] Tooltips / hints při první interakci s katalogem, šablonami, inventářem
+
+### Fáze 4 — Skupiny, štítky a akce v seznamech
+Sloučení původních Fází 4 a 5 — jsou to dvě strany téhož. Polishová fáze, neblokuje launch.
+- [ ] Štítek (Label) — předdefinovaný v rámci household, s názvem a barvou (např. "Osobní věci", "Koupelna", "Ovoce", "Pekárna")
+- [ ] Položka může mít přiřazený štítek → vizuálně barevný border + nadpis skupiny
+- [ ] Položky bez štítku tvoří výchozí skupinu, skupiny lze sbalit / rozbalit
+- [ ] Drag & drop pořadí položek uvnitř skupiny (drag mezi skupinami jako stretch goal — komplexní na mobilu)
+- [ ] Hromadný výběr — dlouhý stisk aktivuje checkbox mode → hromadné smazání / označení / přiřazení štítku
+- [ ] Řazení seznamu — podle názvu, stavu (splněno/nesplněno), vlastního pořadí
+
+### Fáze 5 — Shopping mode & Historie listů
+UX pro reálné použití v terénu — v obchodě, při balení, na cestách.
+- [ ] **Shopping mode** — focused view při aktivním plnění seznamu: velká písma, velké checkboxy, nezaškrtnuté položky vždy nahoře, obrazovka nespadne do spánku (Wake Lock API)
+- [ ] **Archiv splněných listů** — dokončený seznam se archivuje s datem místo smazání ("nákup 3. dubna")
+- [ ] Opakovat archivovaný seznam — jedním kliknutím vytvoří kopii jako nový aktivní seznam
+- [ ] Rychlé přidání položky hlasem — Web Speech API, žádná extra závislost, klíčové pro mobil
+
+### Fáze 6 — Šablony & Recepty
+Šablony jsou obecné (cokoliv opakujícího se), recepty jsou speciální typ šablony s vazbou na porce.
 - [ ] Template = pojmenovaná skupina produktů z katalogu
 - [ ] Kategorie šablon (Vaření / Cestování / Domácnost / Sport / ...)
+- [ ] **"Uložit aktuální seznam jako šablonu"** — přirozená cesta jak šablony vznikají, ne stavění od nuly
 - [ ] Přidat šablonu do existujícího seznamu (batch přidání položek)
 - [ ] Vytvořit nový seznam ze šablony
-- [ ] Příklady: Chleba, Dovolená u moře, Horská turistika, Úklid bytu, Grilování...
+- [ ] **Recepty jako speciální typ šablony** — ingredience s množstvím vázaným na počet porcí, škálování ("recept pro 4, vaříme pro 6 → přizpůsob množství")
+- [ ] Příklady šablon: Chleba, Dovolená u moře, Horská turistika, Úklid bytu, Grilování...
 
 ### Fáze 7 — Inventář
+Inventář uzavírá smyčku: nakoupíš → potvrdíš → app ví co máš doma → příště navrhne co chybí.
 - [ ] Potvrzení dokončeného nákupu
 - [ ] Automatická aktualizace zásob po potvrzení
 - [ ] Přehled co máš doma
+- [ ] **Minimální hranice zásoby** — nastavíš "máslo: minimum 1 ks", při poklesu se automaticky přidá do příštího seznamu
 - [ ] Návrhy co dochází při tvoření nového seznamu
 
 ### Fáze 8 — Notifikace
-- [ ] In-app notifikace — oznámení o sdílení seznamu, přidání položky partnerem apod.
+- [ ] Push notifikace přes PWA — partner přidal položku, sdílení seznamu, pozvánka do domácnosti
+- [ ] In-app notifikace s přehledem aktivity
+- [ ] Upozornění na nízký stav zásoby (propojení s inventářem)
 
 ### Fáze 8.1 — Frontend testy (před nasazením)
 
 Implementovat těsně před Fází 9 — když jsou core features stabilní a přicházejí platící uživatelé.
 
 **Vitest — unit testy composables**
-- `useShoppingLists` — fetch, create, delete, reorder
+- `useLists` — fetch, create, delete, reorder
 - `useListDetail` — optimistický update, live sync eventy
 - `useContextMenu` — toggle, close
 - `auth store` — fetchUser, login, logout
@@ -345,9 +546,23 @@ Implementovat těsně před Fází 9 — když jsou core features stabilní a p�
 
 ### Fáze 9 — Monetizace a růst
 Filozofie: co nejvíc uživatelů za malou částku. Ne vysoký ticket, ale objem.
-- [ ] Onboarding pro nové uživatele
-- [ ] Štědrý free tier — uživatel musí zažít hodnotu než zaplatí
-- [ ] Jeden jednoduchý placený plán (cca €2–4/měsíc) — žádné matoucí tabulky
+
+**Free tier (návrh):**
+- Neomezené listy a položky
+- 1 household (sdílení s 1 partnerem)
+- Katalog do 50 produktů
+- Bez šablon, bez inventáře
+
+**Pro (~€2–4/měsíc):**
+- Neomezený katalog
+- Šablony a recepty
+- Inventář
+- Sdílení s více členy household
+- Historie archivovaných listů
+
+> Free tier musí být dost štědrý aby uživatel zažil hodnotu (první seznam, sdílení), ale Pro musí obsahovat přesně to co ho po 2 týdnech bude bolet postrádat (šablony, inventář).
+
+- [ ] Jeden jednoduchý placený plán — žádné matoucí tabulky, žádné "Teams" / "Enterprise"
 - [ ] Stripe + Laravel Cashier
 - [ ] Billing profil uživatele (fakturační údaje, UID-Nummer pro firmy)
 - [ ] Stripe Tax — automatický výpočet MwSt/DPH podle země zákazníka
@@ -397,16 +612,16 @@ POST   /invitations                 InvitationController@send
 POST   /invitations/{token}/accept  InvitationController@accept
 POST   /invitations/{token}/decline InvitationController@decline
 
-GET    /lists                       ShoppingListController@index
-POST   /lists                       ShoppingListController@store
-GET    /lists/{id}/items            ShoppingListController@show
-PUT    /lists/{id}                  ShoppingListController@update
-DELETE /lists/{id}                  ShoppingListController@destroy
+GET    /lists                       ListController@index
+POST   /lists                       ListController@store
+GET    /lists/{id}                  ListController@show
+PUT    /lists/{id}                  ListController@update
+DELETE /lists/{id}                  ListController@destroy
 
-POST   /lists/{id}/item             ItemController@store
-GET    /lists/{id}/items/{itemId}   ItemController@show
-PUT    /lists/{id}/items/{itemId}   ItemController@update
-DELETE /lists/{id}/items/{itemId}   ItemController@destroy
+POST   /lists/{id}/items            ListItemController@store
+GET    /lists/{id}/items/{itemId}   ListItemController@show
+PUT    /lists/{id}/items/{itemId}   ListItemController@update
+DELETE /lists/{id}/items/{itemId}   ListItemController@destroy
 ```
 
 **Vrstvy**
@@ -510,11 +725,12 @@ Po každém balíku změn (ať frontend nebo backend) provést **code review a t
 **Backend**
 - `php artisan test` — spustit PHPUnit test suite (Feature + Unit testy proti MySQL `shopping_test` DB)
 - `./vendor/bin/pint --test` — zkontrolovat formátování kódu
-- `./vendor/bin/phpstan analyse` — statická analýza
+- `./vendor/bin/phpstan analyse --memory-limit=512M` — statická analýza (bez memory-limit worker crash)
 
 **Frontend**
-- `vue-tsc --build` — typová kontrola TypeScriptu
+- `vue-tsc --build` (`npm run type-check`) — typová kontrola TypeScriptu přes vue-tsc (rozumí `<script setup>` v `.vue` souborech)
 - `npm run lint` — ESLint + Oxlint
+- `npm run build` — zahrnuje type-check automaticky (`run-p type-check build-only`), produkční build se nezkompiluje při typových chybách
 
 Vzor z optimalizace: kód se neodkládá do stavu "funguje, ale neotestovaný". Každý balík změn = otestovaný balík.
 
@@ -535,6 +751,39 @@ Při každé nové backend feature se vždy posoudí, zda jsou testy potřeba. R
 | Databáze | MySQL 8 |
 | Billing | Laravel Cashier + Stripe |
 | Superadmin | vlastní middleware + admin sekce |
+
+---
+
+---
+
+## Budoucí features (post-launch backlog)
+
+Funkce které mají smysl v kontextu aplikace, ale přicházejí až po spuštění a validaci.
+
+### Sociální & spolupráce
+- **Přiřazování položek členům** — "táta koupí pivo, máma vyzvedne děti, syn vyvenčí psa". Rozšiřuje core use case pro celou domácnost.
+- **Chat / komentáře v rámci domácnosti** — komunikace při sdíleném plánování (dovolená, týdenní menu, úkoly).
+- **Veřejné šablony (komunita)** — uživatelé sdílí oblíbené šablony (balení na hory, weekly chores, nákup před Vánoci). Potřebuje dostatek uživatelů.
+
+### AI funkce
+- **AI návrhy položek ze zvyklostí** — "každý pátek kupuješ pivo, přidat?" Vyžaduje historii reálných uživatelů → až po nasbírání dat.
+- **OCR skenování účtenky → inventář** — vyfotíš účtenku, položky se automaticky přidají do inventáře. Silný differenciátor.
+- **AI generování seznamu z receptu** — zadáš URL receptu nebo fotku, app vytvoří nákupní seznam. Nezávislé na datech uživatele.
+- **Předpověď spotřeby** — "máslo ti dojde za ~5 dní". Vyžaduje historii spotřeby → až po datech.
+
+### Gamifikace & motivace
+- **Streaky** — kolik týdnů za sebou jsi splnil plán (nákup, úkoly, balení). Engagement funkce po validaci.
+- **Rodinné body / odměny pro děti** — děti plní úkoly (vynes koš, ukliď pokoj) a sbírají body. Dává smysl pokud app pokryje "domácí úkoly" jako typ listu. Validovat zájem.
+
+### Domácnost jako hub
+- **Připomínky pravidelných plateb** — nájem, předplatné, pojistka. Jako recurring reminder list.
+- **Správa spotřebičů** — záruky, servisní intervaly (servis auta, výměna filtru). Jako reminder list s datem.
+
+### Integrace & platformy
+- **Widget pro iOS/Android** — rychlé přidání položky/úkolu bez otevření app. Kvalita života.
+- **Export do PDF / tisk** — balení na cesty, nákupní seznam pro babičku. Jednoduchá win.
+- **Google Calendar** — připomínky a recurring tasky jako kalendářní události.
+- **Alexa / Google Home** — hlasové přidávání ("přidej mléko do nákupu"). Nízká priorita.
 
 ---
 

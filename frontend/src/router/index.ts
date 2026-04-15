@@ -1,10 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import type { iShoppingList } from '@/types'
+import type { iList } from '@/types'
 
 declare module 'vue-router' {
   interface RouteMeta {
-    list?: iShoppingList
+    list?: iList
     requiresAuth?: boolean
     requiresGuest?: boolean
   }
@@ -69,7 +69,7 @@ const router = createRouter({
     {
       path: '/lists/new',
       name: 'new-list',
-      component: () => import('@/views/CreateShoppingList.vue'),
+      component: () => import('@/views/CreateList.vue'),
       meta: { requiresAuth: true },
     },
     {
@@ -78,7 +78,7 @@ const router = createRouter({
       component: () => import('@/views/ListDetail.vue'),
       meta: { requiresAuth: true },
       beforeEnter: async (to) => {
-        const { fetchList } = await import('@/services/shoppingListService')
+        const { fetchList } = await import('@/services/listService')
         try {
           to.meta.list = await fetchList(to.params.id as string)
           return true

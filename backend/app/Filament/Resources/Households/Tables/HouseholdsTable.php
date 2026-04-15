@@ -23,14 +23,14 @@ class HouseholdsTable
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('owner.name')
-                    ->label('Owner')
+                    ->label(__('Owner'))
                     ->searchable(),
                 TextColumn::make('members_count')
-                    ->label('Members')
+                    ->label(__('Members'))
                     ->counts('members')
                     ->sortable(),
                 IconColumn::make('is_active')
-                    ->label('Active')
+                    ->label(__('Active'))
                     ->boolean(),
                 TextColumn::make('created_at')
                     ->dateTime()
@@ -38,7 +38,7 @@ class HouseholdsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                TernaryFilter::make('is_active')->label('Active'),
+                TernaryFilter::make('is_active')->label(__('Active')),
             ])
             ->recordActions([
                 ViewAction::make(),

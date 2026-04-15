@@ -15,16 +15,17 @@ class ShoppingListInfolist
         return $schema->components([
             Section::make()->schema([
                 TextEntry::make('name'),
-                TextEntry::make('household.name')->label('Household'),
-                TextEntry::make('creator.name')->label('Created by'),
+                TextEntry::make('household.name')->label(__('Household')),
+                TextEntry::make('creator.name')->label(__('Created by')),
                 TextEntry::make('visibility')
                     ->badge()
+                    ->formatStateUsing(fn (string $state): string => __(ucfirst($state)))
                     ->color(fn (string $state): string => match ($state) {
                         'shared' => 'success',
                         'private' => 'gray',
                         default => 'gray',
                     }),
-                TextEntry::make('created_at')->label('Created')->dateTime(),
+                TextEntry::make('created_at')->label(__('Created'))->dateTime(),
             ])->columns(2),
         ]);
     }

@@ -1,11 +1,11 @@
 import { apiFetch } from '@/services/api'
-import type { iItem, iShoppingList } from '@/types'
+import type { iItem, iList } from '@/types'
 
 export async function createItem(
   listId: number | string,
   data: { name: string; quantity: number; isCompleted: boolean },
-): Promise<iShoppingList> {
-  return apiFetch<iShoppingList>(`/lists/${listId}/item`, {
+): Promise<iList> {
+  return apiFetch<iList>(`/lists/${listId}/item`, {
     method: 'POST',
     body: JSON.stringify(data),
   })

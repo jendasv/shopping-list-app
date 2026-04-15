@@ -12,7 +12,7 @@
     <div class="mb-6 flex items-center gap-4 text-xl">
       <label class="shrink-0 text-gray-900">{{ $t('newList.listName') }}</label>
       <input
-        v-model="shoppingListName"
+        v-model="listName"
         type="text"
         :placeholder="$t('newList.listNamePlaceholder')"
         class="flex-1 p-2 focus:outline-none text-gray-900"
@@ -44,8 +44,8 @@
           class="flex items-center justify-between"
         >
           <span class="text-2xl" :class="item.isCompleted ? 'line-through text-gray-400' : ''">
-            <Typewrite v-if="item.isNew" :text="item.quantity > 1 ? item.name + ' — ' + item.quantity + 'x' : item.name" @done="item.isNew = false" />
-            <span v-else>{{ item.name }}{{ item.quantity > 1 ? ' — ' + item.quantity + 'x' : '' }}</span>
+            <Typewrite v-if="item.isNew" :text="(item.quantity ?? 0) > 1 ? item.name + ' — ' + item.quantity + 'x' : item.name" @done="item.isNew = false" />
+            <span v-else>{{ item.name }}{{ (item.quantity ?? 0) > 1 ? ' — ' + item.quantity + 'x' : '' }}</span>
           </span>
           <button @click="removeItem(item.id)" class="text-red-400 hover:text-red-600 text-3xl leading-none ml-3">×</button>
         </li>
@@ -68,8 +68,8 @@
 
     <div class="flex justify-end mt-4">
       <button
-        @click="createShoppingList"
-        :disabled="!shoppingListName.trim()"
+        @click="submitCreate"
+        :disabled="!listName.trim()"
         class="btn-primary"
       >
         {{ $t('newList.createBtn') }}
@@ -83,7 +83,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import type { iItem } from '@/types'
-import { createList } from '@/services/shoppingListService'
+import { createList } from '@/services/listService'
 import AddItemForm from '@/components/form/AddItemForm.vue'
 import AlertMessage from '@/components/elements/AlertMessage.vue'
 import HandDrawnCheckbox from '@/components/elements/form/HandDrawnCheckbox.vue'
@@ -94,7 +94,7 @@ import Typewrite from '@/components/animations/Typewrite.vue'
 const { t } = useI18n()
 const router = useRouter()
 
-const shoppingListName = ref('')
+const listName = ref('')
 const isShared = ref(false)
 const items = ref<iItem[]>([])
 const showItemAddForm = ref(false)
@@ -109,13 +109,13 @@ function removeItem(id: number) {
   items.value = items.value.filter((i) => i.id !== id)
 }
 
-async function createShoppingList() {
-  if (!shoppingListName.value.trim()) {
+async function submitCreate() {
+  if (!listName.value.trim()) {
     error.value = t('lists.errors.nameRequired')
     return
   }
   try {
-    await createList(shoppingListName.value.trim(), isShared.value ? 'shared' : 'private', items.value)
+    await createList(listName.value.trim(), isShared.value ? 'shared' : 'private', items.value)
     router.push({ name: 'home' })
   } catch (e) {
     console.error(e)

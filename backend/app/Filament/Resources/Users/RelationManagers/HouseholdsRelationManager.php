@@ -22,12 +22,12 @@ class HouseholdsRelationManager extends RelationManager
                     ->searchable()
                     ->url(fn ($record) => HouseholdResource::getUrl('view', ['record' => $record])),
                 IconColumn::make('is_active')
-                    ->label('Active')
+                    ->label(__('Active'))
                     ->boolean(),
                 TextColumn::make('pivot.role')
-                    ->label('Role'),
+                    ->label(__('Role')),
                 TextColumn::make('created_at')
-                    ->label('Joined')
+                    ->label(__('Joined'))
                     ->dateTime()
                     ->sortable(),
             ])

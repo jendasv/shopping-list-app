@@ -16,9 +16,9 @@ class HouseholdInfolist
         return $schema->components([
             Section::make()->schema([
                 TextEntry::make('name'),
-                TextEntry::make('owner.name')->label('Owner'),
-                IconEntry::make('is_active')->label('Active')->boolean(),
-                TextEntry::make('created_at')->label('Created')->dateTime(),
+                TextEntry::make('owner.name')->label(__('Owner')),
+                IconEntry::make('is_active')->label(__('Active'))->boolean(),
+                TextEntry::make('created_at')->label(__('Created'))->dateTime(),
             ])->columns(2),
         ]);
     }

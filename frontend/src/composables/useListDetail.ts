@@ -1,8 +1,8 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import type { iShoppingList, iItem } from '@/types'
-import { fetchList } from '@/services/shoppingListService'
+import type { iList, iItem } from '@/types'
+import { fetchList } from '@/services/listService'
 import { createItem, updateItem, deleteItem } from '@/services/itemService'
 import { useAuthStore } from '@/stores/auth'
 import echo from '@/plugins/echo'
@@ -11,7 +11,7 @@ export function useListDetail(id: string) {
   const { t } = useI18n()
   const route = useRoute()
   const authStore = useAuthStore()
-  const list = ref<iShoppingList | null>(null)
+  const list = ref<iList | null>(null)
   const error = ref<string>('')
   const isLoading = ref<boolean>(false)
   const editingItemId = ref<number | null>(null)
@@ -109,12 +109,12 @@ export function useListDetail(id: string) {
       error.value = t('items.errors.nameRequired')
       return
     }
-    if (item.quantity < 1) {
+    if ((item.quantity ?? 0) < 1) {
       error.value = t('items.errors.quantityInvalid')
       return
     }
     try {
-      const data = await createItem(id, { name, quantity: item.quantity, isCompleted: item.isCompleted })
+      const data = await createItem(id, { name, quantity: item.quantity ?? 1, isCompleted: item.isCompleted })
       const lastItem = data.items[data.items.length - 1]
       if (!lastItem || !list.value) return
       lastItem.isNew = true
@@ -134,12 +134,12 @@ export function useListDetail(id: string) {
       error.value = t('items.errors.nameRequired')
       return
     }
-    if (item.quantity < 1) {
+    if ((item.quantity ?? 0) < 1) {
       error.value = t('items.errors.quantityInvalid')
       return
     }
     try {
-      await updateItem(listId, item.id, { name: item.name, quantity: item.quantity, isCompleted: item.isCompleted })
+      await updateItem(listId, item.id, { name: item.name, quantity: item.quantity ?? undefined, isCompleted: item.isCompleted })
       item.isNew = true
       editingItemId.value = null
     } catch (e) {

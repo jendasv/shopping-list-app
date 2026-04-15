@@ -48,9 +48,9 @@
               :class="item.isCompleted ? 'text-gray-400' : ''"
               @click="handleSetComplete(list.id, item.id, item.isCompleted)"
             >
-              <Typewrite v-if="item.isNew" :text="item.quantity > 1 ? item.name + ' — ' + item.quantity + 'x' : item.name" @done="item.isNew = false" />
-              <HandDrawnStrikethrough v-else-if="item.isCompleted" :seed="item.id">{{ item.name }}{{ item.quantity > 1 ? ' — ' + item.quantity + 'x' : '' }}</HandDrawnStrikethrough>
-              <span v-else>{{ item.name }}{{ item.quantity > 1 ? ' — ' + item.quantity + 'x' : '' }}</span>
+              <Typewrite v-if="item.isNew" :text="(item.quantity ?? 0) > 1 ? item.name + ' — ' + item.quantity + 'x' : item.name" @done="item.isNew = false" />
+              <HandDrawnStrikethrough v-else-if="item.isCompleted" :seed="item.id">{{ item.name }}{{ (item.quantity ?? 0) > 1 ? ' — ' + item.quantity + 'x' : '' }}</HandDrawnStrikethrough>
+              <span v-else>{{ item.name }}{{ (item.quantity ?? 0) > 1 ? ' — ' + item.quantity + 'x' : '' }}</span>
             </button>
 
             <RowActions>
@@ -92,7 +92,7 @@ import { ref, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { VueDraggable as VueDraggablePlus } from 'vue-draggable-plus'
 import { useListDetail } from '@/composables/useListDetail'
-import { reorderItems } from '@/services/shoppingListService'
+import { reorderItems } from '@/services/listService'
 import AddItemForm from '@/components/form/AddItemForm.vue'
 import AlertMessage from '@/components/elements/AlertMessage.vue'
 import HandDrawnDivider from '@/components/elements/HandDrawnDivider.vue'

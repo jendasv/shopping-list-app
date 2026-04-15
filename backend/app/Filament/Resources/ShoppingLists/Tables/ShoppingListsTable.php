@@ -22,20 +22,21 @@ class ShoppingListsTable
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('household.name')
-                    ->label('Household')
+                    ->label(__('Household'))
                     ->searchable(),
                 TextColumn::make('creator.name')
-                    ->label('Created by')
+                    ->label(__('Created by'))
                     ->searchable(),
                 TextColumn::make('visibility')
                     ->badge()
+                    ->formatStateUsing(fn (string $state): string => __(ucfirst($state)))
                     ->color(fn (string $state): string => match ($state) {
                         'shared' => 'success',
                         'private' => 'gray',
                         default => 'gray',
                     }),
                 TextColumn::make('items_count')
-                    ->label('Items')
+                    ->label(__('Items'))
                     ->counts('items')
                     ->sortable(),
                 TextColumn::make('created_at')
@@ -46,8 +47,8 @@ class ShoppingListsTable
             ->filters([
                 SelectFilter::make('visibility')
                     ->options([
-                        'shared' => 'Shared',
-                        'private' => 'Private',
+                        'shared' => __('Shared'),
+                        'private' => __('Private'),
                     ]),
             ])
             ->recordActions([

@@ -1,4 +1,5 @@
 import { createI18n } from 'vue-i18n'
+import type { LocaleMessages, VueMessageType } from 'vue-i18n'
 import localesConfig from '../locales/locales.json'
 import { getCookie, setCookie } from '@/utils/cookie'
 
@@ -7,7 +8,7 @@ import { getCookie, setCookie } from '@/utils/cookie'
 const messageFiles = import.meta.glob('../locales/messages/*.json', {
   eager: true,
   import: 'default',
-}) as Record<string, Record<string, unknown>>
+}) as Record<string, LocaleMessages<VueMessageType>>
 
 export const SUPPORTED_LOCALES = localesConfig.map((l) => l.code)
 export const LOCALE_COOKIE = 'app_locale'
@@ -23,7 +24,7 @@ export function detectLocale(): string {
   const cookie = getCookie(LOCALE_COOKIE)
   if (cookie && SUPPORTED_LOCALES.includes(cookie)) return cookie
 
-  const browser = navigator.language.split('-')[0]
+  const browser = navigator.language.split('-')[0] ?? 'en'
   if (SUPPORTED_LOCALES.includes(browser)) return browser
 
   return 'en'

@@ -12,7 +12,7 @@ use App\Filament\Resources\ShoppingLists\RelationManagers\ItemsRelationManager;
 use App\Filament\Resources\ShoppingLists\Schemas\ShoppingListForm;
 use App\Filament\Resources\ShoppingLists\Schemas\ShoppingListInfolist;
 use App\Filament\Resources\ShoppingLists\Tables\ShoppingListsTable;
-use App\Models\ShoppingList;
+use App\Models\Liste;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -21,9 +21,19 @@ use Filament\Tables\Table;
 
 class ShoppingListResource extends Resource
 {
-    protected static ?string $model = ShoppingList::class;
+    protected static ?string $model = Liste::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+
+    public static function getModelLabel(): string
+    {
+        return __('Shopping List');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Shopping Lists');
+    }
 
     public static function form(Schema $schema): Schema
     {

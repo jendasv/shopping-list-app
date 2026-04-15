@@ -21,7 +21,7 @@ class HouseholdInvitation extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "You've been invited to join a household",
+            subject: __('mail.invitation.subject'),
         );
     }
 

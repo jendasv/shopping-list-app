@@ -12,9 +12,9 @@ use App\Exceptions\Domain\ResourceNotFoundException;
 use App\Exceptions\Domain\ValidationException;
 use App\Exceptions\Infrastructure\DatabaseOperationException;
 use App\Mapper\ItemMapper;
-use App\Mapper\ShoppingListMapper;
-use App\Models\Item;
-use App\Models\ShoppingList;
+use App\Mapper\ListMapper;
+use App\Models\Liste;
+use App\Models\ListItem;
 use App\Models\User;
 use Throwable;
 
@@ -22,8 +22,8 @@ class ItemService
 {
     public function __construct(
         private readonly ItemMapper $itemMapper,
-        private readonly ShoppingListMapper $shoppingListMapper,
-        private readonly ShoppingListService $shoppingListService,
+        private readonly ListMapper $listMapper,
+        private readonly ListService $listService,
     ) {}
 
     /**
@@ -39,17 +39,17 @@ class ItemService
     /**
      * @param  array<string, mixed>  $data
      */
-    public function createItem(array $data, ShoppingList $list): Item
+    public function createItem(array $data, Liste $list): ListItem
     {
         $this->validateItemData($data);
 
         try {
-            $item = new Item;
+            $item = new ListItem;
             $item->name = $data['name'];
             $item->quantity = (int) $data['quantity'];
             $item->is_completed = false;
-            $item->shopping_list_id = $list->id;
-            $item->sort_order = Item::where('shopping_list_id', $list->id)->max('sort_order') + 1;
+            $item->list_id = $list->id;
+            $item->sort_order = ListItem::where('list_id', $list->id)->max('sort_order') + 1;
             $item->save();
         } catch (Throwable $e) {
             throw new DatabaseOperationException('Failed to create item: '.$e->getMessage());
@@ -68,11 +68,11 @@ class ItemService
      */
     public function createItemForList(int $listId, array $data, User $user): array
     {
-        $list = $this->shoppingListService->findList($listId, $user);
+        $list = $this->listService->findList($listId, $user);
         $this->createItem($data, $list);
         $list->load('items');
 
-        return $this->shoppingListMapper->map($list);
+        return $this->listMapper->map($list);
     }
 
     /**
@@ -94,7 +94,7 @@ class ItemService
             throw new DatabaseOperationException('Failed to update item: '.$e->getMessage());
         }
 
-        $list = $item->shoppingList;
+        $list = $item->list;
         if ($list->household_id) {
             broadcast(new ItemUpdated($list->household_id, $this->itemMapper->map($item)))->toOthers();
         }
@@ -107,11 +107,11 @@ class ItemService
      */
     public function reorderItems(int $listId, array $orderedIds, User $user): void
     {
-        $list = $this->shoppingListService->findList($listId, $user);
+        $list = $this->listService->findList($listId, $user);
 
         foreach ($orderedIds as $position => $itemId) {
-            Item::where('id', $itemId)
-                ->where('shopping_list_id', $listId)
+            ListItem::where('id', $itemId)
+                ->where('list_id', $listId)
                 ->update(['sort_order' => $position]);
         }
 
@@ -124,7 +124,7 @@ class ItemService
     {
         $item = $this->findItem($listId, $itemId, $user);
 
-        $list = $item->shoppingList;
+        $list = $item->list;
 
         try {
             $item->delete();
@@ -137,13 +137,13 @@ class ItemService
         }
     }
 
-    private function findItem(int $listId, int $itemId, User $user): Item
+    private function findItem(int $listId, int $itemId, User $user): ListItem
     {
         // Ověř přístup k listu přes ShoppingListService (respektuje household + visibility)
-        $this->shoppingListService->findList($listId, $user);
+        $this->listService->findList($listId, $user);
 
-        $item = Item::where('id', $itemId)
-            ->where('shopping_list_id', $listId)
+        $item = ListItem::where('id', $itemId)
+            ->where('list_id', $listId)
             ->first();
 
         if ($item === null) {

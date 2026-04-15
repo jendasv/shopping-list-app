@@ -1,16 +1,16 @@
 <x-mail::message>
-# You've been invited
+# {{ __('mail.invitation.heading') }}
 
-**{{ $inviterName }}** has invited you to join their household **{{ $householdName }}**.
+{{ __('mail.invitation.intro', ['inviter' => $inviterName, 'household' => $householdName]) }}
 
 <x-mail::button :url="$acceptUrl" color="primary">
-Accept invitation
+{{ __('mail.invitation.button') }}
 </x-mail::button>
 
-Not interested? You can [decline the invitation]({{ $declineUrl }}).
+{{ __('mail.invitation.decline', ['url' => $declineUrl]) }}
 
-This invitation expires on **{{ $expiresAt }}**.
+{{ __('mail.invitation.expires', ['date' => $expiresAt]) }}
 
-Thanks,
+{{ __('mail.invitation.thanks') }}
 {{ config('app.name') }}
 </x-mail::message>

@@ -76,7 +76,7 @@ const item = ref<iItem>({
   name: '',
   quantity: 1,
   isCompleted: false,
-  shoppingListId: 0,
+  listId: 0,
   isNew: true
 })
 
@@ -94,7 +94,7 @@ function onSubmit() {
     triggerShake()
     return
   }
-  if (item.value.quantity <= 0) {
+  if ((item.value.quantity ?? 0) <= 0) {
     error.value = t('items.errors.quantityInvalid')
     triggerShake()
     return
@@ -106,7 +106,7 @@ function onSubmit() {
     name: '',
     quantity: 1,
     isCompleted: false,
-    shoppingListId: 0,
+    listId: 0,
     isNew: true
   }
   error.value = ''

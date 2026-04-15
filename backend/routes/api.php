@@ -5,8 +5,8 @@ declare(strict_types=1);
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\HouseholdController;
 use App\Http\Controllers\Api\InvitationController;
-use App\Http\Controllers\Api\ItemController;
-use App\Http\Controllers\Api\ShoppingListController;
+use App\Http\Controllers\Api\ListController;
+use App\Http\Controllers\Api\ListItemController;
 use Illuminate\Support\Facades\Route;
 
 // Auth (public)
@@ -44,17 +44,17 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Lists
-    Route::get('/lists', [ShoppingListController::class, 'index']);
-    Route::post('/lists', [ShoppingListController::class, 'store']);
-    Route::post('/lists/reorder', [ShoppingListController::class, 'reorder']);
-    Route::get('/lists/{id}/items', [ShoppingListController::class, 'show']);
-    Route::put('/lists/{id}', [ShoppingListController::class, 'update']);
-    Route::delete('/lists/{id}', [ShoppingListController::class, 'destroy']);
+    Route::get('/lists', [ListController::class, 'index']);
+    Route::post('/lists', [ListController::class, 'store']);
+    Route::post('/lists/reorder', [ListController::class, 'reorder']);
+    Route::get('/lists/{id}', [ListController::class, 'show']);
+    Route::put('/lists/{id}', [ListController::class, 'update']);
+    Route::delete('/lists/{id}', [ListController::class, 'destroy']);
 
-    // Items
-    Route::post('/lists/{id}/item', [ItemController::class, 'store']);
-    Route::post('/lists/{id}/items/reorder', [ItemController::class, 'reorder']);
-    Route::get('/lists/{id}/items/{itemId}', [ItemController::class, 'show']);
-    Route::put('/lists/{id}/items/{itemId}', [ItemController::class, 'update']);
-    Route::delete('/lists/{id}/items/{itemId}', [ItemController::class, 'destroy']);
+    // List items
+    Route::post('/lists/{id}/items', [ListItemController::class, 'store']);
+    Route::post('/lists/{id}/items/reorder', [ListItemController::class, 'reorder']);
+    Route::get('/lists/{id}/items/{itemId}', [ListItemController::class, 'show']);
+    Route::put('/lists/{id}/items/{itemId}', [ListItemController::class, 'update']);
+    Route::delete('/lists/{id}/items/{itemId}', [ListItemController::class, 'destroy']);
 });

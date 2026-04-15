@@ -6,7 +6,7 @@ namespace Tests\Feature\Invitation;
 
 use App\Enums\InvitationStatus;
 use App\Models\Invitation;
-use App\Models\ShoppingList;
+use App\Models\Liste;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -163,7 +163,7 @@ class InvitationTest extends TestCase
         $owner = $this->createUserWithHousehold();
         $invitee = $this->createUserWithHousehold();
 
-        $list = ShoppingList::factory()->create([
+        $list = Liste::factory()->create([
             'household_id' => $invitee->household()->id,
             'created_by' => $invitee->id,
             'visibility' => 'shared',
@@ -180,7 +180,7 @@ class InvitationTest extends TestCase
 
         $this->actingAs($invitee)->postJson("/api/invitations/{$invitation->token}/accept");
 
-        $this->assertDatabaseHas('shopping_list', [
+        $this->assertDatabaseHas('lists', [
             'id' => $list->id,
             'household_id' => $owner->household()->id,
         ]);

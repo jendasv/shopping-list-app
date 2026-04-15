@@ -25,6 +25,16 @@ class HouseholdResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+    public static function getModelLabel(): string
+    {
+        return __('Household');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Households');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return HouseholdForm::configure($schema);

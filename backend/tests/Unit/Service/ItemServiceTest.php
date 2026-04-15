@@ -5,12 +5,9 @@ declare(strict_types=1);
 namespace Tests\Unit\Service;
 
 use App\Exceptions\Domain\ValidationException;
-use App\Mapper\ItemMapper;
-use App\Mapper\ShoppingListMapper;
-use App\Models\Item;
-use App\Models\ShoppingList;
+use App\Models\ListItem;
+use App\Models\Liste;
 use App\Service\ItemService;
-use App\Service\ShoppingListService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -26,10 +23,11 @@ class ItemServiceTest extends TestCase
         $this->service = app(ItemService::class);
     }
 
-    private function makeList(): ShoppingList
+    private function makeList(): Liste
     {
         $user = $this->createUserWithHousehold();
-        return ShoppingList::factory()->create([
+
+        return Liste::factory()->create([
             'household_id' => $user->household()->id,
             'created_by' => $user->id,
             'visibility' => 'shared',
@@ -42,8 +40,8 @@ class ItemServiceTest extends TestCase
 
         $item = $this->service->createItem(['name' => 'Milk', 'quantity' => 2], $list);
 
-        $this->assertInstanceOf(Item::class, $item);
-        $this->assertDatabaseHas('item', ['name' => 'Milk', 'quantity' => 2, 'shopping_list_id' => $list->id]);
+        $this->assertInstanceOf(ListItem::class, $item);
+        $this->assertDatabaseHas('list_items', ['name' => 'Milk', 'quantity' => 2, 'list_id' => $list->id]);
     }
 
     public function test_create_item_throws_on_missing_name(): void
@@ -79,20 +77,20 @@ class ItemServiceTest extends TestCase
     public function test_reorder_updates_sort_order(): void
     {
         $user = $this->createUserWithHousehold();
-        $list = ShoppingList::factory()->create([
+        $list = Liste::factory()->create([
             'household_id' => $user->household()->id,
             'created_by' => $user->id,
         ]);
 
-        $a = Item::factory()->create(['shopping_list_id' => $list->id, 'sort_order' => 0]);
-        $b = Item::factory()->create(['shopping_list_id' => $list->id, 'sort_order' => 1]);
-        $c = Item::factory()->create(['shopping_list_id' => $list->id, 'sort_order' => 2]);
+        $a = ListItem::factory()->create(['list_id' => $list->id, 'sort_order' => 0]);
+        $b = ListItem::factory()->create(['list_id' => $list->id, 'sort_order' => 1]);
+        $c = ListItem::factory()->create(['list_id' => $list->id, 'sort_order' => 2]);
 
         // Reorder: put C first, then A, then B
         $this->service->reorderItems($list->id, [$c->id, $a->id, $b->id], $user);
 
-        $this->assertDatabaseHas('item', ['id' => $c->id, 'sort_order' => 0]);
-        $this->assertDatabaseHas('item', ['id' => $a->id, 'sort_order' => 1]);
-        $this->assertDatabaseHas('item', ['id' => $b->id, 'sort_order' => 2]);
+        $this->assertDatabaseHas('list_items', ['id' => $c->id, 'sort_order' => 0]);
+        $this->assertDatabaseHas('list_items', ['id' => $a->id, 'sort_order' => 1]);
+        $this->assertDatabaseHas('list_items', ['id' => $b->id, 'sort_order' => 2]);
     }
 }

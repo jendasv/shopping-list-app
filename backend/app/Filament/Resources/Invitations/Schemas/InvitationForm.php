@@ -16,7 +16,7 @@ class InvitationForm
         return $schema
             ->components([
                 TextInput::make('email')
-                    ->label('Invited email')
+                    ->label(__('Invited email'))
                     ->email()
                     ->disabled(),
                 Select::make('household_id')
@@ -24,10 +24,10 @@ class InvitationForm
                     ->disabled(),
                 Select::make('status')
                     ->options([
-                        'pending' => 'Pending',
-                        'accepted' => 'Accepted',
-                        'declined' => 'Declined',
-                        'expired' => 'Expired',
+                        'pending' => __('Pending'),
+                        'accepted' => __('Accepted'),
+                        'declined' => __('Declined'),
+                        'expired' => __('Expired'),
                     ])
                     ->required(),
                 DateTimePicker::make('expires_at')

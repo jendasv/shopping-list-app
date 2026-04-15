@@ -1,3 +1,4 @@
 [
-  { "code": "en", "label": "English", "nativeLabel": "English", "flag": "🇬🇧" }
+  { "code": "en", "label": "English", "nativeLabel": "English", "flag": "🇬🇧" },
+  { "code": "cs", "label": "Czech", "nativeLabel": "Čeština", "flag": "🇨🇿" }
 ]
