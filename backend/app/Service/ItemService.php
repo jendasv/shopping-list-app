@@ -139,7 +139,7 @@ class ItemService
 
     private function findItem(int $listId, int $itemId, User $user): ListItem
     {
-        // Ověř přístup k listu přes ShoppingListService (respektuje household + visibility)
+        // Ověř přístup k listu přes ListService (respektuje household + visibility)
         $this->listService->findList($listId, $user);
 
         $item = ListItem::where('id', $itemId)

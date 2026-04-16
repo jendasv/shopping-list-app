@@ -5,20 +5,20 @@ declare(strict_types=1);
 namespace Tests\Unit\Mapper;
 
 use App\Mapper\ItemMapper;
-use App\Mapper\ShoppingListMapper;
+use App\Mapper\ListMapper;
 use App\Models\ListItem;
 use App\Models\Liste;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use PHPUnit\Framework\TestCase;
 
-class ShoppingListMapperTest extends TestCase
+class ListMapperTest extends TestCase
 {
-    private ShoppingListMapper $mapper;
+    private ListMapper $mapper;
 
     protected function setUp(): void
     {
-        $this->mapper = new ShoppingListMapper(new ItemMapper);
+        $this->mapper = new ListMapper(new ItemMapper);
     }
 
     private function makeList(string $name = 'Test List', string $visibility = 'shared'): Liste

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\ShoppingList;
+namespace Tests\Feature\List;
 
 use App\Models\Liste;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class ShoppingListCrudTest extends TestCase
+class ListCrudTest extends TestCase
 {
     use RefreshDatabase;
 

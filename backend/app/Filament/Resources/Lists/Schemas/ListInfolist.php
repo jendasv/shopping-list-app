@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Filament\Resources\ShoppingLists\Schemas;
+namespace App\Filament\Resources\Lists\Schemas;
 
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
-class ShoppingListInfolist
+class ListInfolist
 {
     public static function configure(Schema $schema): Schema
     {

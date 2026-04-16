@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace App\Filament\Resources\ShoppingLists\Pages;
+namespace App\Filament\Resources\Lists\Pages;
 
-use App\Filament\Resources\ShoppingLists\ShoppingListResource;
+use App\Filament\Resources\Lists\ListResource;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 
-class ViewShoppingList extends ViewRecord
+class ViewList extends ViewRecord
 {
-    protected static string $resource = ShoppingListResource::class;
+    protected static string $resource = ListResource::class;
 
     protected function getHeaderActions(): array
     {

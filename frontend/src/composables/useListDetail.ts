@@ -42,13 +42,13 @@ export function useListDetail(id: string) {
 
     echo
       .private(`household.${householdId}`)
-      .listen('.ItemAdded', (data: iItem & { shoppingListId: number }) => {
-        if (!list.value || data.shoppingListId !== list.value.id) return
+      .listen('.ItemAdded', (data: iItem & { listId: number }) => {
+        if (!list.value || data.listId !== list.value.id) return
         if (list.value.items.some((i) => i.id === data.id)) return
         list.value.items.push(data)
       })
-      .listen('.ItemUpdated', (data: iItem & { shoppingListId: number }) => {
-        if (!list.value || data.shoppingListId !== list.value.id) return
+      .listen('.ItemUpdated', (data: iItem & { listId: number }) => {
+        if (!list.value || data.listId !== list.value.id) return
         list.value.items = sortItems(
           list.value.items.map((i) => (i.id === data.id ? { ...i, ...data } : i)),
         )

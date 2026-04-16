@@ -5,7 +5,7 @@ export async function createItem(
   listId: number | string,
   data: { name: string; quantity: number; isCompleted: boolean },
 ): Promise<iList> {
-  return apiFetch<iList>(`/lists/${listId}/item`, {
+  return apiFetch<iList>(`/lists/${listId}/items`, {
     method: 'POST',
     body: JSON.stringify(data),
   })

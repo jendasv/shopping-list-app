@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Users\RelationManagers;
 
-use App\Filament\Resources\ShoppingLists\ShoppingListResource;
+use App\Filament\Resources\Lists\ListResource;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
-class ShoppingListsRelationManager extends RelationManager
+class ListsRelationManager extends RelationManager
 {
-    protected static string $relationship = 'shoppingLists';
+    protected static string $relationship = 'lists';
 
     public function table(Table $table): Table
     {
@@ -20,7 +20,7 @@ class ShoppingListsRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('name')
                     ->searchable()
-                    ->url(fn ($record) => ShoppingListResource::getUrl('view', ['record' => $record])),
+                    ->url(fn ($record) => ListResource::getUrl('view', ['record' => $record])),
                 TextColumn::make('visibility')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {

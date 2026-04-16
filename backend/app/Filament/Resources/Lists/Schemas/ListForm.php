@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Filament\Resources\ShoppingLists\Schemas;
+namespace App\Filament\Resources\Lists\Schemas;
 
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
-class ShoppingListForm
+class ListForm
 {
     public static function configure(Schema $schema): Schema
     {

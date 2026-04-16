@@ -9,7 +9,7 @@ use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Pages\ViewUser;
 use App\Filament\Resources\Users\RelationManagers\HouseholdsRelationManager;
-use App\Filament\Resources\Users\RelationManagers\ShoppingListsRelationManager;
+use App\Filament\Resources\Users\RelationManagers\ListsRelationManager;
 use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\Schemas\UserInfolist;
 use App\Filament\Resources\Users\Tables\UsersTable;
@@ -55,7 +55,7 @@ class UserResource extends Resource
     {
         return [
             HouseholdsRelationManager::class,
-            ShoppingListsRelationManager::class,
+            ListsRelationManager::class,
         ];
     }
 
