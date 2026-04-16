@@ -34,7 +34,7 @@ class UpdateListRequest extends FormRequest
         throw new HttpResponseException(
             new JsonResponse(
                 ['error' => 'Validation failed.', 'details' => $validator->errors()->toArray()],
-                400,
+                422,
             )
         );
     }

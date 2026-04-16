@@ -52,14 +52,30 @@
         <!-- Members -->
         <div>
           <p class="text-xl font-bold mb-3">{{ $t('household.members') }}</p>
+          <AlertMessage v-if="removeMemberError" type="error" :message="removeMemberError" class="mb-3" />
+          <AlertMessage v-if="removeMemberSuccess" type="success" :message="removeMemberSuccess" class="mb-3" />
           <ul class="space-y-3">
             <li
               v-for="member in data.ownHousehold.members"
               :key="member.id"
               class="flex items-center justify-between text-xl"
             >
-              <span>{{ member.name }} <span class="text-gray-400 text-base">({{ member.email }})</span></span>
-              <span class="text-base text-gray-400 capitalize">{{ member.role === 'owner' ? $t('lists.owner') : $t('lists.member') }}</span>
+              <span>
+                {{ member.name }}
+                <span class="text-gray-400 text-base">({{ member.email }})</span>
+                <span v-if="member.id === currentUserId" class="text-gray-400 text-sm ml-1">({{ $t('household.you') }})</span>
+              </span>
+              <span v-if="member.role === 'owner'" class="text-base text-gray-400 capitalize">
+                {{ $t('lists.owner') }}
+              </span>
+              <button
+                v-else
+                @click="removeMember(member.id, member.name)"
+                :disabled="removingMemberId === member.id"
+                class="text-base text-red-500 hover:text-red-700 transition cursor-pointer disabled:opacity-40"
+              >
+                {{ removingMemberId === member.id ? '...' : $t('household.removeMember') }}
+              </button>
             </li>
           </ul>
         </div>
@@ -77,7 +93,7 @@
             class="flex items-center justify-between text-xl"
           >
             <span class="font-medium">{{ household.name }}</span>
-            <button @click="leave(household.id)" class="text-red-600 underline hover:text-red-800 cursor-pointer">
+            <button @click="leave(household.id)" class="text-red-600 hover:text-red-800 cursor-pointer">
               {{ $t('household.leave') }}
             </button>
           </li>
@@ -93,15 +109,20 @@
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { householdService } from '@/services/householdService'
+import { useAuthStore } from '@/stores/auth'
+import { useConfirm } from '@/composables/useConfirm'
 import AlertMessage from '@/components/elements/AlertMessage.vue'
 import HandDrawnDivider from '@/components/elements/HandDrawnDivider.vue'
 import type { iHouseholdOverview } from '@/types'
 
 const { t } = useI18n()
+const authStore = useAuthStore()
+const { confirm } = useConfirm()
 
 const loading = ref(true)
 const data = ref<iHouseholdOverview | null>(null)
 const householdName = ref('')
+const currentUserId = authStore.user?.id
 
 // Name
 const nameSaving = ref(false)
@@ -116,6 +137,11 @@ const inviteSuccess = ref('')
 
 // Leave
 const leaveErrorMsg = ref('')
+
+// Remove member
+const removingMemberId = ref<number | null>(null)
+const removeMemberError = ref('')
+const removeMemberSuccess = ref('')
 
 onMounted(async () => {
   try {
@@ -159,7 +185,7 @@ async function sendInvite() {
 }
 
 async function leave(id: number) {
-  if (!confirm(t('household.leaveConfirm'))) return
+  if (!await confirm(t('household.leaveConfirm'))) return
   leaveErrorMsg.value = ''
   try {
     await householdService.leaveHousehold(id)
@@ -169,6 +195,25 @@ async function leave(id: number) {
   } catch (e: unknown) {
     const err = e as { message?: string }
     leaveErrorMsg.value = err.message ?? t('household.errors.leaveFailed')
+  }
+}
+
+async function removeMember(memberId: number, memberName: string) {
+  if (!await confirm(t('household.removeMemberConfirm', { name: memberName }))) return
+  removeMemberError.value = ''
+  removeMemberSuccess.value = ''
+  removingMemberId.value = memberId
+  try {
+    await householdService.removeMember(memberId)
+    if (data.value) {
+      data.value.ownHousehold.members = data.value.ownHousehold.members.filter((m) => m.id !== memberId)
+    }
+    removeMemberSuccess.value = t('household.memberRemoved', { name: memberName })
+  } catch (e: unknown) {
+    const err = e as { message?: string }
+    removeMemberError.value = err.message ?? t('household.errors.removeMemberFailed')
+  } finally {
+    removingMemberId.value = null
   }
 }
 </script>

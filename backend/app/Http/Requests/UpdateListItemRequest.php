@@ -22,7 +22,8 @@ class UpdateListItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['sometimes', 'string', 'max:255'],
+            'product_id' => ['sometimes', 'nullable', 'integer', 'exists:products,id'],
+            'name' => ['sometimes', 'nullable', 'string', 'max:255'],
             'quantity' => ['sometimes', 'nullable', 'numeric', 'min:0.01'],
             'unit_id' => ['sometimes', 'nullable', 'integer', 'exists:units,id'],
             'isCompleted' => ['sometimes', 'boolean'],
@@ -35,7 +36,7 @@ class UpdateListItemRequest extends FormRequest
         throw new HttpResponseException(
             new JsonResponse(
                 ['error' => 'Validation failed.', 'details' => $validator->errors()->toArray()],
-                400,
+                422,
             )
         );
     }

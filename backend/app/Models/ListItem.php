@@ -29,7 +29,7 @@ class ListItem extends Model
 
     protected $table = 'list_items';
 
-    protected $fillable = ['name', 'quantity', 'is_completed', 'list_id', 'unit_id', 'notes', 'sort_order'];
+    protected $fillable = ['name', 'quantity', 'is_completed', 'list_id', 'product_id', 'unit_id', 'notes', 'sort_order'];
 
     protected function casts(): array
     {
@@ -49,5 +49,11 @@ class ListItem extends Model
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class);
+    }
+
+    /** @return BelongsTo<Product, $this> */
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
     }
 }

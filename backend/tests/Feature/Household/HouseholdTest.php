@@ -103,7 +103,7 @@ class HouseholdTest extends TestCase
 
         $response = $this->actingAs($owner)->postJson("/api/household/{$owner->household()->id}/leave");
 
-        $response->assertStatus(404);
+        $response->assertStatus(403); // policy: owner cannot leave their own household
     }
 
     public function test_private_lists_move_to_own_household_on_leave(): void
@@ -143,6 +143,67 @@ class HouseholdTest extends TestCase
         $this->assertDatabaseHas('lists', [
             'id' => $sharedList->id,
             'household_id' => $owner->household()->id,
+        ]);
+    }
+
+    // --- remove member ---
+
+    public function test_owner_can_remove_member(): void
+    {
+        $owner = $this->createUserWithHousehold();
+        $member = $this->createUserWithHousehold();
+        $owner->household()->members()->attach($member->id, ['role' => 'member']);
+
+        $response = $this->actingAs($owner)->deleteJson("/api/household/members/{$member->id}");
+
+        $response->assertOk()->assertJsonFragment(['message' => 'Member removed from household.']);
+        $this->assertDatabaseMissing('household_user', [
+            'user_id' => $member->id,
+            'household_id' => $owner->household()->id,
+        ]);
+    }
+
+    public function test_owner_cannot_remove_themselves(): void
+    {
+        $owner = $this->createUserWithHousehold();
+
+        $response = $this->actingAs($owner)->deleteJson("/api/household/members/{$owner->id}");
+
+        $response->assertStatus(404);
+    }
+
+    public function test_member_cannot_remove_another_member(): void
+    {
+        $owner = $this->createUserWithHousehold();
+        $member1 = $this->createUserWithHousehold();
+        $member2 = $this->createUserWithHousehold();
+        $owner->household()->members()->attach($member1->id, ['role' => 'member']);
+        $owner->household()->members()->attach($member2->id, ['role' => 'member']);
+
+        $response = $this->actingAs($member1)->deleteJson("/api/household/members/{$member2->id}");
+
+        // member1 is owner of their OWN household where member2 doesn't exist → 404
+        // prevents member1 from knowing who is in other households
+        $response->assertStatus(404);
+    }
+
+    public function test_removed_member_private_lists_move_to_own_household(): void
+    {
+        $owner = $this->createUserWithHousehold();
+        $member = $this->createUserWithHousehold();
+        $owner->household()->members()->attach($member->id, ['role' => 'member']);
+
+        $privateList = Liste::factory()->create([
+            'household_id' => $owner->household()->id,
+            'created_by' => $member->id,
+            'visibility' => 'private',
+        ]);
+
+        $this->actingAs($owner)->deleteJson("/api/household/members/{$member->id}");
+
+        $this->assertDatabaseHas('lists', [
+            'id' => $privateList->id,
+            'household_id' => $member->household()->id,
         ]);
     }
 }

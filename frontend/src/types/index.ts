@@ -30,14 +30,49 @@ export interface iHouseholdOverview {
 export type ListType = 'shopping' | 'packing' | 'todo'
 export type ListStatus = 'active' | 'completed' | 'archived'
 
+export interface iUnit {
+  id: number
+  symbol: string
+  name: string
+}
+
+export interface iUnitGroups {
+  count?: iUnit[]
+  weight?: iUnit[]
+  volume?: iUnit[]
+  piece?: iUnit[]
+  [key: string]: iUnit[] | undefined
+}
+
+export interface iCategory {
+  id: number
+  name: string
+  is_global: boolean
+}
+
+export interface iProduct {
+  id: number
+  name: string
+  barcode: string | null
+  notes: string | null
+  preferred_quantity: number | null
+  category_id: number | null
+  category: { id: number; name: string } | null
+  preferred_unit_id: number | null
+  unit: { id: number; symbol: string } | null
+  global_product_id: number | null
+}
+
 export interface iItem {
   id: number
   name: string
   quantity: number | null
   isCompleted: boolean
   listId: number
-  unitId?: number | null
+  unit_id?: number | null
+  unit?: { id: number; symbol: string } | null
   notes?: string | null
+  product_id?: number | null
   createdAt?: string
   updatedAt?: string
   isNew?: boolean

@@ -19,7 +19,7 @@
 
     <div v-else-if="list">
       <!-- Add item form -->
-      <AddItemForm @add="addItem" v-model:showAddForm="showItemAddForm" />
+      <AddItemForm @add="addItem" v-model:showAddForm="showItemAddForm" :listType="list.listType" />
 
       <AlertMessage v-if="error" :message="error" type="error" />
 
@@ -48,9 +48,9 @@
               :class="item.isCompleted ? 'text-gray-400' : ''"
               @click="handleSetComplete(list.id, item.id, item.isCompleted)"
             >
-              <Typewrite v-if="item.isNew" :text="(item.quantity ?? 0) > 1 ? item.name + ' — ' + item.quantity + 'x' : item.name" @done="item.isNew = false" />
-              <HandDrawnStrikethrough v-else-if="item.isCompleted" :seed="item.id">{{ item.name }}{{ (item.quantity ?? 0) > 1 ? ' — ' + item.quantity + 'x' : '' }}</HandDrawnStrikethrough>
-              <span v-else>{{ item.name }}{{ (item.quantity ?? 0) > 1 ? ' — ' + item.quantity + 'x' : '' }}</span>
+              <Typewrite v-if="item.isNew" :text="formatItem(item, list.listType)" @done="item.isNew = false" />
+              <HandDrawnStrikethrough v-else-if="item.isCompleted" :seed="item.id">{{ formatItem(item, list.listType) }}</HandDrawnStrikethrough>
+              <span v-else>{{ formatItem(item, list.listType) }}</span>
             </button>
 
             <RowActions>
@@ -100,6 +100,14 @@ import ArrowLeft from '@/components/icons/ArrowLeft.vue'
 import Typewrite from '@/components/animations/Typewrite.vue'
 import HandDrawnStrikethrough from '@/components/animations/HandDrawnStrikethrough.vue'
 import RowActions from '@/components/ui/RowActions.vue'
+import type { iItem, ListType } from '@/types'
+
+function formatItem(item: iItem, listType: ListType): string {
+  if (listType === 'todo') return item.name
+  if (!item.quantity) return item.name
+  if (item.unit?.symbol) return `${item.name} ${item.quantity} ${item.unit.symbol}`
+  return item.quantity > 1 ? `${item.name} — ${item.quantity}×` : item.name
+}
 
 const route = useRoute()
 const id = route.params.id as string

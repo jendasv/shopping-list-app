@@ -22,33 +22,25 @@ class InvitationController extends Controller
     {
         $request->validate(['email' => ['required', 'string', 'email']]);
 
-        $user = $request->user();
+        $this->authorize('send', Invitation::class);
 
-        // Sdílení je placená funkce — zatím vždy povoleno, billing přijde ve fázi 7
+        $user = $request->user();
         $household = $user->households()->wherePivot('role', HouseholdRole::Owner->value)->first();
 
-        if (! $household) {
-            return response()->json(['error' => 'No household found.'], 404);
-        }
-
-        // Pouze registrovaní uživatelé mohou být pozváni
         $invitee = User::where('email', $request->email)->first();
         if (! $invitee) {
             return response()->json(['error' => 'No account found with this email address.'], 422);
         }
 
-        // Nelze pozvat sám sebe
         if ($invitee->id === $user->id) {
             return response()->json(['error' => 'You cannot invite yourself.'], 422);
         }
 
-        // Zkontroluj jestli uživatel není již členem
         $alreadyMember = $household->members()->where('users.id', $invitee->id)->exists();
         if ($alreadyMember) {
             return response()->json(['error' => 'User is already a member of this household.'], 422);
         }
 
-        // Zrušit předchozí pending pozvánku na stejný email
         Invitation::where('household_id', $household->id)
             ->where('email', $request->email)
             ->where('status', InvitationStatus::Pending->value)
@@ -84,6 +76,8 @@ class InvitationController extends Controller
             return response()->json(['error' => 'Invalid or expired invitation.'], 404);
         }
 
+        $this->authorize('accept', $invitation);
+
         $user = $request->user();
         $targetHousehold = $invitation->household;
         $ownHousehold = $user->households()->wherePivot('role', HouseholdRole::Owner->value)->first();
@@ -111,6 +105,8 @@ class InvitationController extends Controller
         if (! $invitation || ! $invitation->isPending()) {
             return response()->json(['error' => 'Invalid or expired invitation.'], 404);
         }
+
+        $this->authorize('decline', $invitation);
 
         $invitation->update(['status' => InvitationStatus::Declined->value]);
 

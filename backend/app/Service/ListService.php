@@ -100,7 +100,7 @@ class ListService
     {
         $household = $user->household();
 
-        $query = Liste::with(['items' => fn ($q) => $q->orderBy('is_completed')->orderBy('sort_order')])->where('id', $id);
+        $query = Liste::with(['items' => fn ($q) => $q->orderBy('is_completed')->orderBy('sort_order')->with('unit')])->where('id', $id);
 
         if ($household) {
             $query->where('household_id', $household->id)

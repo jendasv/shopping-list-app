@@ -46,8 +46,8 @@ class ItemCrudTest extends TestCase
             'quantity' => 1,
         ]);
 
-        $response->assertStatus(400)
-            ->assertJsonPath('details.name.0', 'The name field is required.');
+        $response->assertStatus(422)
+            ->assertJsonPath('details.name.0', 'The name field is required when product id is not present.');
     }
 
     public function test_item_quantity_must_be_positive(): void
@@ -59,7 +59,7 @@ class ItemCrudTest extends TestCase
             'quantity' => 0,
         ]);
 
-        $response->assertStatus(400)
+        $response->assertStatus(422)
             ->assertJsonPath('details.quantity.0', 'The quantity field must be at least 0.01.');
     }
 

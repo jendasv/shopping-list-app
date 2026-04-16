@@ -12,7 +12,8 @@
     "next": "Další →",
     "sending": "Odesílám...",
     "saving": "Ukládám...",
-    "signOut": "Odhlásit se"
+    "signOut": "Odhlásit se",
+    "confirm": "Potvrdit"
   },
   "auth": {
     "appName": "Seznamy",
@@ -98,17 +99,58 @@
     "name": "Název",
     "namePlaceholder": "Název položky",
     "quantity": "Množství",
+    "unit": "Jednotka",
     "fulfilled": "Splněno?",
     "addItem": "Přidat položku",
     "closeForm": "Zavřít formulář",
     "noItems": "Zatím žádné položky.",
     "noItemsAdd": "Zatím žádné položky. Přidej první výše.",
+    "addNew": "Přidat jako nový",
+    "noSuggestions": "V katalogu nic nenalezeno",
     "errors": {
       "nameRequired": "Název je povinný",
       "quantityInvalid": "Množství musí být větší než 0",
       "addFailed": "Nepodařilo se přidat položku. Zkus to znovu.",
       "updateFailed": "Nepodařilo se upravit položku. Zkus to znovu.",
       "removeFailed": "Nepodařilo se odebrat položku. Zkus to znovu."
+    }
+  },
+  "units": {
+    "types": {
+      "count": "Počet",
+      "weight": "Hmotnost",
+      "volume": "Objem",
+      "piece": "Kus"
+    }
+  },
+  "catalog": {
+    "title": "Katalog",
+    "addProduct": "Přidat produkt",
+    "newProduct": "Nový produkt",
+    "editProduct": "Upravit produkt",
+    "allCategories": "Všechny kategorie",
+    "globalCategories": "Globální",
+    "customCategories": "Vlastní",
+    "empty": "Katalog je zatím prázdný.",
+    "addFirst": "Přidej první produkt.",
+    "deleteConfirm": "Smazat \"{name}\" z katalogu?",
+    "infoTitle": "O katalogu",
+    "infoText": "Katalog je sdílený se všemi členy domácnosti. Produkty přidané kýmkoliv jsou dostupné všem.",
+    "fields": {
+      "name": "Název",
+      "namePlaceholder": "např. Plnotučné mléko",
+      "category": "Kategorie",
+      "noCategory": "Bez kategorie",
+      "preferredQty": "Výchozí množství",
+      "notes": "Poznámky",
+      "notesPlaceholder": "Značka, obchod, poznámky..."
+    },
+    "errors": {
+      "nameRequired": "Název produktu je povinný.",
+      "loadFailed": "Nepodařilo se načíst katalog. Zkus to znovu.",
+      "saveFailed": "Nepodařilo se uložit produkt. Zkus to znovu.",
+      "deleteFailed": "Nepodařilo se smazat produkt. Zkus to znovu.",
+      "freeTierLimit": "Dosažen limit katalogu (50 produktů). Přejdi na Pro pro neomezený katalog."
     }
   },
   "newList": {
@@ -118,7 +160,15 @@
     "items": "Položky",
     "shareWithHousehold": "Sdílet s domácností",
     "sharedInfo": "Sdílené seznamy vidí všichni členové domácnosti.",
-    "createBtn": "Vytvořit seznam"
+    "createBtn": "Vytvořit seznam",
+    "listType": "Typ",
+    "types": {
+      "shopping": "Nákupy",
+      "packing": "Balení",
+      "todo": "Úkoly"
+    },
+    "listNamePlaceholderPacking": "např. Letní dovolená",
+    "listNamePlaceholderTodo": "např. Pochůzky"
   },
   "household": {
     "title": "Domácnost",
@@ -140,8 +190,13 @@
     "errors": {
       "inviteFailed": "Nepodařilo se odeslat pozvánku.",
       "leaveFailed": "Nepodařilo se odejít z domácnosti.",
-      "nameSaveFailed": "Nepodařilo se uložit název."
-    }
+      "nameSaveFailed": "Nepodařilo se uložit název.",
+      "removeMemberFailed": "Nepodařilo se odebrat člena."
+    },
+    "removeMember": "Odebrat",
+    "removeMemberConfirm": "Opravdu chceš odebrat {name} z domácnosti?",
+    "memberRemoved": "{name} byl/a odebrán/a.",
+    "you": "ty"
   },
   "settings": {
     "title": "Nastavení profilu",

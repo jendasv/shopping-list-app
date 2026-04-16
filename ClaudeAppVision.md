@@ -428,55 +428,116 @@ Frontend překládá Vue composable `vue-i18n` — soubory v `frontend/src/local
 - `vue-i18n`, soubory v `frontend/src/locales/`
 - Přepínač jazyka: `LocaleSwitcher.vue` v UI
 
-### Fáze 2.2 — Refactor: List types + přejmenování
-Nutné před katalogem — levnější teď než po rozsáhlé implementaci.
-- [ ] Migrace: `shopping_lists` → `lists`, `items` → `list_items`
-- [ ] Přidat `list_type` (enum: `shopping`, `packing`, `todo`) na `lists`
-- [ ] Přidat `name` (nullable), `unit_id` (nullable), `notes` (nullable) na `list_items`
-- [ ] Přejmenovat Eloquent modely: `ShoppingList` → `List`, `Item` → `ListItem`
-- [ ] Aktualizovat všechny controllers, services, mappers, testy
-- [ ] Nové tabulky seedované: `languages`, `units`, `unit_translations`
-- [ ] Nová tabulka: `global_products` (prázdná, plní se postupně)
-- [ ] Kategorie: přidat `is_global`, `household_id`, seedovat globální kategorie s překlady
+### Fáze 2.2 — Refactor: List types + přejmenování ✅ HOTOVO
+- [x] Migrace: `shopping_list` → `lists`, `item` → `list_items`
+- [x] `list_type` (enum: shopping/packing/todo) + `status` (active/completed/archived) na `lists`
+- [x] `unit_id` (nullable), `notes` (nullable), `quantity` decimal na `list_items`
+- [x] Modely: `ShoppingList` (PHP si vyhrazuje `List`) → `Liste`, `Item` → `ListItem`; staré jako deprecated aliasy
+- [x] Tabulky: `languages`, `units`, `unit_translations`, `categories`, `category_translations`, `global_products`
+- [x] Seedery: 6 jazyků, 17 jednotek (EN/CS), 20 globálních kategorií (EN/CS)
+- [x] Frontend: výběr `list_type` při vytváření seznamu
 
-### Fáze 3 — Produktový katalog
+### Fáze 2.3 — API security ✅ HOTOVO
+- [x] Rate limiting: `throttle:auth` (10/min) na auth endpointy, `throttle:api` (120/min) globálně
+- [x] Email verification: `verified` middleware na protected routes; accept/decline invitation bez ověření
+- [x] Laravel Policies: `ListePolicy`, `HouseholdPolicy` (incl. removeMember), `InvitationPolicy`
+- [x] Base `Controller` rozšířen o `AuthorizesRequests`
+- [x] `AuthorizationException` → 403 JSON
+- [x] Validační status kódy sjednoceny na 422
+- [x] `DatabaseOperationException`: loguje real error, vrací generic v produkci
+- [x] CORS: `allowed_headers` omezeno na explicitní seznam
+- [x] Frontend: `ConfirmDialog` komponenta (místo browser confirm()), `useConfirm` composable
+- [x] Household: owner může odebrat člena (`DELETE /household/members/{userId}`)
+
+### Fáze 3 — Produktový katalog ✅ HOTOVO
 Musí být před šablonami — vše ostatní stojí na katalogu. Cíl: katalog se buduje přirozeně při používání, uživatel ho nestaví vědomě od nuly.
 
-**Household katalog**
-- [ ] CRUD pro `products` (katalog domácnosti)
-- [ ] CRUD pro vlastní kategorie domácnosti
-- [ ] Vyhledávání / našeptávač při přidávání do seznamu (`GET /products?q=mo...`)
-- [ ] Přidat produkt z katalogu přímo do konkrétního seznamu
-- [ ] Uložit položku ze seznamu do katalogu (free text → produkt)
-- [ ] Preferované množství + jednotka uloženy jako default při přidávání do seznamu
-- [ ] Poznámky k produktu — brand preference, obchod, "jen bio", "červené víčko"
+#### Rozhodnutá architektura a UX
+
+**Přidávání položky do listu — search-as-you-type**
+- `AddItemForm` má jeden textový input; po 2+ znacích + 300ms debounce se zobrazí dropdown se suggestions z household katalogu
+- Výběr z dropdownu → pre-fill name, quantity, unit (editovatelné před odesláním); `product_id` uloženo interně
+- Pokud user změní name po výběru z katalogu → odpojení od produktu, stane se free textem
+- Dropdown obsahuje i "Přidat jako nový" pro explicitní free text bez katalogu
+- Po přidání free text položky → nenápadný hint "Uložit do katalogu?" pod položkou
+- Global catalog v textovém hledání: **ne v Phase 3** — přidáme jako fallback až bude naplněný
+
+**Jednotky**
+- `list_items.unit_id` nullable FK → `units`
+- Výchozí (když unit nevybrán): interně `null`, zobrazení jako `3×`
+- Zobrazení s jednotkou: `mouka 1 kg`; bez jednotky: `vejce 3×`; todo list: jen název bez quantity/unit
+- Unit dropdown ve formuláři: skupiny — Počet (ks, balení...) / Hmotnost (g, kg...) / Objem (ml, l...)
+- Smart text parsing ("mouka 1kg"): **ne v Phase 3**
+- Unit pro todo listy: skryto (quantity i unit)
+- Přidání z katalogu → auto-fill `preferred_unit` + `preferred_quantity`, user může přepsat
+
+**Katalog — správa**
+- Samostatná sekce v menu s filtry (kategorie, search) + stránkování
+- Inline přidávání do katalogu z formuláře pro přidání položky do listu
+- Soft delete: `products.deleted_at` — FK v `list_items` ON DELETE SET NULL (historické položky zachovány)
+- `category_id` nullable — produkt nemusí mít kategorii
+- Globální kategorie: read-only, nelze mazat/upravovat; household může přidat vlastní
+- Unikátnost: soft — frontend varuje při přesné shodě jména, žádný DB constraint
+
+**Free tier hook**
+- `ProductService::create()` kontroluje počet produktů domácnosti
+- Free tier ≥ 50 produktů → `PaymentRequiredException` (HTTP 402)
+- Phase 9 nahradí podmínku skutečnou billing logikou
 
 **Barcode scanning**
-- [ ] Integrace `zxing-wasm` — lazy load, funguje ve všech prohlížečích
-- [ ] Scan flow: own DB → Open Food Facts API → manuální zadání + opt-in příspěvek
-- [ ] Pokud kamera nedostupná (desktop) → tlačítko skryto
+- Po scanu → editovatelný formulář "Potvrdit produkt" (pre-filled z OFI nebo prázdný)
+- Scan flow: household DB → Open Food Facts API → manuální zadání + opt-in příspěvek do global_products
+- Desktop / kamera nedostupná → tlačítko skryto
 
-**Globální produktová knihovna**
-- [ ] `GlobalProductController` — vyhledávání podle barcode / názvu
-- [ ] Při úspěšném scanu: uložit do `global_products` (source, verified = false)
-- [ ] Při přidání z knihovny: vytvořit `Product` v household katalogu s `global_product_id`
-- [ ] Admin (Filament): správa `global_products` — verify, merge duplicates, edit
+#### Backend
 
-**Nové API routes (Fáze 3)**
+- [x] `Product` model se soft delete (`deleted_at`), `ProductService`, `ProductPolicy`
+- [x] `Product.created_by` — při odchodu z householdu se uživatelovy produkty zkopírují do jeho vlastního household
+- [x] `ProductController`: `GET /products?q=&limit=` (autocomplete), full CRUD
+- [x] `UnitController`: `GET /units` — grouped by type s překladem
+- [x] `StoreListItemRequest` + `ItemService`: rozšíření o `product_id` → auto-fill z produktu; spec (qty+unit) se zapéká do názvu položky
+- [x] `CategoryController`: `GET /categories` (globální + household), POST/PUT/DELETE pro household kategorie
+- [x] `GlobalProductController`: `GET /global-products/search?barcode=&q=`
+- [x] Filament: resource `GlobalProducts` — verify, edit, bulk delete
+- [x] `PaymentRequiredException` (HTTP 402)
+
+#### API routes (implementováno)
+
 ```
-GET    /products                    ProductController@index   → katalog domácnosti (search, pagination)
-POST   /products                    ProductController@store   → přidat do katalogu
+GET    /products/search?q=&limit=   ProductController@search  → autocomplete (min 2 znaky)
+GET    /products                    ProductController@index   → full katalog se stránkováním
+POST   /products                    ProductController@store
 PUT    /products/{id}               ProductController@update
-DELETE /products/{id}               ProductController@destroy
-POST   /products/{id}/add-to-list   ProductController@addToList → přidat z katalogu do listu
+DELETE /products/{id}               ProductController@destroy (soft delete)
 
-GET    /categories                  CategoryController@index  → globální + household kategorie
-POST   /categories                  CategoryController@store  → vytvořit vlastní kategorii
+GET    /categories                  CategoryController@index  → globální + household
+POST   /categories                  CategoryController@store  → pouze household vlastní
 PUT    /categories/{id}             CategoryController@update
 DELETE /categories/{id}             CategoryController@destroy
 
-GET    /global-products/search      GlobalProductController@search  → hledat v knihovně (barcode / název)
+GET    /global-products/search?barcode=&q=   GlobalProductController@search
+
+GET    /units                       UnitController@index → grouped by type s překladem
 ```
+
+**Rozšíření existujícího endpointu:**
+`POST /lists/{id}/items` nově přijímá `product_id` (nullable) — pokud zadán a produkt má spec (qty+unit), spec se zapéká do názvu položky; quantity = počet kusů k nákupu
+
+**Sémantika quantity na list_items:**
+- `quantity` = kolik kusů daného produktu nakoupit (ne objem/hmotnost balení)
+- Spec produktu (500 ml, 1 kg) je součástí názvu položky: "Milk fat 500 ml — 2×"
+- Produkty bez spec: quantity + unit_id zůstanou jako přímé měření (1 kg mouky)
+
+#### Frontend
+
+- [x] `AddItemForm` — search-as-you-type autocomplete z katalogu (debounce 300ms, min 2 znaky), unit dropdown (grouped), quantity nullable pro todo listy
+- [x] Výběr z katalogu: spec zapečena do názvu položky ("Milk fat 500 ml"), quantity = počet kusů k nákupu
+- [x] `CatalogView` — `/catalog` route, list produktů se stránkováním, filter kategorie + search, add/edit/delete form
+- [x] Tooltip s `i` ikonkou — vysvětluje sdílení katalogu v rámci household
+- [x] `ListDetail` — `formatItem()` zobrazuje qty+unit nebo qty× podle kontextu; skrývá qty/unit pro todo listy
+- [x] Nové services: `productService`, `categoryService`, `unitService`
+- [x] Typy: `iProduct`, `iCategory`, `iUnit`, `iUnitGroups`; update `iItem` (unit, product_id)
+- [x] Menu: Catalog odkaz, `/catalog` route
 
 ### Fáze 3.1 — Onboarding
 Uživatel musí zažít hodnotu do 3 minut. Bez guided flow většina odejde dřív, než pochopí co app umí.

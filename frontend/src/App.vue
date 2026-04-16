@@ -2,6 +2,7 @@
 import { RouterView } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import AppHeader from '@/components/layout/AppHeader.vue'
+import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 
 const authStore = useAuthStore()
 </script>
@@ -19,4 +20,5 @@ const authStore = useAuthStore()
       </main>
     </div>
   </div>
+  <ConfirmDialog />
 </template>

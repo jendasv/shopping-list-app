@@ -2,38 +2,99 @@
   <Transition name="unroll">
   <form @submit.prevent="onSubmit" v-if="showAddForm" class="relative mb-4 flex flex-col gap-4 w-full">
     <HandDrawnClose :title="$t('items.closeForm')" :modelValue="showAddForm" @update:modelValue="val => emit('update:showAddForm', val)"/>
-    <!-- NAME -->
-    <div class="flex flex-col text-xl">
+
+    <!-- NAME with autocomplete -->
+    <div class="relative flex flex-col text-xl">
       <label class="text-gray-900 mb-1">{{ $t('items.name') }}
         <input
-          v-model="item.name"
+          ref="nameInputRef"
+          v-model="inputName"
           type="text"
           :placeholder="$t('items.namePlaceholder')"
-          class="px-2 pt-2 focus:outline-none focus:border-gray-600 text-gray-900"
-          @input="error = ''"
+          class="px-2 pt-2 focus:outline-none focus:border-gray-600 text-gray-900 w-full"
+          autocomplete="off"
+          @input="onNameInput"
+          @keydown.esc.prevent="closeSuggestions"
+          @keydown.arrow-down.prevent="moveFocus(1)"
+          @keydown.arrow-up.prevent="moveFocus(-1)"
+          @keydown.enter.prevent="confirmFocused"
+          @blur="onBlur"
+          @focus="onFocus"
         />
       </label>
+
+      <!-- Dropdown -->
+      <div
+        v-if="showDropdown"
+        class="absolute top-full left-0 right-0 bg-white border-2 border-black rounded-lg shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] z-50 max-h-60 overflow-y-auto"
+      >
+        <button
+          v-for="(product, i) in suggestions"
+          :key="product.id"
+          type="button"
+          class="w-full px-4 py-3 text-left flex items-center justify-between transition-colors"
+          :class="focusedIndex === i ? 'bg-gray-100' : 'hover:bg-gray-50'"
+          @mousedown.prevent="selectProduct(product)"
+        >
+          <span class="font-medium">{{ product.name }}</span>
+          <span class="text-sm text-gray-400 ml-2 shrink-0">
+            {{ product.category?.name ?? '' }}
+            <template v-if="product.preferred_quantity && product.unit">
+              · {{ product.preferred_quantity }} {{ product.unit.symbol }}
+            </template>
+          </span>
+        </button>
+
+        <button
+          v-if="inputName.trim().length >= 2"
+          type="button"
+          class="w-full px-4 py-3 text-left text-gray-500 hover:bg-gray-50 transition-colors"
+          :class="suggestions.length > 0 ? 'border-t border-gray-100' : ''"
+          @mousedown.prevent="addAsFreeText"
+        >
+          + {{ $t('items.addNew') }}: "{{ inputName.trim() }}"
+        </button>
+
+        <p v-if="searching" class="px-4 py-3 text-sm text-gray-400">{{ $t('common.loading') }}</p>
+        <p v-else-if="suggestions.length === 0 && inputName.trim().length >= 2 && !searching" class="px-4 py-3 text-sm text-gray-400">
+          {{ $t('items.noSuggestions') }}
+        </p>
+      </div>
     </div>
 
-    <!-- QUANTITY -->
-    <div class="flex flex-col text-xl">
-      <label class="text-gray-900 mb-1">{{ $t('items.quantity') }}
-        <input
-          v-model.number="item.quantity"
-          type="number"
-          min="1"
-          placeholder="1"
-          class="w-20 p-2 text-gray-900 focus:outline-none"
-          @input="error = ''"
-        />
-      </label>
-    </div>
+    <!-- QUANTITY + UNIT (hidden for todo) -->
+    <div v-if="listType !== 'todo'" class="flex gap-6 items-end">
+      <div class="flex flex-col text-xl">
+        <label class="text-gray-900 mb-1">{{ $t('items.quantity') }}
+          <input
+            v-model.number="form.quantity"
+            type="number"
+            min="0.01"
+            step="0.01"
+            placeholder="—"
+            class="w-20 p-2 text-gray-900 focus:outline-none"
+            @input="error = ''"
+          />
+        </label>
+      </div>
 
-    <!-- CHECKBOX -->
-    <div class="flex items-center gap-2">
-      <HandDrawnCheckbox v-model="item.isCompleted" sizeClass="w-7 h-7">
-        {{ $t('items.fulfilled') }}
-      </HandDrawnCheckbox>
+      <div class="flex flex-col text-xl">
+        <label class="text-gray-900 mb-1">{{ $t('items.unit') }}
+          <select
+            v-model="form.unit_id"
+            class="p-2 text-gray-900 focus:outline-none bg-transparent"
+          >
+            <option :value="null">—</option>
+            <template v-for="(units, groupType) in unitGroups" :key="groupType">
+              <optgroup :label="$t('units.types.' + groupType)">
+                <option v-for="unit in units" :key="unit.id" :value="unit.id">
+                  {{ unit.symbol }}
+                </option>
+              </optgroup>
+            </template>
+          </select>
+        </label>
+      </div>
     </div>
 
     <!-- ERROR -->
@@ -54,62 +115,191 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { iItem } from '@/types'
-import HandDrawnCheckbox from "@/components/elements/form/HandDrawnCheckbox.vue";
-import HandDrawnClose from "@/components/icons/HandDrawnClose.vue";
+import type { iProduct, iUnitGroups } from '@/types'
+import { searchProducts } from '@/services/productService'
+import { fetchUnits } from '@/services/unitService'
+import HandDrawnClose from '@/components/icons/HandDrawnClose.vue'
 
 const { t } = useI18n()
 
+const props = defineProps<{
+  showAddForm: boolean
+  listType?: 'shopping' | 'packing' | 'todo'
+}>()
+
 const emit = defineEmits<{
   (e: 'update:showAddForm', value: boolean): void
-  (e: 'add', item: iItem): void
+  (e: 'add', payload: {
+    name: string
+    product_id: number | null
+    quantity: number | null
+    unit_id: number | null
+    notes: string | null
+    isCompleted: boolean
+  }): void
 }>()
 
-defineProps<{
-  showAddForm: boolean
-}>()
+// --- State ---
+const nameInputRef = ref<HTMLInputElement | null>(null)
+const inputName = ref('')
+const selectedProduct = ref<iProduct | null>(null)
 
-const item = ref<iItem>({
-  id: Date.now(),
-  name: '',
-  quantity: 1,
-  isCompleted: false,
-  listId: 0,
-  isNew: true
+const form = ref({
+  quantity: null as number | null,
+  unit_id: null as number | null,
 })
 
 const error = ref('')
 const shaking = ref(false)
 
+// Autocomplete
+const suggestions = ref<iProduct[]>([])
+const searching = ref(false)
+const showDropdown = ref(false)
+const focusedIndex = ref(-1)
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
+// Units
+const unitGroups = ref<iUnitGroups>({})
+
+onMounted(async () => {
+  try {
+    unitGroups.value = await fetchUnits()
+  } catch {
+    // units not critical — form works without them
+  }
+})
+
+// Reset form when closed
+watch(() => props.showAddForm, (val) => {
+  if (!val) resetForm()
+})
+
+// --- Autocomplete ---
+function onNameInput() {
+  error.value = ''
+  selectedProduct.value = null // disconnect from product when name is edited
+
+  const q = inputName.value.trim()
+  if (q.length < 2) {
+    closeSuggestions()
+    return
+  }
+
+  if (debounceTimer) clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => doSearch(q), 300)
+}
+
+async function doSearch(q: string) {
+  searching.value = true
+  showDropdown.value = true
+  try {
+    suggestions.value = await searchProducts(q)
+  } catch {
+    suggestions.value = []
+  } finally {
+    searching.value = false
+  }
+}
+
+function onFocus() {
+  if (inputName.value.trim().length >= 2 && (suggestions.value.length > 0 || searching.value)) {
+    showDropdown.value = true
+  }
+}
+
+function onBlur() {
+  // Delay to allow mousedown on dropdown items to fire first
+  setTimeout(() => { showDropdown.value = false; focusedIndex.value = -1 }, 150)
+}
+
+function closeSuggestions() {
+  showDropdown.value = false
+  focusedIndex.value = -1
+}
+
+function moveFocus(dir: 1 | -1) {
+  if (!showDropdown.value) return
+  const max = suggestions.value.length // "add as new" is at suggestions.length
+  focusedIndex.value = Math.max(-1, Math.min(max, focusedIndex.value + dir))
+}
+
+function confirmFocused() {
+  if (focusedIndex.value >= 0 && focusedIndex.value < suggestions.value.length) {
+    const product = suggestions.value[focusedIndex.value]
+    if (product) selectProduct(product)
+  } else if (focusedIndex.value === suggestions.value.length) {
+    addAsFreeText()
+  } else {
+    onSubmit()
+  }
+}
+
+function selectProduct(product: iProduct) {
+  selectedProduct.value = product
+
+  if (product.preferred_quantity && product.unit) {
+    // Packaged product: bake spec into name, quantity = number of units to buy
+    inputName.value = `${product.name} ${product.preferred_quantity} ${product.unit.symbol}`
+    form.value.quantity = 1
+    form.value.unit_id = null
+  } else {
+    // Bulk/unspecified product: keep name plain, let user fill in amount
+    inputName.value = product.name
+    form.value.quantity = null
+    form.value.unit_id = product.preferred_unit_id ?? null
+  }
+
+  closeSuggestions()
+}
+
+function addAsFreeText() {
+  selectedProduct.value = null
+  closeSuggestions()
+}
+
+// --- Validation & submit ---
 function triggerShake() {
   shaking.value = true
   setTimeout(() => { shaking.value = false }, 500)
 }
 
 function onSubmit() {
-  if (!item.value.name.trim()) {
+  const name = inputName.value.trim()
+
+  if (!name && !selectedProduct.value) {
     error.value = t('items.errors.nameRequired')
     triggerShake()
     return
   }
-  if ((item.value.quantity ?? 0) <= 0) {
+
+  const qty = form.value.quantity
+  if (props.listType !== 'todo' && qty !== null && qty <= 0) {
     error.value = t('items.errors.quantityInvalid')
     triggerShake()
     return
   }
 
-  emit('add', { ...item.value })
-  item.value = {
-    id: Date.now(),
-    name: '',
-    quantity: 1,
+  emit('add', {
+    name: name || selectedProduct.value!.name,
+    product_id: selectedProduct.value?.id ?? null,
+    quantity: props.listType === 'todo' ? null : (qty ?? null),
+    unit_id: props.listType === 'todo' ? null : (form.value.unit_id ?? null),
+    notes: null,
     isCompleted: false,
-    listId: 0,
-    isNew: true
-  }
+  })
+
+  resetForm()
+}
+
+function resetForm() {
+  inputName.value = ''
+  selectedProduct.value = null
+  form.value = { quantity: null, unit_id: null }
   error.value = ''
+  closeSuggestions()
 }
 </script>
 
@@ -122,8 +312,5 @@ function onSubmit() {
   80%  { transform: translateX(4px); }
   100% { transform: translateX(0); }
 }
-
-.shake {
-  animation: shake 0.5s ease-in-out;
-}
+.shake { animation: shake 0.5s ease-in-out; }
 </style>

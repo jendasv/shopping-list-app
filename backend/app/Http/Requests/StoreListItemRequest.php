@@ -22,8 +22,9 @@ class StoreListItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'quantity' => ['required', 'numeric', 'min:0.01'],
+            'product_id' => ['sometimes', 'nullable', 'integer', 'exists:products,id'],
+            'name' => ['required_without:product_id', 'nullable', 'string', 'max:255'],
+            'quantity' => ['sometimes', 'nullable', 'numeric', 'min:0.01'],
             'unit_id' => ['sometimes', 'nullable', 'integer', 'exists:units,id'],
             'notes' => ['sometimes', 'nullable', 'string', 'max:500'],
         ];
@@ -34,7 +35,7 @@ class StoreListItemRequest extends FormRequest
         throw new HttpResponseException(
             new JsonResponse(
                 ['error' => 'Validation failed.', 'details' => $validator->errors()->toArray()],
-                400,
+                422,
             )
         );
     }

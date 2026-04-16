@@ -15,6 +15,7 @@ use App\Mapper\ItemMapper;
 use App\Mapper\ListMapper;
 use App\Models\Liste;
 use App\Models\ListItem;
+use App\Models\Product;
 use App\Models\User;
 use Throwable;
 
@@ -32,6 +33,7 @@ class ItemService
     public function getItem(int $listId, int $itemId, User $user): array
     {
         $item = $this->findItem($listId, $itemId, $user);
+        $item->loadMissing('unit');
 
         return $this->itemMapper->map($item);
     }
@@ -41,14 +43,42 @@ class ItemService
      */
     public function createItem(array $data, Liste $list): ListItem
     {
+        // Resolve product and auto-fill fields
+        $product = null;
+        if (isset($data['product_id'])) {
+            $product = Product::where('id', $data['product_id'])
+                ->where('household_id', $list->household_id)
+                ->first();
+
+            // If product doesn't belong to this household, ignore it
+            if ($product === null) {
+                $data['product_id'] = null;
+            }
+        }
+
+        if ($product !== null) {
+            if (! isset($data['name'])) {
+                $data['name'] = $product->name;
+            }
+            if (! isset($data['unit_id']) && $product->preferred_unit_id !== null) {
+                $data['unit_id'] = $product->preferred_unit_id;
+            }
+            if (! isset($data['quantity']) && $product->preferred_quantity !== null) {
+                $data['quantity'] = $product->preferred_quantity;
+            }
+        }
+
         $this->validateItemData($data);
 
         try {
             $item = new ListItem;
             $item->name = $data['name'];
-            $item->quantity = (int) $data['quantity'];
+            $item->quantity = isset($data['quantity']) ? (float) $data['quantity'] : null;
             $item->is_completed = false;
             $item->list_id = $list->id;
+            $item->product_id = $product?->id;
+            $item->unit_id = $data['unit_id'] ?? null;
+            $item->notes = $data['notes'] ?? null;
             $item->sort_order = ListItem::where('list_id', $list->id)->max('sort_order') + 1;
             $item->save();
         } catch (Throwable $e) {
@@ -83,17 +113,31 @@ class ItemService
     {
         $item = $this->findItem($listId, $itemId, $user);
 
-        $this->validateItemData($data, $itemId);
-
         try {
-            $item->name = $data['name'] ?? $item->name;
-            $item->quantity = isset($data['quantity']) ? (int) $data['quantity'] : $item->quantity;
-            $item->is_completed = isset($data['isCompleted']) ? (bool) $data['isCompleted'] : $item->is_completed;
+            if (isset($data['name'])) {
+                $item->name = $data['name'];
+            }
+            if (array_key_exists('quantity', $data)) {
+                $item->quantity = $data['quantity'] !== null ? (float) $data['quantity'] : null;
+            }
+            if (array_key_exists('isCompleted', $data)) {
+                $item->is_completed = (bool) $data['isCompleted'];
+            }
+            if (array_key_exists('unit_id', $data)) {
+                $item->unit_id = $data['unit_id'];
+            }
+            if (array_key_exists('notes', $data)) {
+                $item->notes = $data['notes'];
+            }
+            if (array_key_exists('product_id', $data)) {
+                $item->product_id = $data['product_id'];
+            }
             $item->save();
         } catch (Throwable $e) {
             throw new DatabaseOperationException('Failed to update item: '.$e->getMessage());
         }
 
+        $item->loadMissing('unit');
         $list = $item->list;
         if ($list->household_id) {
             broadcast(new ItemUpdated($list->household_id, $this->itemMapper->map($item)))->toOthers();
@@ -139,7 +183,7 @@ class ItemService
 
     private function findItem(int $listId, int $itemId, User $user): ListItem
     {
-        // Ověř přístup k listu přes ListService (respektuje household + visibility)
+        // Verify access to the list (respects household + visibility)
         $this->listService->findList($listId, $user);
 
         $item = ListItem::where('id', $itemId)
@@ -164,7 +208,10 @@ class ItemService
             $errors['name'] = 'Item name is required.';
         }
 
-        if ($itemId === null && (! isset($data['quantity']) || ! is_numeric($data['quantity']) || (int) $data['quantity'] < 1)) {
+        if (
+            isset($data['quantity'])
+            && (! is_numeric($data['quantity']) || (float) $data['quantity'] < 0.01)
+        ) {
             $errors['quantity'] = 'Quantity must be a positive number.';
         }
 

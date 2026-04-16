@@ -2,6 +2,7 @@
 
 use App\Exceptions\ApiException;
 use App\Exceptions\Domain\ValidationException;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -23,6 +24,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (AuthenticationException $e, Request $request): ?JsonResponse {
             if ($request->expectsJson() || $request->is('api/*')) {
                 return new JsonResponse(['error' => 'Unauthenticated.'], 401);
+            }
+
+            return null;
+        });
+
+        $exceptions->render(function (AuthorizationException $e, Request $request): ?JsonResponse {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return new JsonResponse(['error' => $e->getMessage() ?: 'This action is not authorized.'], 403);
             }
 
             return null;

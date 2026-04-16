@@ -3,7 +3,7 @@ import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import type { iList, iItem } from '@/types'
 import { fetchList } from '@/services/listService'
-import { createItem, updateItem, deleteItem } from '@/services/itemService'
+import { createItem, updateItem, deleteItem, type iCreateItemPayload } from '@/services/itemService'
 import { useAuthStore } from '@/stores/auth'
 import echo from '@/plugins/echo'
 
@@ -103,18 +103,9 @@ export function useListDetail(id: string) {
     }
   }
 
-  async function addItem(item: iItem) {
-    const name = item.name.trim()
-    if (!name) {
-      error.value = t('items.errors.nameRequired')
-      return
-    }
-    if ((item.quantity ?? 0) < 1) {
-      error.value = t('items.errors.quantityInvalid')
-      return
-    }
+  async function addItem(payload: iCreateItemPayload) {
     try {
-      const data = await createItem(id, { name, quantity: item.quantity ?? 1, isCompleted: item.isCompleted })
+      const data = await createItem(id, payload)
       const lastItem = data.items[data.items.length - 1]
       if (!lastItem || !list.value) return
       lastItem.isNew = true
@@ -134,12 +125,14 @@ export function useListDetail(id: string) {
       error.value = t('items.errors.nameRequired')
       return
     }
-    if ((item.quantity ?? 0) < 1) {
-      error.value = t('items.errors.quantityInvalid')
-      return
-    }
     try {
-      await updateItem(listId, item.id, { name: item.name, quantity: item.quantity ?? undefined, isCompleted: item.isCompleted })
+      await updateItem(listId, item.id, {
+        name: item.name,
+        quantity: item.quantity ?? null,
+        unit_id: item.unit_id ?? null,
+        notes: item.notes ?? null,
+        isCompleted: item.isCompleted,
+      })
       item.isNew = true
       editingItemId.value = null
     } catch (e) {

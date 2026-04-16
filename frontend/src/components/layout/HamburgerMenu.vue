@@ -47,6 +47,7 @@ const menuRef = ref<HTMLElement | null>(null)
 
 const menuItems = [
   { name: 'home', labelKey: 'lists.title', to: { name: 'home' } },
+  { name: 'catalog', labelKey: 'catalog.title', to: { name: 'catalog' } },
   { name: 'household', labelKey: 'household.title', to: { name: 'household' } },
   { name: 'settings', labelKey: 'settings.title', to: { name: 'settings' } },
 ]

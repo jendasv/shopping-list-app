@@ -27,4 +27,8 @@ export const householdService = {
   async leaveHousehold(id: number): Promise<MessageResponse> {
     return apiFetch<MessageResponse>(`/household/${id}/leave`, { method: 'POST' })
   },
+
+  async removeMember(userId: number): Promise<MessageResponse> {
+    return apiFetch<MessageResponse>(`/household/members/${userId}`, { method: 'DELETE' })
+  },
 }

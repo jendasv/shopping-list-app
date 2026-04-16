@@ -14,10 +14,11 @@ export async function createList(
   name: string,
   visibility: 'shared' | 'private',
   items?: { name: string; quantity: number | null }[],
+  listType: 'shopping' | 'packing' | 'todo' = 'shopping',
 ): Promise<iList> {
   return apiFetch<iList>('/lists', {
     method: 'POST',
-    body: JSON.stringify({ name, visibility, items }),
+    body: JSON.stringify({ name, visibility, items, list_type: listType }),
   })
 }
 

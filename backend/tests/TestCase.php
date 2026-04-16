@@ -26,7 +26,9 @@ abstract class TestCase extends BaseTestCase
      */
     protected function createUserWithHousehold(?string $householdName = null): User
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
         $household = Household::create([
             'name' => $householdName ?? "{$user->name}'s household",
             'owner_id' => $user->id,

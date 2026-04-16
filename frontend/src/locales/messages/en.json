@@ -12,7 +12,8 @@
     "next": "Next →",
     "sending": "Sending...",
     "saving": "Saving...",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "confirm": "Confirm"
   },
   "auth": {
     "appName": "Lists",
@@ -98,11 +99,14 @@
     "name": "Name",
     "namePlaceholder": "Item name",
     "quantity": "Quantity",
+    "unit": "Unit",
     "fulfilled": "Fulfilled?",
     "addItem": "Add item",
     "closeForm": "Close form",
     "noItems": "No items yet.",
     "noItemsAdd": "No items yet. Add your first above.",
+    "addNew": "Add as new",
+    "noSuggestions": "No products found in catalog",
     "errors": {
       "nameRequired": "Name is required",
       "quantityInvalid": "Quantity must be greater than 0",
@@ -111,10 +115,56 @@
       "removeFailed": "Failed to remove item. Try again."
     }
   },
+  "units": {
+    "types": {
+      "count": "Count",
+      "weight": "Weight",
+      "volume": "Volume",
+      "piece": "Piece"
+    }
+  },
+  "catalog": {
+    "title": "Catalog",
+    "addProduct": "Add product",
+    "newProduct": "New product",
+    "editProduct": "Edit product",
+    "allCategories": "All categories",
+    "globalCategories": "Global",
+    "customCategories": "Custom",
+    "empty": "No products in catalog yet.",
+    "addFirst": "Add your first product.",
+    "deleteConfirm": "Delete \"{name}\" from catalog?",
+    "infoTitle": "About the catalog",
+    "infoText": "The catalog is shared with all members of your household. Products added by any member are available to everyone.",
+    "fields": {
+      "name": "Name",
+      "namePlaceholder": "e.g. Whole milk",
+      "category": "Category",
+      "noCategory": "No category",
+      "preferredQty": "Default qty",
+      "notes": "Notes",
+      "notesPlaceholder": "Brand, shop, notes..."
+    },
+    "errors": {
+      "nameRequired": "Product name is required.",
+      "loadFailed": "Failed to load catalog. Try again.",
+      "saveFailed": "Failed to save product. Try again.",
+      "deleteFailed": "Failed to delete product. Try again.",
+      "freeTierLimit": "Catalog limit reached (50 products). Upgrade to Pro for unlimited catalog."
+    }
+  },
   "newList": {
     "title": "New list",
     "listName": "List name",
     "listNamePlaceholder": "e.g. Weekly shopping",
+    "listNamePlaceholderPacking": "e.g. Summer holiday",
+    "listNamePlaceholderTodo": "e.g. Errands",
+    "listType": "Type",
+    "types": {
+      "shopping": "Shopping",
+      "packing": "Packing",
+      "todo": "To-do"
+    },
     "items": "Items",
     "shareWithHousehold": "Share with household",
     "sharedInfo": "Shared lists are visible to all household members.",
@@ -137,10 +187,15 @@
     "joinedHouseholds": "Joined households",
     "leave": "Leave",
     "leaveConfirm": "Are you sure you want to leave this household?",
+    "removeMember": "Remove",
+    "removeMemberConfirm": "Are you sure you want to remove {name} from the household?",
+    "memberRemoved": "{name} has been removed.",
+    "you": "you",
     "errors": {
       "inviteFailed": "Failed to send invitation.",
       "leaveFailed": "Failed to leave household.",
-      "nameSaveFailed": "Failed to save name."
+      "nameSaveFailed": "Failed to save name.",
+      "removeMemberFailed": "Failed to remove member."
     }
   },
   "settings": {

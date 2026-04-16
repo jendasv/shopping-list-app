@@ -88,6 +88,12 @@ const router = createRouter({
       },
     },
     {
+      path: '/catalog',
+      name: 'catalog',
+      component: () => import('@/views/CatalogView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/household',
       name: 'household',
       component: () => import('@/views/HouseholdView.vue'),

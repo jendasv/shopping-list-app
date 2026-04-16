@@ -13,7 +13,7 @@ class ValidationException extends ApiException
      */
     public function __construct(string $message, private readonly array $details = [])
     {
-        parent::__construct($message, 400);
+        parent::__construct($message, 422);
     }
 
     /**

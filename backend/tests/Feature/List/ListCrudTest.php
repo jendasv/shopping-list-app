@@ -59,7 +59,7 @@ class ListCrudTest extends TestCase
             'visibility' => 'shared',
         ]);
 
-        $response->assertStatus(400)
+        $response->assertStatus(422)
             ->assertJsonPath('details.name.0', 'The name field is required.');
     }
 
