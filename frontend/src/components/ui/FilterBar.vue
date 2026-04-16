@@ -5,7 +5,7 @@
       :value="search"
       type="text"
       :placeholder="$t('search.placeholder')"
-      class="w-full border-b-2 border-black px-1 py-1 text-base outline-none bg-transparent placeholder-gray-400"
+      class="w-full border-b-2 border-gray-300 focus:border-black px-1 py-1 text-base outline-none bg-transparent placeholder-gray-400 transition-colors"
       @input="emit('update:search', ($event.target as HTMLInputElement).value)"
     />
 
@@ -30,7 +30,7 @@
       <select
         v-if="sortOptions.length"
         :value="sort"
-        class="text-sm border-b-2 border-black bg-transparent outline-none cursor-pointer py-1 pl-1 pr-6"
+        class="text-sm border-b-2 border-gray-300 focus:border-black bg-transparent outline-none cursor-pointer py-1 pl-1 pr-6 transition-colors"
         @change="emit('update:sort', ($event.target as HTMLSelectElement).value)"
       >
         <option v-for="opt in sortOptions" :key="opt.value" :value="opt.value">

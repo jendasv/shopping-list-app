@@ -65,14 +65,14 @@
             <input
               v-model="item.name"
               type="text"
-              class="flex-1 border-b-2 border-black text-base px-1 py-1 outline-none"
+              class="flex-1 border-b-2 border-gray-300 focus:border-black text-base px-1 py-1 outline-none transition-colors"
               v-focus-end
             />
             <input
               v-model.number="item.quantity"
               type="number"
               min="1"
-              class="w-14 border-b-2 border-black text-base px-1 py-1 outline-none"
+              class="w-14 border-b-2 border-gray-300 focus:border-black text-base px-1 py-1 outline-none transition-colors"
             />
             <button type="submit" class="text-base font-medium text-green-700 px-1 py-0.5 cursor-pointer">{{ $t('common.save') }}</button>
             <button type="button" @click="editingItemId = null" class="text-base text-gray-400 px-1 py-0.5 cursor-pointer">{{ $t('common.cancel') }}</button>

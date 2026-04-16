@@ -76,7 +76,7 @@
                 <option :value="null">—</option>
                 <template v-for="(units, groupType) in unitGroups" :key="groupType">
                   <optgroup :label="$t('units.types.' + groupType)">
-                    <option v-for="unit in units" :key="unit.id" :value="unit.id">{{ unit.symbol }}</option>
+                    <option v-for="unit in units" :key="unit.id" :value="unit.id">{{ unit.name }}</option>
                   </optgroup>
                 </template>
               </select>

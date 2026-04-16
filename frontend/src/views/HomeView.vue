@@ -62,7 +62,7 @@
             </RowActions>
           </template>
           <form v-else @submit.prevent="saveListName(list)" class="flex items-center gap-2 w-full">
-            <input v-model="list.name" type="text" class="flex-1 border-b-2 border-black text-base px-1 py-1 outline-none" v-focus-end />
+            <input v-model="list.name" type="text" class="flex-1 border-b-2 border-gray-300 focus:border-black text-base px-1 py-1 outline-none transition-colors" v-focus-end />
             <button type="submit" class="text-base font-medium text-green-700 px-1 py-0.5 cursor-pointer">{{ $t('common.save') }}</button>
             <button type="button" @click="editingListId = null" class="text-base text-gray-400 px-1 py-0.5 cursor-pointer">{{ $t('common.cancel') }}</button>
           </form>
@@ -91,7 +91,7 @@
             </RowActions>
           </template>
           <form v-else @submit.prevent="saveListName(list)" class="flex items-center gap-2 w-full">
-            <input v-model="list.name" type="text" class="flex-1 border-b-2 border-black text-base px-1 py-1 outline-none" v-focus-end />
+            <input v-model="list.name" type="text" class="flex-1 border-b-2 border-gray-300 focus:border-black text-base px-1 py-1 outline-none transition-colors" v-focus-end />
             <button type="submit" class="text-base font-medium text-green-700 px-1 py-0.5 cursor-pointer">{{ $t('common.save') }}</button>
             <button type="button" @click="editingListId = null" class="text-base text-gray-400 px-1 py-0.5 cursor-pointer">{{ $t('common.cancel') }}</button>
           </form>
