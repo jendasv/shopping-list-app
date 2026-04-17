@@ -60,10 +60,10 @@ class ItemService
             if (! isset($data['name'])) {
                 $data['name'] = $product->name;
             }
-            if (! isset($data['unit_id']) && $product->preferred_unit_id !== null) {
+            if (! array_key_exists('unit_id', $data) && $product->preferred_unit_id !== null) {
                 $data['unit_id'] = $product->preferred_unit_id;
             }
-            if (! isset($data['quantity']) && $product->preferred_quantity !== null) {
+            if (! array_key_exists('quantity', $data) && $product->preferred_quantity !== null) {
                 $data['quantity'] = $product->preferred_quantity;
             }
         }
@@ -100,7 +100,7 @@ class ItemService
     {
         $list = $this->listService->findList($listId, $user);
         $this->createItem($data, $list);
-        $list->load('items');
+        $list->load('items.unit');
 
         return $this->listMapper->map($list);
     }

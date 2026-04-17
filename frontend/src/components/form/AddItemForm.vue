@@ -10,7 +10,7 @@
     >✕</button>
 
     <form @submit.prevent="onSubmit" class="flex flex-col gap-4">
-      <!-- NAME with autocomplete -->
+      <!-- NAME — with autocomplete for shopping/packing, plain for todo -->
       <div class="relative flex flex-col text-xl">
         <label class="text-gray-900 mb-1">{{ $t('items.name') }}
           <input
@@ -20,19 +20,19 @@
             :placeholder="$t('items.namePlaceholder')"
             class="px-2 pt-2 focus:outline-none focus:border-gray-600 text-gray-900 w-full"
             autocomplete="off"
-            @input="onNameInput"
-            @keydown.esc.prevent="closeSuggestions"
-            @keydown.arrow-down.prevent="moveFocus(1)"
-            @keydown.arrow-up.prevent="moveFocus(-1)"
-            @keydown.enter.prevent="confirmFocused"
-            @blur="onBlur"
-            @focus="onFocus"
+            @input="listType !== 'todo' ? onNameInput() : (error = '')"
+            @keydown.esc.prevent="listType !== 'todo' && closeSuggestions()"
+            @keydown.arrow-down.prevent="listType !== 'todo' && moveFocus(1)"
+            @keydown.arrow-up.prevent="listType !== 'todo' && moveFocus(-1)"
+            @keydown.enter.prevent="listType !== 'todo' ? confirmFocused() : onSubmit()"
+            @blur="listType !== 'todo' && onBlur()"
+            @focus="listType !== 'todo' && onFocus()"
           />
         </label>
 
-        <!-- Dropdown -->
+        <!-- Dropdown (shopping/packing only) -->
         <div
-          v-if="showDropdown"
+          v-if="listType !== 'todo' && showDropdown"
           class="absolute top-full left-0 right-0 bg-white border-2 border-black rounded-lg shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] z-50 max-h-60 overflow-y-auto"
         >
           <button
@@ -126,7 +126,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { iProduct, iUnitGroups } from '@/types'
-import { searchProducts } from '@/services/productService'
+import { searchProducts, createProduct } from '@/services/productService'
 import { fetchUnits } from '@/services/unitService'
 
 const { t } = useI18n()
@@ -172,6 +172,7 @@ let debounceTimer: ReturnType<typeof setTimeout> | null = null
 const unitGroups = ref<iUnitGroups>({})
 
 onMounted(async () => {
+  if (props.listType === 'todo') return
   try {
     unitGroups.value = await fetchUnits()
   } catch {
@@ -259,9 +260,27 @@ function selectProduct(product: iProduct) {
   closeSuggestions()
 }
 
-function addAsFreeText() {
-  selectedProduct.value = null
+async function addAsFreeText() {
   closeSuggestions()
+  const name = inputName.value.trim()
+  if (name.length >= 2 && props.listType !== 'todo') {
+    try {
+      const product = await createProduct({
+        name,
+        preferred_unit_id: form.value.unit_id ?? null,
+        category_id: null,
+        preferred_quantity: null,
+        notes: null,
+      })
+      selectedProduct.value = product
+    } catch {
+      // catalog save failed — add to list without product link
+      selectedProduct.value = null
+    }
+  } else {
+    selectedProduct.value = null
+  }
+  onSubmit()
 }
 
 // --- Validation & submit ---

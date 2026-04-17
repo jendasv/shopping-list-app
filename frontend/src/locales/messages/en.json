@@ -107,12 +107,15 @@
     "noItemsAdd": "No items yet. Add your first above.",
     "addNew": "Add as new",
     "noSuggestions": "No products found in catalog",
+    "saveToCatalog": "Save to catalog",
+    "savedToCatalog": "Saved to catalog",
     "errors": {
       "nameRequired": "Name is required",
       "quantityInvalid": "Quantity must be greater than 0",
       "addFailed": "Failed to add item. Try again.",
       "updateFailed": "Failed to update item. Try again.",
-      "removeFailed": "Failed to remove item. Try again."
+      "removeFailed": "Failed to remove item. Try again.",
+      "saveToCatalogFailed": "Failed to save to catalog. Try again."
     }
   },
   "units": {

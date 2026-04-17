@@ -56,6 +56,14 @@
             <RowActions>
               <template #menu="{ close }">
                 <button @click="startEdit(item); close()" class="w-full px-4 py-3 text-left text-xl hover:bg-gray-50 transition-colors">{{ $t('common.edit') }}</button>
+                <button
+                  v-if="list.listType !== 'todo' && !item.product_id"
+                  @click="saveItemToCatalog(list.id, item, close)"
+                  class="w-full px-4 py-3 text-left text-xl hover:bg-gray-50 transition-colors border-t border-gray-100"
+                  :disabled="savingCatalogItemId === item.id"
+                >
+                  {{ savingCatalogItemId === item.id ? $t('common.saving') : $t('items.saveToCatalog') }}
+                </button>
                 <button @click="removeItemFromList(list.id, item.id); close()" class="w-full px-4 py-3 text-left text-xl text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100">{{ $t('common.delete') }}</button>
               </template>
             </RowActions>
@@ -90,9 +98,12 @@
 <script setup lang="ts">
 import { ref, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { VueDraggable as VueDraggablePlus } from 'vue-draggable-plus'
 import { useListDetail } from '@/composables/useListDetail'
 import { reorderItems } from '@/services/listService'
+import { updateItem } from '@/services/itemService'
+import { createProduct } from '@/services/productService'
 import AddItemForm from '@/components/form/AddItemForm.vue'
 import AlertMessage from '@/components/elements/AlertMessage.vue'
 import HandDrawnDivider from '@/components/elements/HandDrawnDivider.vue'
@@ -101,6 +112,8 @@ import Typewrite from '@/components/animations/Typewrite.vue'
 import HandDrawnStrikethrough from '@/components/animations/HandDrawnStrikethrough.vue'
 import RowActions from '@/components/ui/RowActions.vue'
 import type { iItem, ListType } from '@/types'
+
+const { t } = useI18n()
 
 function formatItem(item: iItem, listType: ListType): string {
   if (listType === 'todo') return item.name
@@ -116,6 +129,28 @@ const showItemAddForm = ref(false)
 const { list, error, isLoading, editingItemId, removeItemFromList, setComplete, addItem, startEdit, saveItem } = useListDetail(id)
 
 const animatingItemId = ref<number | null>(null)
+const savingCatalogItemId = ref<number | null>(null)
+
+async function saveItemToCatalog(listId: number, item: iItem, close: () => void) {
+  close()
+  savingCatalogItemId.value = item.id
+  try {
+    const product = await createProduct({
+      name: item.name,
+      preferred_unit_id: item.unit_id ?? null,
+      category_id: null,
+      preferred_quantity: null,
+      notes: null,
+    })
+    // link item to newly created product
+    await updateItem(listId, item.id, { product_id: product.id })
+    item.product_id = product.id
+  } catch {
+    if (list.value) error.value = t('items.errors.saveToCatalogFailed')
+  } finally {
+    savingCatalogItemId.value = null
+  }
+}
 
 async function handleSetComplete(listId: number, itemId: number, isCompleted: boolean) {
   animatingItemId.value = itemId
