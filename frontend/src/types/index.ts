@@ -50,6 +50,18 @@ export interface iCategory {
   is_global: boolean
 }
 
+export interface iGlobalProduct {
+  id: number
+  name: string
+  brand: string | null
+  barcode: string | null
+  image_url: string | null
+  default_category_id: number | null
+  default_unit_id: number | null
+  verified: boolean
+  scan_count: number
+}
+
 export interface iProduct {
   id: number
   name: string

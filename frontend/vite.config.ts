@@ -1,4 +1,5 @@
 import { fileURLToPath, URL } from 'node:url'
+import { readFileSync } from 'node:fs'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
@@ -60,6 +61,10 @@ export default defineConfig({
   server: {
     host: true,
     allowedHosts: true,
+    https: {
+      key: readFileSync('/app/certs/172.23.169.31+3-key.pem'),
+      cert: readFileSync('/app/certs/172.23.169.31+3.pem'),
+    },
     proxy: {
       '/api': { target: 'http://nginx:80', changeOrigin: true },
       '/sanctum': { target: 'http://nginx:80', changeOrigin: true },

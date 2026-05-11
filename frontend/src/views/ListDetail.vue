@@ -77,9 +77,11 @@
               v-focus-end
             />
             <input
+              v-if="list.listType !== 'todo'"
               v-model.number="item.quantity"
               type="number"
               min="1"
+              step="1"
               class="w-14 border-b-2 border-gray-300 focus:border-black text-base px-1 py-1 outline-none transition-colors"
             />
             <button type="submit" class="text-base font-medium text-green-700 px-1 py-0.5 cursor-pointer">{{ $t('common.save') }}</button>
@@ -117,9 +119,8 @@ const { t } = useI18n()
 
 function formatItem(item: iItem, listType: ListType): string {
   if (listType === 'todo') return item.name
-  if (!item.quantity) return item.name
-  if (item.unit?.symbol) return `${item.name} ${item.quantity} ${item.unit.symbol}`
-  return item.quantity > 1 ? `${item.name} — ${item.quantity}×` : item.name
+  if (!item.quantity || item.quantity === 1) return item.name
+  return `${item.name} — ${item.quantity}×`
 }
 
 const route = useRoute()

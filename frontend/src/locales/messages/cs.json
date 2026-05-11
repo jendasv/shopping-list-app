@@ -237,5 +237,27 @@
   },
   "search": {
     "placeholder": "Hledat..."
+  },
+  "barcode": {
+    "scanning": "Skenovat čárový kód",
+    "pointCamera": "Namiřte kameru na čárový kód produktu",
+    "permissionDenied": "Přístup ke kameře zamítnut.",
+    "permissionDeniedTitle": "Přístup ke kameře zamítnut",
+    "permissionDeniedHint": "Klepněte na ikonu zámku v adresním řádku prohlížeče, povolte Kameru a zkuste to znovu.",
+    "retryPermission": "Zkusit znovu",
+    "cameraError": "Chyba kamery. Zkuste to znovu.",
+    "notFound": "Produkt nenalezen. Vyplňte ručně.",
+    "found": "Produkt nalezen",
+    "unsupportedTitle": "Kamera není dostupná",
+    "unsupportedHint": "Skenování čárových kódů vyžaduje Safari na iOS. Otevřete tuto stránku v Safari.",
+    "attachedHint": "Čárový kód připojen — zadej název produktu a bude uložen do databáze",
+    "searching": "Hledám produkt...",
+    "notFoundTitle": "Produkt nenalezen",
+    "scanAgain": "Skenovat znovu",
+    "enterManually": "Zadat číslo ručně",
+    "continueWithBarcode": "Pokračovat bez názvu produktu",
+    "manualInputTitle": "Zadej číslo čárového kódu",
+    "manualInputPlaceholder": "např. 8594056400022",
+    "search": "Vyhledat"
   }
 }

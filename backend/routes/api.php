@@ -86,6 +86,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
 
         // Global product library
         Route::get('/global-products/search', [GlobalProductController::class, 'search']);
+        Route::post('/global-products', [GlobalProductController::class, 'store']);
 
         // Units
         Route::get('/units', [UnitController::class, 'index']);

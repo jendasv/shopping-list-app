@@ -237,5 +237,27 @@
   },
   "search": {
     "placeholder": "Search..."
+  },
+  "barcode": {
+    "scanning": "Scan barcode",
+    "pointCamera": "Point the camera at a product barcode",
+    "permissionDenied": "Camera access denied.",
+    "permissionDeniedTitle": "Camera access denied",
+    "permissionDeniedHint": "Tap the lock icon in your browser's address bar, enable Camera, then try again.",
+    "retryPermission": "Try again",
+    "cameraError": "Camera error. Try again.",
+    "notFound": "Product not found. Fill in manually.",
+    "found": "Product found",
+    "unsupportedTitle": "Camera not available",
+    "unsupportedHint": "Barcode scanning requires Safari on iOS. Open this page in Safari to use the camera.",
+    "attachedHint": "Barcode attached — enter a product name and it will be saved to the database",
+    "searching": "Looking up product...",
+    "notFoundTitle": "Product not found",
+    "scanAgain": "Scan again",
+    "enterManually": "Enter number manually",
+    "continueWithBarcode": "Continue without product name",
+    "manualInputTitle": "Enter barcode number",
+    "manualInputPlaceholder": "e.g. 8594056400022",
+    "search": "Search"
   }
 }

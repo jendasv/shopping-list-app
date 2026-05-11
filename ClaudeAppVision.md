@@ -147,15 +147,16 @@ UnitTranslations
 ├── lang_id       (FK → languages)
 └── value         (gram, kilogram, mililitr, litr, kus...)
 
-GlobalProducts  ← crowdsourced + Open Food Facts, sdílená přes všechny domácnosti
+GlobalProducts  ← crowdsourced + Open Food/Beauty/Products/PetFood Facts
 ├── id
+├── household_id  (nullable — null = globální; set = viditelné jen dané domácnosti)
 ├── barcode       (EAN-13, UPC-A, QR...)
 ├── name
 ├── brand         (nullable)
 ├── default_category_id (nullable, FK → global category)
 ├── default_unit_id     (nullable, FK → units)
 ├── image_url     (nullable)
-├── source        (enum: user_scan, open_food_facts, admin)
+├── source        (enum: user | open_food_facts | open_beauty_facts | open_products_facts | open_pet_food_facts | admin)
 ├── verified      (bool — admin ověřil)
 ├── scan_count    (int — kolik domácností potvrdilo produkt)
 └── created_at
@@ -288,24 +289,59 @@ Pro `Unit` a globální `Category` vlastní Eloquent trait `HasTranslations`:
 - Fallback na `en` pokud překlad chybí
 - Žádná externí závislost, ~30 řádků
 
-### Barcode scanning — strategie
+### Barcode scanning — strategie (implementováno ve Fázi 3)
 
+**BarcodeScanner.vue state machine:**
 ```
-Uživatel naskenuje čárový kód
+scanning (kamera aktivní)
+  │  ↓ uživatel klikne "Zadat číslo ručně"
+  │  └→ manualInput (textový vstup, numeric keyboard)
   │
-  ├── 1. Hledej v global_products (vlastní DB, okamžité)
-  │       → nalezeno → "Mouka hladká Mlýn Herold, přidat?" → scan_count++
+  ↓ kamera detekuje čárový kód
+searching (API call — PROBÍHÁ UVNITŘ SCANNERU)
   │
-  ├── 2. Nenalezeno → dotaz na Open Food Facts API (free, bez API klíče)
-  │       → nalezeno → ulož do global_products (source: open_food_facts) → zobraz
+  ├── GET /global-products/search?barcode=
+  │   ├── 1. Hledej v global_products (vlastní DB, okamžité)
+  │   │       → nalezeno (household nebo globální) → scan_count++
+  │   │
+  │   └── 2. Nenalezeno → Http::pool() — 4 databáze PARALELNĚ (max 5s):
+  │           ├── world.openfoodfacts.org   (potraviny)
+  │           ├── world.openbeautyfacts.org (kosmetika, drogerie)
+  │           ├── world.openproductsfacts.org (spotřební věci)
+  │           └── world.openpetfoodfacts.org  (krmivo)
+  │           → první úspěšná odpověď → ulož do global_products → zobraz
   │
-  └── 3. Nenalezeno nikde → uživatel zadá ručně
-              → opt-in: "Přidat do sdílené knihovny?"
-              → pokud ano → global_products (source: user_scan, verified: false)
+  ├── Nalezeno → emit productFound(iGlobalProduct)
+  │   → AddItemForm předvyplní formulář (name + brand), scanner se zavře
+  │
+  └── Nenalezeno → stav notFound
+        Uživatel má 3 možnosti:
+        ├── "Skenovat znovu" → zpět na scanning
+        ├── "Zadat číslo ručně" → manualInput
+        └── "Pokračovat bez názvu produktu" → emit barcodeOnly(barcode)
+            → AddItemForm: scannedBarcode ref se nastaví, hint "Čárový kód připojen"
+            → uživatel zadá název → po submit: storeUserProduct() na pozadí
+            → uloží do global_products (source: user, household_id: X)
+            → viditelné pouze dané domácnosti (dokud admin nepovýší na globální)
 ```
 
-Technologie: `zxing-wasm` (WebAssembly — funguje ve všech prohlížečích, lazy load ~500kB).
-Web Barcode Detection API pouze jako progressive enhancement tam kde je dostupné.
+**manualInput flow:** uživatel zadá číslo → stejný searching flow jako po scanu.
+
+**Emitované eventy z BarcodeScanner:**
+- `productFound(product: iGlobalProduct)` — produkt nalezen, formulář se předvyplní
+- `barcodeOnly(barcode: string)` — produkt nenalezen, uživatel pokračuje ručně
+- `close` — scanner zavřen
+
+**Moderace uživatelských příspěvků (pending — task #7):**
+Produkty s `source='user'` zůstávají household-scoped — ostatní domácnosti je nevidí.
+Globální viditelnost vyžaduje admin review přes Filament. Claude API moderace názvů
+zvážit až při automatickém povyšování do globální DB.
+
+**Technologie:** `@zxing/browser` (BrowserMultiFormatReader).
+**HTTPS požadavek:** `navigator.mediaDevices.getUserMedia` vyžaduje secure context.
+**iOS:** funguje pouze v Safari (iOS Chrome/WKWebView camera API nepodporuje).
+**Dev HTTPS:** mkcert certifikáty v `docker/certs/`, Vite config čte z `/app/certs/`.
+**Mobilní přístup:** Windows portproxy (5173, 8080, 6001) → WSL2; certifikát instalovat jako CA.
 
 ---
 
@@ -323,10 +359,10 @@ Bez toho to nefunguje:
 ### Fáze 1.1 — Backend testy ✅ HOTOVO
 
 **Infrastruktura**
-- [x] `shopping_test` MySQL databáze, `phpunit.xml` přepnut z SQLite na MySQL
+- [x] `shopping_test` PostgreSQL databáze, `phpunit.xml` přepnut z SQLite na PostgreSQL
 - [x] `TestCase` rozšířen o `spaPostJson()` a `createUserWithHousehold()` helpery
 
-**Implementované testy (79 testů / 164 assertions)**
+**Implementované testy**
 ```
 tests/
 ├── Feature/
@@ -334,20 +370,20 @@ tests/
 │   │   ├── RegisterTest.php         — 7 testů (registrace, household auto-vytvoření, validace)
 │   │   ├── LoginTest.php            — 5 testů (správné/špatné heslo, validace)
 │   │   └── LogoutTest.php           — 2 testy
-│   ├── ShoppingList/
-│   │   ├── ShoppingListCrudTest.php    — 7 testů (CRUD, list_user_order)
-│   │   └── ShoppingListAccessTest.php  — 5 testů (cizí list = 404, shared/private viditelnost)
+│   ├── List/
+│   │   ├── ListCrudTest.php         — 7 testů (CRUD, list_user_order)
+│   │   └── ListAccessTest.php       — 5 testů (cizí list = 404, shared/private viditelnost)
 │   ├── Item/
 │   │   ├── ItemCrudTest.php         — 7 testů (CRUD, validace, mark completed)
 │   │   └── ItemAccessTest.php       — 5 testů (cizí list = 404, member může přidat)
 │   ├── Household/
-│   │   └── HouseholdTest.php        — 10 testů (show, rename, leave, přesun listů)
+│   │   └── HouseholdTest.php        — 14 testů (show, rename, leave, přesun listů, removeMember)
 │   └── Invitation/
 │       └── InvitationTest.php       — 13 testů (send, accept, decline, expiry, reuse)
 └── Unit/
     ├── Mapper/
     │   ├── ItemMapperTest.php        — 3 testy (mapování polí, bool cast)
-    │   └── ShoppingListMapperTest.php — 8 testů (listOnly, isOwner, sortOrder, items)
+    │   └── ListMapperTest.php        — 8 testů (listOnly, isOwner, sortOrder, items)
     └── Service/
         └── ItemServiceTest.php      — 5 testů (createItem validace, sort_order, reorder)
 ```
@@ -484,10 +520,10 @@ Musí být před šablonami — vše ostatní stojí na katalogu. Cíl: katalog 
 - Free tier ≥ 50 produktů → `PaymentRequiredException` (HTTP 402)
 - Phase 9 nahradí podmínku skutečnou billing logikou
 
-**Barcode scanning**
-- Po scanu → editovatelný formulář "Potvrdit produkt" (pre-filled z OFI nebo prázdný)
-- Scan flow: household DB → Open Food Facts API → manuální zadání + opt-in příspěvek do global_products
-- Desktop / kamera nedostupná → tlačítko skryto
+**Barcode scanning (implementováno — viz sekce níže)**
+- Scan ikona v `AddItemForm` (jen shopping/packing) → fullscreen `BarcodeScanner.vue` overlay
+- Scanner obsahuje celý state machine: scanning → searching → notFound / productFound
+- Nalezeno: formulář se předvyplní; Nenalezeno: 3 možnosti v overlaye (viz strategie níže)
 
 #### Backend
 
@@ -516,6 +552,10 @@ PUT    /categories/{id}             CategoryController@update
 DELETE /categories/{id}             CategoryController@destroy
 
 GET    /global-products/search?barcode=&q=   GlobalProductController@search
+POST   /global-products                      GlobalProductController@store
+       → přijme: name (required), barcode (required), brand (optional)
+       → uloží s source='user', household_id = caller's household
+       → vrátí 200 s existujícím produktem pokud barcode již existuje pro tuto domácnost
 
 GET    /units                       UnitController@index → grouped by type s překladem
 ```
@@ -638,7 +678,7 @@ Filozofie: co nejvíc uživatelů za malou částku. Ne vysoký ticket, ale obje
 - Faktury archivovat **7 let**
 
 #### Infrastruktura
-- **Nyní:** Hetzner VPS (~€4/měsíc) — běží vše na jednom serveru (PHP, MySQL, Reverb), Resend pro emaily (free tier)
+- **Nyní:** Hetzner VPS (~€4/měsíc) — běží vše na jednom serveru (PHP, PostgreSQL, Reverb), Resend pro emaily (free tier)
 - **Do budoucna:** Škálování řešit až při potřebě (500+ aktivních uživatelů)
 
 #### ⚠️ Před nasazením na produkci — Queue Worker
@@ -687,24 +727,29 @@ DELETE /lists/{id}/items/{itemId}   ListItemController@destroy
 
 **Vrstvy**
 ```
-app/Http/Controllers/Api/   AuthController, HouseholdController, InvitationController
-                            ShoppingListController, ItemController
-app/Service/                ShoppingListService, ItemService
-app/Mapper/                 ShoppingListMapper, ItemMapper, HouseholdMapper
-app/Models/                 User, Household, Invitation, ShoppingList, Item
-app/Events/                 ListUpdated, ItemAdded, ItemUpdated, ItemDeleted
-app/Exceptions/Domain/      ResourceNotFoundException, ValidationException
+app/Http/Controllers/Api/   AuthController, HouseholdController, InvitationController,
+                            ListController, ListItemController,
+                            CategoryController, ProductController,
+                            GlobalProductController, UnitController
+app/Service/                ListService, ItemService, ProductService, OpenFoodFactsService
+app/Mapper/                 ListMapper, ItemMapper, HouseholdMapper
+app/Models/                 User, Household, Invitation, Liste (model pro tabulku lists),
+                            ListItem, Category, CategoryTranslation,
+                            GlobalProduct, Product, Unit, UnitTranslation, Language
+app/Events/                 ListCreated, ListUpdated, ListDeleted,
+                            ItemAdded, ItemUpdated, ItemDeleted, ItemsReordered
+app/Exceptions/Domain/      ResourceNotFoundException, ValidationException, PaymentRequiredException
 app/Exceptions/Infrastructure/ DatabaseOperationException
 ```
 
 **Databáze — klíčové FK kaskády**
 ```
 users
-  └─(owner_id)─► households ──CASCADE──► shopping_list ──CASCADE──► item
+  └─(owner_id)─► households ──CASCADE──► lists ──CASCADE──► list_items
 users ─CASCADE──► household_user (pivot: role owner/member)
 users ─CASCADE──► invitations (invited_by)
 households ─CASCADE──► invitations
-shopping_list ─CASCADE──► item  (shopping_list_id)
+lists ─CASCADE──► list_items  (list_id)
 ```
 
 ---
@@ -713,17 +758,20 @@ shopping_list ─CASCADE──► item  (shopping_list_id)
 
 **Router** `router/index.ts`
 ```
-/                   landing         (requiresGuest)
-/login              login           (requiresGuest)
-/forgot-password    forgot-password (requiresGuest)
-/reset-password     reset-password  (requiresGuest)
-/email-verify       email-verify
-/email-verified     email-verified
-/lists              home            (requiresAuth)
-/lists/new          new-list        (requiresAuth)
-/lists/:id          list-detail     (requiresAuth, beforeEnter: fetchList)
-/household          household       (requiresAuth)
-/settings           settings        (requiresAuth)
+/                               landing         (requiresGuest)
+/login                          login           (requiresGuest)
+/forgot-password                forgot-password (requiresGuest)
+/reset-password                 reset-password  (requiresGuest)
+/email-verify                   email-verify
+/email-verified                 email-verified
+/invitations/:token/accept      invitation-accept
+/invitations/:token/decline     invitation-decline
+/lists                          home            (requiresAuth)
+/lists/new                      new-list        (requiresAuth)
+/lists/:id                      list-detail     (requiresAuth, beforeEnter: fetchList)
+/catalog                        catalog         (requiresAuth)
+/household                      household       (requiresAuth)
+/settings                       settings        (requiresAuth)
 ```
 Router guard: neověřený email → přesměruj na `email-verify`
 
@@ -736,20 +784,26 @@ auth/ResetPasswordView.vue
 auth/EmailVerifyView.vue    resend + logout (přihlášený) / sign-in (nepřihlášený)
 auth/EmailVerifiedView.vue
 HomeView.vue                seznam listů
-CreateShoppingList.vue
+CreateList.vue
 ListDetail.vue              položky listu, real-time sync
+CatalogView.vue             katalog produktů — search, filter, CRUD
+InvitationView.vue          přijmout / odmítnout pozvánku
 HouseholdView.vue           ownHousehold (edit, members, invite) + joinedHouseholds (leave)
 SettingsView.vue            profil, heslo
 ```
 
 **Services** `services/`
 ```
-api.ts              apiFetch() — CSRF cookie + X-XSRF-TOKEN header, credentials: include
-authService.ts      register, login, logout, getUser, forgotPassword, resetPassword,
-                    updateProfile, updatePassword, resendVerification
-householdService.ts getHousehold, updateHousehold, sendInvitation, leaveHousehold(id)
-shoppingListService.ts fetchList, fetchLists, createList, updateList, deleteList
-itemService.ts      (přímé volání v ListDetail.vue)
+api.ts                  apiFetch() — CSRF cookie + X-XSRF-TOKEN header, credentials: include
+authService.ts          register, login, logout, getUser, forgotPassword, resetPassword,
+                        updateProfile, updatePassword, resendVerification
+householdService.ts     getHousehold, updateHousehold, sendInvitation, leaveHousehold(id)
+listService.ts          fetchList, fetchLists, createList, updateList, deleteList
+itemService.ts          createItem, updateItem, deleteItem, reorderItems
+productService.ts       searchProducts, getProducts, createProduct, updateProduct, deleteProduct
+categoryService.ts      getCategories, createCategory, updateCategory, deleteCategory
+unitService.ts          getUnits
+globalProductService.ts searchByBarcode, storeUserProduct
 ```
 
 **Stores** `stores/`
@@ -761,7 +815,8 @@ auth.ts    user, loading, initialized, isAuthenticated, isEmailVerified
 **Klíčové typy** `types/index.ts`
 ```
 iUser, iHousehold, iHouseholdMember, iHouseholdOverview,
-iItem, iShoppingList, iNewList
+iItem, iList, iNewList, ListType, ListStatus,
+iProduct, iGlobalProduct, iCategory, iUnit, iUnitGroups
 ```
 
 **Komponenty** `components/`
@@ -809,7 +864,7 @@ Při každé nové backend feature se vždy posoudí, zda jsou testy potřeba. R
 | Real-time | Laravel Reverb (WebSockets) |
 | Frontend | Vue 3, TypeScript, Tailwind CSS |
 | Mobile | PWA (fáze 1), nativní app later |
-| Databáze | MySQL 8 |
+| Databáze | PostgreSQL 17 |
 | Billing | Laravel Cashier + Stripe |
 | Superadmin | vlastní middleware + admin sekce |
 
