@@ -57,3 +57,8 @@ Thumbs.db
 # Database
 # =========================
 mysql_data/
+
+# =========================
+# TLS certifikáty (dev, IP-specifické — generuj přes mkcert)
+# =========================
+/docker/certs/
