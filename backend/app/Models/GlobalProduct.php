@@ -9,20 +9,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property int $id
+ * @property int|null $household_id
  * @property string|null $barcode
  * @property string $name
  * @property string|null $brand
  * @property int|null $default_category_id
  * @property int|null $default_unit_id
  * @property string|null $image_url
- * @property string $source user_scan | open_food_facts | admin
+ * @property string $source user | open_food_facts | open_beauty_facts | open_products_facts | open_pet_food_facts | admin
  * @property bool $verified
  * @property int $scan_count
  */
 class GlobalProduct extends Model
 {
     protected $fillable = [
-        'barcode', 'name', 'brand', 'default_category_id',
+        'household_id', 'barcode', 'name', 'brand', 'default_category_id',
         'default_unit_id', 'image_url', 'source', 'verified', 'scan_count',
     ];
 

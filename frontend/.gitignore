@@ -27,6 +27,8 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+*.vue.js
+*.vue.d.ts
 
 .eslintcache
 

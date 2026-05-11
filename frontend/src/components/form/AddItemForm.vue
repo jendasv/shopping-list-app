@@ -1,18 +1,39 @@
 <template>
   <Transition name="unroll">
   <div v-if="showAddForm" class="border-2 border-black rounded-lg p-4 mb-4 relative">
-    <!-- Close button -->
-    <button
-      type="button"
-      class="absolute top-3 right-3 text-gray-400 hover:text-black transition text-xl leading-none"
-      :title="$t('items.closeForm')"
-      @click="emit('update:showAddForm', false)"
-    >✕</button>
+    <!-- Top-right actions: scan + close -->
+    <div class="absolute top-3 right-3 z-10 flex items-center gap-3">
+      <button
+        v-if="listType !== 'todo'"
+        type="button"
+        class="text-gray-400 hover:text-black transition"
+        :title="$t('barcode.scanning')"
+        @click="showScanner = true"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 4h2v16H3V4zm4 0h1v16H7V4zm3 0h2v16h-2V4zm4 0h1v16h-1V4zm3 0h1v16h-1V4zM2 3h4v2H2V3zm0 16h4v2H2v-2zm14-16h4v2h-4V3zm0 16h4v2h-4v-2z" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="text-gray-400 hover:text-black transition text-xl leading-none"
+        :title="$t('items.closeForm')"
+        @click="emit('update:showAddForm', false)"
+      >✕</button>
+    </div>
 
     <form @submit.prevent="onSubmit" class="flex flex-col gap-4">
+      <!-- Barcode scanner overlay -->
+      <BarcodeScanner
+        v-if="showScanner"
+        @productFound="onProductFound"
+        @barcodeOnly="onBarcodeOnly"
+        @close="showScanner = false"
+      />
+
       <!-- NAME — with autocomplete for shopping/packing, plain for todo -->
       <div class="relative flex flex-col text-xl">
-        <label class="text-gray-900 mb-1">{{ $t('items.name') }}
+        <label class="text-gray-900 mb-1">{{ $t('items.name') }}</label>
           <input
             ref="nameInputRef"
             v-model="inputName"
@@ -28,7 +49,6 @@
             @blur="listType !== 'todo' && onBlur()"
             @focus="listType !== 'todo' && onFocus()"
           />
-        </label>
 
         <!-- Dropdown (shopping/packing only) -->
         <div
@@ -69,37 +89,27 @@
         </div>
       </div>
 
-      <!-- QUANTITY + UNIT (hidden for todo) -->
+      <!-- Barcode indicator (shown when scanned barcode is not in any DB) -->
+      <p v-if="scannedBarcode" class="text-xs text-gray-400 -mt-2 flex items-center gap-1">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 4h2v16H3V4zm4 0h1v16H7V4zm3 0h2v16h-2V4zm4 0h1v16h-1V4zm3 0h1v16h-1V4zM2 3h4v2H2V3zm0 16h4v2H2v-2zm14-16h4v2h-4V3zm0 16h4v2h-4v-2z" />
+        </svg>
+        {{ $t('barcode.attachedHint') }}
+      </p>
+
+      <!-- QUANTITY (hidden for todo) -->
       <div v-if="listType !== 'todo'" class="flex gap-6 items-end">
         <div class="flex flex-col text-xl">
           <label class="text-gray-900 mb-1">{{ $t('items.quantity') }}
             <input
               v-model.number="form.quantity"
               type="number"
-              min="0.01"
-              step="0.01"
+              min="1"
+              step="1"
               placeholder="—"
               class="w-20 p-2 text-gray-900 focus:outline-none"
               @input="error = ''"
             />
-          </label>
-        </div>
-
-        <div class="flex flex-col text-xl">
-          <label class="text-gray-900 mb-1">{{ $t('items.unit') }}
-            <select
-              v-model="form.unit_id"
-              class="p-2 text-gray-900 focus:outline-none bg-transparent"
-            >
-              <option :value="null">—</option>
-              <template v-for="(units, groupType) in unitGroups" :key="groupType">
-                <optgroup :label="$t('units.types.' + groupType)">
-                  <option v-for="unit in units" :key="unit.id" :value="unit.id">
-                    {{ unit.name }}
-                  </option>
-                </optgroup>
-              </template>
-            </select>
           </label>
         </div>
       </div>
@@ -123,11 +133,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { iProduct, iUnitGroups } from '@/types'
+import type { iProduct } from '@/types'
+import type { iGlobalProduct } from '@/types'
 import { searchProducts, createProduct } from '@/services/productService'
-import { fetchUnits } from '@/services/unitService'
+import { storeUserProduct } from '@/services/globalProductService'
+import BarcodeScanner from '@/components/ui/BarcodeScanner.vue'
 
 const { t } = useI18n()
 
@@ -155,11 +167,12 @@ const selectedProduct = ref<iProduct | null>(null)
 
 const form = ref({
   quantity: null as number | null,
-  unit_id: null as number | null,
 })
 
 const error = ref('')
 const shaking = ref(false)
+const showScanner = ref(false)
+const scannedBarcode = ref<string | null>(null)
 
 // Autocomplete
 const suggestions = ref<iProduct[]>([])
@@ -167,18 +180,6 @@ const searching = ref(false)
 const showDropdown = ref(false)
 const focusedIndex = ref(-1)
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
-
-// Units
-const unitGroups = ref<iUnitGroups>({})
-
-onMounted(async () => {
-  if (props.listType === 'todo') return
-  try {
-    unitGroups.value = await fetchUnits()
-  } catch {
-    // units not critical — form works without them
-  }
-})
 
 // Reset form when closed
 watch(() => props.showAddForm, (val) => {
@@ -250,11 +251,9 @@ function selectProduct(product: iProduct) {
   if (product.preferred_quantity && product.unit) {
     inputName.value = `${product.name} ${product.preferred_quantity} ${product.unit.symbol}`
     form.value.quantity = 1
-    form.value.unit_id = null
   } else {
     inputName.value = product.name
     form.value.quantity = null
-    form.value.unit_id = product.preferred_unit_id ?? null
   }
 
   closeSuggestions()
@@ -267,7 +266,6 @@ async function addAsFreeText() {
     try {
       const product = await createProduct({
         name,
-        preferred_unit_id: form.value.unit_id ?? null,
         category_id: null,
         preferred_quantity: null,
         notes: null,
@@ -281,6 +279,22 @@ async function addAsFreeText() {
     selectedProduct.value = null
   }
   onSubmit()
+}
+
+// --- Barcode scanning ---
+function onProductFound(product: iGlobalProduct) {
+  showScanner.value = false
+  error.value = ''
+  inputName.value = product.brand ? `${product.name} ${product.brand}` : product.name
+  form.value.quantity = 1
+  selectedProduct.value = null
+  scannedBarcode.value = null
+}
+
+function onBarcodeOnly(barcode: string) {
+  showScanner.value = false
+  error.value = ''
+  scannedBarcode.value = barcode
 }
 
 // --- Validation & submit ---
@@ -309,10 +323,15 @@ function onSubmit() {
     name: name || selectedProduct.value!.name,
     product_id: selectedProduct.value?.id ?? null,
     quantity: props.listType === 'todo' ? null : (qty ?? null),
-    unit_id: props.listType === 'todo' ? null : (form.value.unit_id ?? null),
+    unit_id: null,
     notes: null,
     isCompleted: false,
   })
+
+  // Save unknown barcode product to global DB in background
+  if (scannedBarcode.value && name) {
+    storeUserProduct(name, scannedBarcode.value).catch(() => {})
+  }
 
   resetForm()
 }
@@ -320,8 +339,9 @@ function onSubmit() {
 function resetForm() {
   inputName.value = ''
   selectedProduct.value = null
-  form.value = { quantity: null, unit_id: null }
+  form.value = { quantity: null }
   error.value = ''
+  scannedBarcode.value = null
   closeSuggestions()
 }
 </script>

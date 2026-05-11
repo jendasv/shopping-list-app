@@ -42,16 +42,34 @@
           {{ editingProduct ? $t('catalog.editProduct') : $t('catalog.newProduct') }}
         </h2>
 
+        <!-- Barcode scanner overlay -->
+        <BarcodeScanner
+          v-if="showScanner"
+          @detected="onBarcodeDetected"
+          @close="showScanner = false"
+        />
+
         <!-- Name -->
         <div class="flex flex-col text-xl mb-4">
-          <label class="text-gray-900 mb-1">{{ $t('catalog.fields.name') }}
-            <input
-              v-model="form.name"
-              type="text"
-              class="px-2 pt-2 focus:outline-none focus:border-gray-600 text-gray-900 w-full"
-              :placeholder="$t('catalog.fields.namePlaceholder')"
-            />
-          </label>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-gray-900 flex-1">{{ $t('catalog.fields.name') }}</span>
+            <button
+              type="button"
+              class="text-gray-400 hover:text-black transition shrink-0"
+              :title="$t('barcode.scanning')"
+              @click="showScanner = true"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 4h2v16H3V4zm4 0h1v16H7V4zm3 0h2v16h-2V4zm4 0h1v16h-1V4zm3 0h1v16h-1V4zM2 3h4v2H2V3zm0 16h4v2H2v-2zm14-16h4v2h-4V3zm0 16h4v2h-4v-2z" />
+              </svg>
+            </button>
+          </div>
+          <input
+            v-model="form.name"
+            type="text"
+            class="px-2 pt-2 focus:outline-none focus:border-gray-600 text-gray-900 w-full"
+            :placeholder="$t('catalog.fields.namePlaceholder')"
+          />
         </div>
 
         <!-- Category + Unit -->
@@ -215,9 +233,11 @@ import type { iProduct, iUnitGroups } from '@/types'
 import { fetchProducts, createProduct, updateProduct, deleteProduct } from '@/services/productService'
 import { fetchCategories } from '@/services/categoryService'
 import { fetchUnits } from '@/services/unitService'
+import { searchByBarcode } from '@/services/globalProductService'
 import { useConfirm } from '@/composables/useConfirm'
 import AlertMessage from '@/components/elements/AlertMessage.vue'
 import RowActions from '@/components/ui/RowActions.vue'
+import BarcodeScanner from '@/components/ui/BarcodeScanner.vue'
 
 const { t } = useI18n()
 const { confirm } = useConfirm()
@@ -247,6 +267,7 @@ const showForm = ref(false)
 const editingProduct = ref<iProduct | null>(null)
 const saving = ref(false)
 const formError = ref('')
+const showScanner = ref(false)
 
 const form = ref({
   name: '',
@@ -255,6 +276,25 @@ const form = ref({
   preferred_quantity: null as number | null,
   notes: '',
 })
+
+async function onBarcodeDetected(barcode: string) {
+  showScanner.value = false
+  formError.value = ''
+  try {
+    const globalProduct = await searchByBarcode(barcode)
+    if (globalProduct) {
+      form.value.name = globalProduct.brand
+        ? `${globalProduct.name} ${globalProduct.brand}`
+        : globalProduct.name
+      if (globalProduct.default_unit_id) form.value.preferred_unit_id = globalProduct.default_unit_id
+      if (globalProduct.default_category_id) form.value.category_id = globalProduct.default_category_id
+    } else {
+      formError.value = t('barcode.notFound')
+    }
+  } catch {
+    formError.value = t('barcode.notFound')
+  }
+}
 
 onMounted(async () => {
   await Promise.all([loadPage(1), loadCategories(), loadUnits()])
@@ -316,6 +356,7 @@ function openEditForm(product: iProduct) {
 function closeForm() {
   showForm.value = false
   editingProduct.value = null
+  showScanner.value = false
 }
 
 async function saveProduct() {
