@@ -14,13 +14,17 @@ function getXsrfToken(): string {
   return match?.[1] ? decodeURIComponent(match[1]) : ''
 }
 
+// In dev, Reverb is exposed directly on port 6001.
+// In production, nginx proxies wss://domain/app → reverb:6001 (port 443).
+const isDev = import.meta.env.DEV
+
 const echo = new Echo({
   broadcaster: 'reverb',
   key: import.meta.env.VITE_REVERB_APP_KEY as string,
   wsHost: window.location.hostname,
-  wsPort: 6001,
-  wssPort: 6001,
-  forceTLS: false,
+  wsPort: isDev ? 6001 : 443,
+  wssPort: isDev ? 6001 : 443,
+  forceTLS: !isDev,
   enabledTransports: ['ws', 'wss'],
   disableStats: true,
   authorizer: (channel: { name: string }) => ({

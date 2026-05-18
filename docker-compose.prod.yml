@@ -1,0 +1,92 @@
+services:
+
+  php:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile.prod
+    container_name: shopping_php
+    restart: unless-stopped
+    env_file: backend/.env
+    volumes:
+      - storage_data:/var/www/storage/app/public
+    depends_on:
+      - postgres
+
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile.prod
+      args:
+        VITE_APP_NAME: ${VITE_APP_NAME:-Shopping List}
+        VITE_REVERB_APP_KEY: ${VITE_REVERB_APP_KEY}
+    container_name: shopping_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - certbot_certs:/etc/letsencrypt:ro
+      - certbot_www:/var/www/certbot
+      - storage_data:/var/www/public/storage
+    depends_on:
+      - php
+      - reverb
+
+  certbot:
+    image: certbot/certbot
+    container_name: shopping_certbot
+    volumes:
+      - certbot_certs:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    # Renews certificates every 12 hours (certbot only renews if <30 days left)
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --quiet; sleep 12h & wait $${!}; done;'"
+
+  postgres:
+    image: postgres:17
+    container_name: shopping_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  reverb:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile.prod
+    container_name: shopping_reverb
+    restart: unless-stopped
+    command: php artisan reverb:start --host=0.0.0.0 --port=6001
+    env_file: backend/.env
+    depends_on:
+      - postgres
+
+  queue:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile.prod
+    container_name: shopping_queue
+    restart: unless-stopped
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    env_file: backend/.env
+    depends_on:
+      - postgres
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile.prod
+    container_name: shopping_scheduler
+    restart: unless-stopped
+    command: php artisan schedule:work
+    env_file: backend/.env
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+  storage_data:
+  certbot_certs:
+  certbot_www:

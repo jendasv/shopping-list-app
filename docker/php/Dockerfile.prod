@@ -1,0 +1,44 @@
+FROM php:8.3-fpm
+
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    libicu-dev \
+    libzip-dev \
+    libonig-dev \
+    libpq-dev \
+    zip \
+    curl \
+    && docker-php-ext-install \
+        pdo \
+        pdo_pgsql \
+        intl \
+        zip \
+        mbstring \
+        pcntl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www
+
+COPY backend/ .
+
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+RUN mkdir -p storage/app/public \
+             storage/framework/cache \
+             storage/framework/sessions \
+             storage/framework/views \
+             storage/logs \
+             bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
+
+COPY docker/php/entrypoint.prod.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+USER www-data
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["php-fpm"]
