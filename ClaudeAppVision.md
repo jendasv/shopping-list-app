@@ -678,13 +678,66 @@ Filozofie: co nejvíc uživatelů za malou částku. Ne vysoký ticket, ale obje
 - Faktury archivovat **7 let**
 
 #### Infrastruktura
-- **Nyní:** Hetzner VPS (~€4/měsíc) — běží vše na jednom serveru (PHP, PostgreSQL, Reverb), Resend pro emaily (free tier)
+- **Nyní:** Hetzner CX22 (~€4.51/měsíc) — 2 vCPU, 4 GB RAM, vše na jednom serveru via Docker Compose
+- **Email:** Resend (free tier)
 - **Do budoucna:** Škálování řešit až při potřebě (500+ aktivních uživatelů)
 
-#### ⚠️ Před nasazením na produkci — Queue Worker
-Broadcasting eventy (`ItemAdded`, `ItemUpdated`, `ItemDeleted`, `ListUpdated`) aktuálně používají `ShouldBroadcastNow` — broadcast se provede synchronně v rámci HTTP requestu (bez fronty).
-Na produkci přepnout na `ShouldBroadcast` a spustit queue worker (`php artisan queue:work`).
-To vyžaduje: supervisor nebo systemd service na VPS, nebo dedikovaný worker kontejner v Docker Compose.
+#### Docker produkční setup (připraveno)
+
+**Soubory:**
+```
+docker-compose.prod.yml          ← produkční stack
+docker/php/Dockerfile.prod       ← PHP-FPM, kód baked in, composer --no-dev
+docker/php/entrypoint.prod.sh    ← config:cache, route:cache, storage:link při startu
+docker/nginx/Dockerfile.prod     ← multi-stage: npm run build → nginx
+docker/nginx/default.prod.conf   ← HTTPS, Vue SPA, Reverb WebSocket proxy, Laravel API
+frontend/.env.production.example ← šablona: VITE_APP_NAME + VITE_REVERB_APP_KEY
+deploy.sh                        ← ./deploy.sh setup domain.com | ./deploy.sh update
+```
+
+**Kontejnery v produkci:**
+```
+php        — Laravel PHP-FPM
+nginx      — HTTPS + Vue SPA + proxy → PHP a Reverb
+postgres   — databáze (volume postgres_data)
+reverb     — WebSocket server (port 6001, interní)
+queue      — php artisan queue:work
+scheduler  — php artisan schedule:work
+certbot    — Let's Encrypt, auto-renewal každých 12h
+```
+
+**Reverb WebSocket v produkci:**
+nginx terminuje SSL a proxuje `wss://domain.com/app/*` → `http://reverb:6001/app/*`.
+`echo.ts` auto-detekuje: `import.meta.env.DEV` → port 6001 přímý; prod build → port 443 přes nginx.
+
+**SSL certifikát:**
+Certbot + Let's Encrypt přes webroot challenge (nginx obsluhuje `/.well-known/acme-challenge/`).
+
+**První nasazení:**
+```bash
+# Na VPS (Ubuntu/Debian):
+apt install docker.io docker-compose-plugin
+git clone <repo> && cd shopping-list-laravel
+cp backend/.env.example backend/.env   # vyplnit hodnoty
+# V docker/nginx/default.prod.conf změnit DOMAIN na skutečnou doménu
+./deploy.sh setup yourdomain.com
+```
+
+**Aktualizace:**
+```bash
+./deploy.sh update   # git pull → rebuild → migrate → restart
+```
+
+**Env proměnné pro build (baked do JS):**
+Předávají se jako Docker build args z `.env` souboru v kořeni repozitáře:
+```
+VITE_APP_NAME=...
+VITE_REVERB_APP_KEY=...   # shoduje se s REVERB_APP_KEY v backend/.env
+```
+
+#### ⚠️ Queue Worker — vyřešeno v produkčním Docker Compose
+Broadcasting eventy používají `ShouldBroadcastNow` (synchronní). Pokud bude potřeba přepnout na async:
+změnit na `ShouldBroadcast` — queue worker kontejner je již přítomen v `docker-compose.prod.yml`.
 
 ---
 
