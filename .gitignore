@@ -63,5 +63,5 @@ mysql_data/
 # =========================
 /docker/certs/
 
-
+.claude/
 ClaudeAppVision.md
