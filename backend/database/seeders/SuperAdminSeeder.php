@@ -30,7 +30,7 @@ class SuperAdminSeeder extends Seeder
         // Vytvoř household pokud ještě nemá
         if ($user->households()->count() === 0) {
             $household = Household::create(['name' => "Admin's household", 'owner_id' => $user->id]);
-            $household->members()->attach($user->id, ['role' => HouseholdRole::Owner->value]);
+            $household->members()->attach($user->id, ['role' => HouseholdRole::Owner->value, 'is_current' => true]);
         }
 
         $this->command->info("Super admin ready: {$email} / {$password}");

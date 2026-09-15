@@ -135,7 +135,7 @@ class InvitationTest extends TestCase
         ]);
     }
 
-    public function test_own_household_is_deactivated_on_accept(): void
+    public function test_current_household_switches_to_target_on_accept(): void
     {
         $owner = $this->createUserWithHousehold();
         $invitee = $this->createUserWithHousehold();
@@ -152,9 +152,82 @@ class InvitationTest extends TestCase
 
         $this->actingAs($invitee)->postJson("/api/invitations/{$invitation->token}/accept");
 
-        $this->assertDatabaseHas('households', [
-            'id' => $inviteeHouseholdId,
-            'is_active' => false,
+        $invitee->refresh();
+
+        $this->assertDatabaseHas('household_user', [
+            'user_id' => $invitee->id,
+            'household_id' => $inviteeHouseholdId,
+            'is_current' => false,
+        ]);
+        $this->assertEquals($owner->household()->id, $invitee->household()->id);
+    }
+
+    public function test_accept_does_not_affect_other_members_current_household(): void
+    {
+        // Regression test: households.is_active used to be a shared flag on the
+        // household row, so deactivating the invitee's own household when they
+        // accepted an invitation elsewhere also broke household() for every
+        // other member of that household. Now it's per-membership.
+        $owner = $this->createUserWithHousehold();
+        $otherMember = $this->createUserWithHousehold();
+        $otherMemberOwnHouseholdId = $otherMember->household()->id;
+        $owner->household()->members()->attach($otherMember->id, ['role' => 'member']);
+
+        $inviter = $this->createUserWithHousehold();
+
+        $invitation = Invitation::create([
+            'household_id' => $inviter->household()->id,
+            'invited_by' => $inviter->id,
+            'email' => $owner->email,
+            'token' => 'switch-token',
+            'status' => InvitationStatus::Pending->value,
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        $this->actingAs($owner)->postJson("/api/invitations/{$invitation->token}/accept");
+
+        $otherMember->refresh();
+
+        $this->assertEquals($otherMemberOwnHouseholdId, $otherMember->household()->id);
+    }
+
+    public function test_accept_only_moves_lists_created_by_the_invitee(): void
+    {
+        $owner = $this->createUserWithHousehold();
+        $invitee = $this->createUserWithHousehold();
+        $otherMember = User::factory()->create();
+        $invitee->household()->members()->attach($otherMember->id, ['role' => 'member']);
+        $inviteeOriginalHouseholdId = $invitee->household()->id;
+
+        $inviteesList = Liste::factory()->create([
+            'household_id' => $inviteeOriginalHouseholdId,
+            'created_by' => $invitee->id,
+            'visibility' => 'shared',
+        ]);
+        $otherMembersList = Liste::factory()->create([
+            'household_id' => $inviteeOriginalHouseholdId,
+            'created_by' => $otherMember->id,
+            'visibility' => 'shared',
+        ]);
+
+        $invitation = Invitation::create([
+            'household_id' => $owner->household()->id,
+            'invited_by' => $owner->id,
+            'email' => $invitee->email,
+            'token' => 'valid-token',
+            'status' => InvitationStatus::Pending->value,
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        $this->actingAs($invitee)->postJson("/api/invitations/{$invitation->token}/accept");
+
+        $this->assertDatabaseHas('lists', [
+            'id' => $inviteesList->id,
+            'household_id' => $owner->household()->id,
+        ]);
+        $this->assertDatabaseHas('lists', [
+            'id' => $otherMembersList->id,
+            'household_id' => $inviteeOriginalHouseholdId,
         ]);
     }
 

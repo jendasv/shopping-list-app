@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password', 'is_active', 'locale'])]
@@ -41,7 +42,7 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
     public function households(): BelongsToMany
     {
         return $this->belongsToMany(Household::class)
-            ->withPivot('role')
+            ->withPivot('role', 'is_current')
             ->withTimestamps();
     }
 
@@ -53,7 +54,23 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
 
     public function household(): ?Household
     {
-        return $this->households()->where('is_active', true)->first();
+        // Every membership created through the app's own flows always has exactly
+        // one is_current row (see the household_user_one_current_per_user index).
+        // The fallback only matters for a membership created outside those flows
+        // (e.g. directly in a test or by an admin) — in that case a single,
+        // unambiguous membership is still a sensible "current" household.
+        return $this->households()->wherePivot('is_current', true)->first()
+            ?? $this->households()->first();
+    }
+
+    /**
+     * Switch which of this user's households is their "current" one.
+     * Scoped to this user's membership rows only — never touches other members.
+     */
+    public function setCurrentHousehold(int $householdId): void
+    {
+        DB::table('household_user')->where('user_id', $this->id)->update(['is_current' => false]);
+        DB::table('household_user')->where('user_id', $this->id)->where('household_id', $householdId)->update(['is_current' => true]);
     }
 
     public function preferredLocale(): string

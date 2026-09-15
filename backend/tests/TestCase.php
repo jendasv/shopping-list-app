@@ -33,7 +33,7 @@ abstract class TestCase extends BaseTestCase
             'name' => $householdName ?? "{$user->name}'s household",
             'owner_id' => $user->id,
         ]);
-        $household->members()->attach($user->id, ['role' => HouseholdRole::Owner->value]);
+        $household->members()->attach($user->id, ['role' => HouseholdRole::Owner->value, 'is_current' => true]);
 
         return $user;
     }

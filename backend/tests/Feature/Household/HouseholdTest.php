@@ -55,6 +55,21 @@ class HouseholdTest extends TestCase
             ->assertJsonCount(1, 'joinedHouseholds');
     }
 
+    public function test_household_resolves_deterministically_when_member_of_multiple(): void
+    {
+        // Regression test: household() used to filter households.is_active, a
+        // column shared by every member — ambiguous whenever a user belonged
+        // to 2+ households that were both still "active". It's now driven by
+        // the per-membership is_current flag instead.
+        $owner = $this->createUserWithHousehold();
+        $member = $this->createUserWithHousehold();
+        $ownHouseholdId = $member->household()->id;
+
+        $owner->household()->members()->attach($member->id, ['role' => 'member']);
+
+        $this->assertEquals($ownHouseholdId, $member->household()->id);
+    }
+
     // --- update ---
 
     public function test_owner_can_rename_household(): void

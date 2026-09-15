@@ -14,6 +14,7 @@ use App\Models\Product;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class HouseholdController extends Controller
 {
@@ -71,18 +72,22 @@ class HouseholdController extends Controller
 
         $ownHousehold = $user->households()->wherePivot('role', HouseholdRole::Owner->value)->first();
 
-        if ($ownHousehold) {
-            Liste::where('household_id', $household->id)
-                ->where('created_by', $user->id)
-                ->where('visibility', ListVisibility::Private->value)
-                ->update(['household_id' => $ownHousehold->id]);
+        DB::transaction(function () use ($user, $household, $ownHousehold) {
+            if ($ownHousehold) {
+                Liste::where('household_id', $household->id)
+                    ->where('created_by', $user->id)
+                    ->where('visibility', ListVisibility::Private->value)
+                    ->update(['household_id' => $ownHousehold->id]);
 
-            $this->copyProductsToHousehold($household->id, $user->id, $ownHousehold->id);
+                $this->copyProductsToHousehold($household->id, $user->id, $ownHousehold->id);
+            }
 
-            $ownHousehold->update(['is_active' => true]);
-        }
+            $household->members()->detach($user->id);
 
-        $household->members()->detach($user->id);
+            if ($ownHousehold) {
+                $user->setCurrentHousehold($ownHousehold->id);
+            }
+        });
 
         return response()->json(['message' => 'Left household successfully.']);
     }
@@ -106,18 +111,23 @@ class HouseholdController extends Controller
 
         // Move member's private lists back to their own household
         $memberOwnHousehold = $member->households()->wherePivot('role', HouseholdRole::Owner->value)->first();
-        if ($memberOwnHousehold) {
-            Liste::where('household_id', $household->id)
-                ->where('created_by', $member->id)
-                ->where('visibility', ListVisibility::Private->value)
-                ->update(['household_id' => $memberOwnHousehold->id]);
 
-            $this->copyProductsToHousehold($household->id, $member->id, $memberOwnHousehold->id);
+        DB::transaction(function () use ($household, $member, $userId, $memberOwnHousehold) {
+            if ($memberOwnHousehold) {
+                Liste::where('household_id', $household->id)
+                    ->where('created_by', $member->id)
+                    ->where('visibility', ListVisibility::Private->value)
+                    ->update(['household_id' => $memberOwnHousehold->id]);
 
-            $memberOwnHousehold->update(['is_active' => true]);
-        }
+                $this->copyProductsToHousehold($household->id, $member->id, $memberOwnHousehold->id);
+            }
 
-        $household->members()->detach($userId);
+            $household->members()->detach($userId);
+
+            if ($memberOwnHousehold) {
+                $member->setCurrentHousehold($memberOwnHousehold->id);
+            }
+        });
 
         return response()->json(['message' => 'Member removed from household.']);
     }

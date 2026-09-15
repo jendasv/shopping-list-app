@@ -33,7 +33,7 @@ class AuthController extends Controller
 
         $householdName = $request->household_name ?? "{$user->name}'s household";
         $household = Household::create(['name' => $householdName, 'owner_id' => $user->id]);
-        $household->members()->attach($user->id, ['role' => HouseholdRole::Owner->value]);
+        $household->members()->attach($user->id, ['role' => HouseholdRole::Owner->value, 'is_current' => true]);
 
         event(new Registered($user));
 

@@ -13,6 +13,7 @@ use App\Models\Liste;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -82,16 +83,21 @@ class InvitationController extends Controller
         $targetHousehold = $invitation->household;
         $ownHousehold = $user->households()->wherePivot('role', HouseholdRole::Owner->value)->first();
 
-        if ($ownHousehold) {
-            Liste::where('household_id', $ownHousehold->id)
-                ->update(['household_id' => $targetHousehold->id]);
+        DB::transaction(function () use ($user, $targetHousehold, $ownHousehold) {
+            if ($ownHousehold) {
+                // Only lists the user created themselves move with them —
+                // not every list in their own household (other members may have some).
+                Liste::where('household_id', $ownHousehold->id)
+                    ->where('created_by', $user->id)
+                    ->update(['household_id' => $targetHousehold->id]);
+            }
 
-            $ownHousehold->update(['is_active' => false]);
-        }
+            if (! $targetHousehold->members()->wherePivot('user_id', $user->id)->exists()) {
+                $targetHousehold->members()->attach($user->id, ['role' => HouseholdRole::Member->value]);
+            }
 
-        if (! $targetHousehold->members()->wherePivot('user_id', $user->id)->exists()) {
-            $targetHousehold->members()->attach($user->id, ['role' => HouseholdRole::Member->value]);
-        }
+            $user->setCurrentHousehold($targetHousehold->id);
+        });
 
         $invitation->update(['status' => InvitationStatus::Accepted->value]);
 
