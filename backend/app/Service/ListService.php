@@ -140,28 +140,32 @@ class ListService
         $household = $user->household();
 
         try {
-            $list = Liste::create([
-                'name' => $data['name'],
-                'list_type' => $data['list_type'] ?? 'shopping',
-                'household_id' => $household?->id,
-                'created_by' => $user->id,
-                'visibility' => $data['visibility'] ?? ListVisibility::Private->value,
-            ]);
+            $list = DB::transaction(function () use ($data, $household, $user) {
+                $list = Liste::create([
+                    'name' => $data['name'],
+                    'list_type' => $data['list_type'] ?? 'shopping',
+                    'household_id' => $household?->id,
+                    'created_by' => $user->id,
+                    'visibility' => $data['visibility'] ?? ListVisibility::Private->value,
+                ]);
 
-            if (! empty($data['items']) && is_array($data['items'])) {
-                foreach ($data['items'] as $itemData) {
-                    $this->itemService()->createItem($itemData, $list);
+                if (! empty($data['items']) && is_array($data['items'])) {
+                    foreach ($data['items'] as $itemData) {
+                        $this->itemService()->createItem($itemData, $list);
+                    }
                 }
-            }
 
-            $list->load('items');
+                $list->load('items');
 
-            $minOrder = DB::table('list_user_order')->where('user_id', $user->id)->min('sort_order') ?? 1;
-            DB::table('list_user_order')->insert([
-                'user_id' => $user->id,
-                'list_id' => $list->id,
-                'sort_order' => $minOrder - 1,
-            ]);
+                $minOrder = DB::table('list_user_order')->where('user_id', $user->id)->min('sort_order') ?? 1;
+                DB::table('list_user_order')->insert([
+                    'user_id' => $user->id,
+                    'list_id' => $list->id,
+                    'sort_order' => $minOrder - 1,
+                ]);
+
+                return $list;
+            });
         } catch (Throwable $e) {
             throw new DatabaseOperationException('Failed to create list: '.$e->getMessage());
         }

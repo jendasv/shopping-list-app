@@ -16,6 +16,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rule;
@@ -25,15 +26,19 @@ class AuthController extends Controller
 {
     public function register(RegisterRequest $request): JsonResponse
     {
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        $user = DB::transaction(function () use ($request) {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+            ]);
 
-        $householdName = $request->household_name ?? "{$user->name}'s household";
-        $household = Household::create(['name' => $householdName, 'owner_id' => $user->id]);
-        $household->members()->attach($user->id, ['role' => HouseholdRole::Owner->value, 'is_current' => true]);
+            $householdName = $request->household_name ?? "{$user->name}'s household";
+            $household = Household::create(['name' => $householdName, 'owner_id' => $user->id]);
+            $household->members()->attach($user->id, ['role' => HouseholdRole::Owner->value, 'is_current' => true]);
+
+            return $user;
+        });
 
         event(new Registered($user));
 
