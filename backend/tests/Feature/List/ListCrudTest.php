@@ -6,6 +6,7 @@ namespace Tests\Feature\List;
 
 use App\Models\Liste;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class ListCrudTest extends TestCase
@@ -95,6 +96,24 @@ class ListCrudTest extends TestCase
 
         $response->assertStatus(204);
         $this->assertDatabaseMissing('lists', ['id' => $list->id]);
+    }
+
+    public function test_show_endpoint_fetches_the_list_only_once(): void
+    {
+        $user = $this->createUserWithHousehold();
+        $list = Liste::factory()->create([
+            'household_id' => $user->household()->id,
+            'created_by' => $user->id,
+        ]);
+
+        DB::enableQueryLog();
+        $this->actingAs($user)->getJson("/api/lists/{$list->id}")->assertOk();
+        $queries = collect(DB::getQueryLog());
+        DB::disableQueryLog();
+
+        $listQueries = $queries->filter(fn (array $q) => str_contains($q['query'], 'from "lists"'))->count();
+
+        $this->assertSame(1, $listQueries);
     }
 
     public function test_list_order_entry_is_created_on_new_list(): void

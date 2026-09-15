@@ -28,7 +28,7 @@ class ListController extends Controller
         $list = $this->listService->findList($id, $request->user());
         $this->authorize('view', $list);
 
-        return new JsonResponse($this->listService->getList($id, $request->user()));
+        return new JsonResponse($this->listService->getList($list, $request->user()));
     }
 
     public function store(StoreListRequest $request): JsonResponse

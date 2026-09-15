@@ -139,9 +139,9 @@ class ListService
     /**
      * @return array<string, mixed>
      */
-    public function getList(int $id, User $user): array
+    public function getList(Liste $list, User $user): array
     {
-        return $this->listMapper->map($this->findList($id, $user), user: $user);
+        return $this->listMapper->map($list, user: $user);
     }
 
     /**
