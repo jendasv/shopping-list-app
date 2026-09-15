@@ -37,6 +37,21 @@ class ListServiceTest extends TestCase
         $this->assertDatabaseMissing('list_items', ['name' => 'Milk']);
     }
 
+    public function test_creating_a_second_list_does_not_overflow_sort_order(): void
+    {
+        // sort_order is signed on purpose: a new list gets (current minimum - 1)
+        // so it sorts first, which goes negative starting with the user's
+        // second list ever. Locks in that this is expected, not a bug.
+        $user = $this->createUserWithHousehold();
+        $service = app(ListService::class);
+
+        $service->createList(['name' => 'First'], $user);
+        $service->createList(['name' => 'Second'], $user);
+
+        $this->assertDatabaseHas('list_user_order', ['user_id' => $user->id, 'sort_order' => 0]);
+        $this->assertDatabaseHas('list_user_order', ['user_id' => $user->id, 'sort_order' => -1]);
+    }
+
     public function test_reorder_lists_updates_sort_order_for_own_lists(): void
     {
         $user = $this->createUserWithHousehold();
