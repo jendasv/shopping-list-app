@@ -112,6 +112,7 @@ class ItemService
     public function updateItem(int $listId, int $itemId, array $data, User $user): array
     {
         $item = $this->findItem($listId, $itemId, $user);
+        $list = $item->list;
 
         try {
             if (isset($data['name'])) {
@@ -130,7 +131,14 @@ class ItemService
                 $item->notes = $data['notes'];
             }
             if (array_key_exists('product_id', $data)) {
-                $item->product_id = $data['product_id'];
+                $productId = $data['product_id'];
+
+                // Ignore products that don't belong to this list's household — same rule as createItem().
+                if ($productId !== null && ! Product::where('id', $productId)->where('household_id', $list->household_id)->exists()) {
+                    $productId = null;
+                }
+
+                $item->product_id = $productId;
             }
             $item->save();
         } catch (Throwable $e) {
@@ -138,7 +146,6 @@ class ItemService
         }
 
         $item->loadMissing('unit');
-        $list = $item->list;
         if ($list->household_id) {
             broadcast(new ItemUpdated($list->household_id, $this->itemMapper->map($item)))->toOthers();
         }

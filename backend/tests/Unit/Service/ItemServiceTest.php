@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Tests\Unit\Service;
 
 use App\Exceptions\Domain\ValidationException;
-use App\Models\ListItem;
 use App\Models\Liste;
+use App\Models\ListItem;
+use App\Models\Product;
 use App\Service\ItemService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -72,6 +73,42 @@ class ItemServiceTest extends TestCase
 
         $this->assertSame($first->sort_order + 1, $second->sort_order);
         $this->assertSame($second->sort_order + 1, $third->sort_order);
+    }
+
+    public function test_create_item_ignores_product_from_another_household(): void
+    {
+        $list = $this->makeList();
+        $otherHouseholdId = $this->createUserWithHousehold()->household()->id;
+        $foreignProduct = Product::create(['household_id' => $otherHouseholdId, 'name' => 'Foreign Butter']);
+
+        $item = $this->service->createItem(['name' => 'Butter', 'quantity' => 1, 'product_id' => $foreignProduct->id], $list);
+
+        $this->assertNull($item->product_id);
+    }
+
+    public function test_update_item_ignores_product_from_another_household(): void
+    {
+        $user = $this->createUserWithHousehold();
+        $list = Liste::factory()->create(['household_id' => $user->household()->id, 'created_by' => $user->id]);
+        $item = $this->service->createItem(['name' => 'Butter', 'quantity' => 1], $list);
+        $otherHouseholdId = $this->createUserWithHousehold()->household()->id;
+        $foreignProduct = Product::create(['household_id' => $otherHouseholdId, 'name' => 'Foreign Butter']);
+
+        $this->service->updateItem($list->id, $item->id, ['product_id' => $foreignProduct->id], $user);
+
+        $this->assertDatabaseHas('list_items', ['id' => $item->id, 'product_id' => null]);
+    }
+
+    public function test_update_item_accepts_product_from_same_household(): void
+    {
+        $user = $this->createUserWithHousehold();
+        $list = Liste::factory()->create(['household_id' => $user->household()->id, 'created_by' => $user->id]);
+        $item = $this->service->createItem(['name' => 'Butter', 'quantity' => 1], $list);
+        $ownProduct = Product::create(['household_id' => $list->household_id, 'name' => 'Own Butter']);
+
+        $this->service->updateItem($list->id, $item->id, ['product_id' => $ownProduct->id], $user);
+
+        $this->assertDatabaseHas('list_items', ['id' => $item->id, 'product_id' => $ownProduct->id]);
     }
 
     public function test_reorder_updates_sort_order(): void
