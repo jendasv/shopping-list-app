@@ -14,6 +14,7 @@ use App\Exceptions\Infrastructure\DatabaseOperationException;
 use App\Mapper\ListMapper;
 use App\Models\Liste;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -98,9 +99,29 @@ class ListService
 
     public function findList(int $id, User $user): Liste
     {
+        $list = $this->accessibleListsQuery($user)
+            ->with(['items' => fn ($q) => $q->orderBy('is_completed')->orderBy('sort_order')->with('unit')])
+            ->where('id', $id)
+            ->first();
+
+        if ($list === null) {
+            throw new ResourceNotFoundException('List not found.');
+        }
+
+        return $list;
+    }
+
+    /**
+     * Lists this user is allowed to see: their own household's shared lists
+     * plus anything they created themselves (private or not).
+     *
+     * @return Builder<Liste>
+     */
+    private function accessibleListsQuery(User $user): Builder
+    {
         $household = $user->household();
 
-        $query = Liste::with(['items' => fn ($q) => $q->orderBy('is_completed')->orderBy('sort_order')->with('unit')])->where('id', $id);
+        $query = Liste::query();
 
         if ($household) {
             $query->where('household_id', $household->id)
@@ -112,13 +133,7 @@ class ListService
             $query->where('created_by', $user->id);
         }
 
-        $list = $query->first();
-
-        if ($list === null) {
-            throw new ResourceNotFoundException('List not found.');
-        }
-
-        return $list;
+        return $query;
     }
 
     /**
@@ -214,7 +229,13 @@ class ListService
      */
     public function reorderLists(array $orderedIds, User $user): void
     {
+        $accessibleIds = $this->accessibleListsQuery($user)->whereIn('id', $orderedIds)->pluck('id')->all();
+
         foreach ($orderedIds as $position => $id) {
+            if (! in_array($id, $accessibleIds, true)) {
+                continue;
+            }
+
             DB::table('list_user_order')->updateOrInsert(
                 ['user_id' => $user->id, 'list_id' => $id],
                 ['sort_order' => $position],
