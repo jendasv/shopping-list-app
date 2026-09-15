@@ -119,7 +119,19 @@ class AuthController extends Controller
             'locale' => ['sometimes', 'nullable', 'string', Rule::in(config('locales'))],
         ]);
 
-        $user->fill($validated)->save();
+        $emailChanged = isset($validated['email']) && $validated['email'] !== $user->email;
+
+        $user->fill($validated);
+
+        if ($emailChanged) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+
+        if ($emailChanged) {
+            $user->sendEmailVerificationNotification();
+        }
 
         return response()->json(['user' => $this->formatUser($user)]);
     }
