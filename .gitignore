@@ -63,5 +63,10 @@ mysql_data/
 # =========================
 /docker/certs/
 
+# =========================
+# Deploy-generated (deploy.sh renders these — see docker/nginx/*.template)
+# =========================
+/docker/nginx/default.prod.conf
+
 .claude/
 ClaudeAppVision.md

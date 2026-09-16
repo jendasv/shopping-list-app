@@ -318,11 +318,11 @@ git clone <repo-url> && cd shopping-list-laravel
 cp backend/.env.example backend/.env
 nano backend/.env
 
-# Create a root-level .env for Docker build args (baked into frontend JS)
-echo 'VITE_APP_NAME=Listmania' > .env
-echo 'VITE_REVERB_APP_KEY=your-reverb-app-key' >> .env
-
 ./deploy.sh setup yourdomain.com
+# deploy.sh derives the root-level .env Docker Compose needs for build args
+# (VITE_APP_NAME, VITE_REVERB_APP_KEY) and Postgres credentials
+# (DB_DATABASE/DB_USERNAME/DB_PASSWORD) straight from backend/.env — nothing
+# to fill in twice.
 ```
 
 ### Updates
