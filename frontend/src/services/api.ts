@@ -21,16 +21,17 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
   }
 
   const socketId = echo.socketId()
+  const { headers: callerHeaders, ...restOptions } = options
   const response = await fetch(`${API_URL}${endpoint}`, {
+    ...restOptions,
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
       'X-XSRF-TOKEN': getXsrfToken(),
       ...(socketId ? { 'X-Socket-Id': socketId } : {}),
-      ...options.headers,
+      ...callerHeaders,
     },
     credentials: 'include',
-    ...options,
   })
 
   if (response.status === 204) {
