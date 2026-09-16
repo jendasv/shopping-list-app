@@ -40,6 +40,10 @@ export function useListDetail(id: string) {
     const householdId = authStore.user?.householdId
     if (!householdId) return
 
+    // Patch items in place instead of re-fetching (unlike useLists' list
+    // events): this view shows one list's full, unpaginated item set with a
+    // fixed, deterministic sort (sortItems), so the event payload alone is
+    // enough to keep it correct without a server round-trip.
     echo
       .private(`household.${householdId}`)
       .listen('.ItemAdded', (data: iItem & { listId: number }) => {

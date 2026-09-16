@@ -30,6 +30,10 @@ export function useLists() {
     const householdId = authStore.user?.householdId
     if (!householdId) return
 
+    // Re-fetch instead of patching locally (unlike useListDetail's item
+    // events): this view is paginated/searched/sorted server-side, so a
+    // single event payload can't tell us which page a changed list belongs
+    // on or where it sorts — only the server knows that.
     echo
       .private(`household.${householdId}`)
       .listen('.ListUpdated', () => base.fetchItems())
