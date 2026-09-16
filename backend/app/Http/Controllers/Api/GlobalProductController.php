@@ -22,18 +22,18 @@ class GlobalProductController extends Controller
     {
         $request->validate([
             'barcode' => ['sometimes', 'nullable', 'string', 'max:50'],
-            'q'       => ['sometimes', 'nullable', 'string', 'min:2', 'max:100'],
+            'q' => ['sometimes', 'nullable', 'string', 'min:2', 'max:100'],
         ]);
 
-        $barcode     = $request->input('barcode');
-        $query       = $request->input('q');
+        $barcode = $request->input('barcode');
+        $query = $request->input('q');
         $householdId = $request->user()->household()?->id;
 
         if ($barcode !== null && $barcode !== '') {
             $product = GlobalProduct::where('barcode', $barcode)
                 ->where(function ($q) use ($householdId) {
                     $q->whereNull('household_id')
-                      ->orWhere('household_id', $householdId);
+                        ->orWhere('household_id', $householdId);
                 })
                 ->with(['defaultCategory', 'defaultUnit'])
                 ->first();
@@ -56,7 +56,7 @@ class GlobalProductController extends Controller
             $results = GlobalProduct::where('name', 'like', '%'.$query.'%')
                 ->where(function ($q) use ($householdId) {
                     $q->whereNull('household_id')
-                      ->orWhere('household_id', $householdId);
+                        ->orWhere('household_id', $householdId);
                 })
                 ->with(['defaultCategory', 'defaultUnit'])
                 ->orderByDesc('scan_count')
@@ -78,9 +78,9 @@ class GlobalProductController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'name'    => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'barcode' => ['required', 'string', 'max:50'],
-            'brand'   => ['sometimes', 'nullable', 'string', 'max:255'],
+            'brand' => ['sometimes', 'nullable', 'string', 'max:255'],
         ]);
 
         $household = $request->user()->household();
@@ -93,7 +93,7 @@ class GlobalProductController extends Controller
         $existing = GlobalProduct::where('barcode', $data['barcode'])
             ->where(function ($q) use ($household) {
                 $q->whereNull('household_id')
-                  ->orWhere('household_id', $household->id);
+                    ->orWhere('household_id', $household->id);
             })
             ->first();
 
@@ -103,12 +103,12 @@ class GlobalProductController extends Controller
 
         $product = GlobalProduct::create([
             'household_id' => $household->id,
-            'barcode'      => $data['barcode'],
-            'name'         => $data['name'],
-            'brand'        => $data['brand'] ?? null,
-            'source'       => 'user',
-            'verified'     => false,
-            'scan_count'   => 1,
+            'barcode' => $data['barcode'],
+            'name' => $data['name'],
+            'brand' => $data['brand'] ?? null,
+            'source' => 'user',
+            'verified' => false,
+            'scan_count' => 1,
         ]);
 
         return new JsonResponse($this->map($product), 201);
@@ -118,15 +118,15 @@ class GlobalProductController extends Controller
     private function map(GlobalProduct $product): array
     {
         return [
-            'id'                  => $product->id,
-            'name'                => $product->name,
-            'brand'               => $product->brand,
-            'barcode'             => $product->barcode,
-            'image_url'           => $product->image_url,
+            'id' => $product->id,
+            'name' => $product->name,
+            'brand' => $product->brand,
+            'barcode' => $product->barcode,
+            'image_url' => $product->image_url,
             'default_category_id' => $product->default_category_id,
-            'default_unit_id'     => $product->default_unit_id,
-            'verified'            => $product->verified,
-            'scan_count'          => $product->scan_count,
+            'default_unit_id' => $product->default_unit_id,
+            'verified' => $product->verified,
+            'scan_count' => $product->scan_count,
         ];
     }
 }
