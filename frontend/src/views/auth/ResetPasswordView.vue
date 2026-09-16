@@ -50,6 +50,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { authService } from '@/services/authService'
+import type { ApiError } from '@/services/api'
 import AlertMessage from '@/components/elements/AlertMessage.vue'
 
 const route = useRoute()
@@ -76,7 +77,7 @@ async function handleSubmit() {
     await authService.resetPassword(form.value)
     router.push({ name: 'login' })
   } catch (e: unknown) {
-    const err = e as { errors?: Record<string, string[]>; message?: string }
+    const err = e as ApiError
     if (err.errors) {
       const first = Object.values(err.errors)[0]
       error.value = Array.isArray(first) ? (first[0] ?? '') : String(first)

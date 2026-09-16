@@ -110,6 +110,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import type { ApiError } from '@/services/api'
 import AlertMessage from '@/components/elements/AlertMessage.vue'
 import Typewrite from '@/components/animations/Typewrite.vue'
 import HandDrawnDivider from '@/components/elements/HandDrawnDivider.vue'
@@ -132,7 +133,7 @@ async function handleRegister() {
     await authStore.register(form.value)
     router.push({ name: 'email-verify' })
   } catch (e: unknown) {
-    const err = e as { errors?: Record<string, string[]>; message?: string }
+    const err = e as ApiError
     if (err.errors) {
       const first = Object.values(err.errors)[0]
       error.value = Array.isArray(first) ? (first[0] ?? '') : String(first)

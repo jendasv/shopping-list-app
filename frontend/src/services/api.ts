@@ -2,6 +2,17 @@ import echo from '@/plugins/echo'
 
 const API_URL = '/api'
 
+// The backend doesn't return one consistent shape: default Laravel validation
+// (auth endpoints) sends { message, errors }, while FormRequest-based
+// endpoints (lists/items/products) send { error, details } instead — both
+// with the same { field: string[] } validation-message structure underneath.
+// Normalized here so every caller of apiFetch only ever has to know one shape.
+export interface ApiError {
+  status: number
+  message: string
+  errors?: Record<string, string[]>
+}
+
 async function getCsrfCookie(): Promise<void> {
   await fetch('/sanctum/csrf-cookie', {
     credentials: 'include',
@@ -39,8 +50,13 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
   }
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: `API error: ${response.status}` }))
-    throw { status: response.status, ...error }
+    const body = await response.json().catch(() => ({}))
+    const apiError: ApiError = {
+      status: response.status,
+      message: body.message ?? body.error ?? `API error: ${response.status}`,
+      errors: body.errors ?? body.details,
+    }
+    throw apiError
   }
 
   return (await response.json()) as T

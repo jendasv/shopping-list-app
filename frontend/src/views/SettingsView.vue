@@ -57,6 +57,7 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { authService } from '@/services/authService'
+import type { ApiError } from '@/services/api'
 import AlertMessage from '@/components/elements/AlertMessage.vue'
 import HandDrawnDivider from '@/components/elements/HandDrawnDivider.vue'
 import LocaleSwitcher from '@/components/ui/LocaleSwitcher.vue'
@@ -79,7 +80,7 @@ async function saveProfile() {
     authStore.user = res.user
     profileSuccess.value = t('settings.profileSaved')
   } catch (e: unknown) {
-    const err = e as { errors?: Record<string, string[]>; message?: string }
+    const err = e as ApiError
     if (err.errors) {
       const first = Object.values(err.errors)[0]
       profileError.value = Array.isArray(first) ? (first[0] ?? '') : String(first)
@@ -110,7 +111,7 @@ async function savePassword() {
     passwordSuccess.value = t('settings.passwordChanged')
     password.value = { current: '', next: '', confirm: '' }
   } catch (e: unknown) {
-    const err = e as { errors?: Record<string, string[]>; message?: string }
+    const err = e as ApiError
     if (err.errors) {
       const first = Object.values(err.errors)[0]
       passwordError.value = Array.isArray(first) ? (first[0] ?? '') : String(first)
