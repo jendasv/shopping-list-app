@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Http\JsonResponse;
-
 class StoreProductRequest extends FormRequest
 {
     public function authorize(): bool
@@ -30,15 +25,5 @@ class StoreProductRequest extends FormRequest
             'barcode' => ['sometimes', 'nullable', 'string', 'max:50'],
             'global_product_id' => ['sometimes', 'nullable', 'integer', 'exists:global_products,id'],
         ];
-    }
-
-    protected function failedValidation(Validator $validator): never
-    {
-        throw new HttpResponseException(
-            new JsonResponse(
-                ['error' => 'Validation failed.', 'details' => $validator->errors()->toArray()],
-                422,
-            )
-        );
     }
 }
