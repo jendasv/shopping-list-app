@@ -58,13 +58,11 @@ class AppServiceProvider extends ServiceProvider
                 .'&email='.urlencode($user->email);
         });
 
-        $this->allowPrivateLanOrigin();
+        if ($this->app->environment('local')) {
+            $this->allowPrivateLanOrigin();
+        }
     }
 
-    /**
-     * Dynamically add private LAN IP origins to Sanctum stateful domains.
-     * This allows any device on a private network to use the app without config changes.
-     */
     private function registerPolicies(): void
     {
         Gate::policy(Liste::class, ListePolicy::class);
@@ -86,6 +84,15 @@ class AppServiceProvider extends ServiceProvider
         });
     }
 
+    /**
+     * Dynamically add private LAN IP origins to Sanctum stateful domains, so
+     * any device on the developer's LAN can use the app without manual config.
+     *
+     * local-only: Origin/Referer are client-controlled, so trusting them to
+     * decide Sanctum's stateful domains would let any request claiming a
+     * private-IP origin be treated as a stateful, cookie-authenticated SPA
+     * request in every environment — fine for LAN dev, not for staging/prod.
+     */
     private function allowPrivateLanOrigin(): void
     {
         $origin = request()->header('Origin') ?? request()->header('Referer');
