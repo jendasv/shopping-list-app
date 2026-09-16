@@ -6,14 +6,15 @@ namespace App\Service;
 
 use App\Models\GlobalProduct;
 use Illuminate\Http\Client\Pool;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class OpenFoodFactsService
 {
     private const DATABASES = [
-        'open_food_facts'    => 'https://world.openfoodfacts.org/api/v2/product/',
-        'open_beauty_facts'  => 'https://world.openbeautyfacts.org/api/v2/product/',
+        'open_food_facts' => 'https://world.openfoodfacts.org/api/v2/product/',
+        'open_beauty_facts' => 'https://world.openbeautyfacts.org/api/v2/product/',
         'open_products_facts' => 'https://world.openproductsfacts.org/api/v2/product/',
         'open_pet_food_facts' => 'https://world.openpetfoodfacts.org/api/v2/product/',
     ];
@@ -29,13 +30,17 @@ class OpenFoodFactsService
                         ->withUserAgent('ShoppingListApp/1.0')
                         ->get($url.$barcode.'.json');
                 }
+
                 return $requests;
             });
 
             foreach (self::DATABASES as $source => $_) {
                 $response = $responses[$source];
 
-                if (! $response->ok()) {
+                // Http::pool() returns the exception itself (not a Response) for a
+                // request that failed to connect or timed out — one slow service
+                // must not abort the lookup for the others that did respond.
+                if (! $response instanceof Response || ! $response->ok()) {
                     continue;
                 }
 
@@ -55,11 +60,11 @@ class OpenFoodFactsService
                 return GlobalProduct::firstOrCreate(
                     ['barcode' => $barcode],
                     [
-                        'name'      => $name,
-                        'brand'     => $product['brands'] ?? null,
+                        'name' => $name,
+                        'brand' => $product['brands'] ?? null,
                         'image_url' => $product['image_front_small_url'] ?? $product['image_url'] ?? null,
-                        'source'    => $source,
-                        'verified'  => false,
+                        'source' => $source,
+                        'verified' => false,
                         'scan_count' => 0,
                     ],
                 );
