@@ -30,6 +30,10 @@ coverage
 *.vue.js
 *.vue.d.ts
 
+# src/ is pure TypeScript — a plain .js file here is always a stale compiled
+# duplicate of the matching .ts/.vue source, never a real source file.
+src/**/*.js
+
 .eslintcache
 
 # Cypress
